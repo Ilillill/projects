@@ -311,6 +311,8 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, onSnapshot, setDoc, collection, addDoc, query, orderBy, deleteDoc, updateDoc } 
         from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        // IMPORT ADDED HERE:
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBxKv-xXahSO2TEtwVwXTfU1eJ1ZsaaMAc",
@@ -326,11 +328,11 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         
+        // MOVED OUTSIDE THE .THEN BLOCK so the "Add Quest" form can see it
+        const questsRef = collection(db, "oliver_quests_v2");
+        
         // Wait for the silent login to succeed, THEN load the data
         signInAnonymously(auth).then(() => {
-            const questsRef = collection(db, "oliver_quests_v2");
-
-            // Changed to "desc" so newly created quests appear at the very top
             const q = query(questsRef, orderBy("createdAt", "desc"));
             
             onSnapshot(q, (snapshot) => {
