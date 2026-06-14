@@ -325,21 +325,27 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        signInAnonymously(auth);
         
-        const questsRef = collection(db, "oliver_quests_v2");
+        // Wait for the silent login to succeed, THEN load the data
+        signInAnonymously(auth).then(() => {
+            const questsRef = collection(db, "oliver_quests_v2");
 
-        // Changed to "desc" so newly created quests appear at the very top
-        const q = query(questsRef, orderBy("createdAt", "desc"));
-        
-        onSnapshot(q, (snapshot) => {
-            const board = document.getElementById('quest-board');
-            board.innerHTML = ''; 
+            // Changed to "desc" so newly created quests appear at the very top
+            const q = query(questsRef, orderBy("createdAt", "desc"));
+            
+            onSnapshot(q, (snapshot) => {
+                const board = document.getElementById('quest-board');
+                board.innerHTML = ''; 
 
-            snapshot.forEach((docSnap) => {
-                const quest = { id: docSnap.id, ...docSnap.data() };
-                renderQuestCard(board, quest);
+                snapshot.forEach((docSnap) => {
+                    const quest = { id: docSnap.id, ...docSnap.data() };
+                    renderQuestCard(board, quest);
+                });
+            }, (error) => {
+                console.error("Firestore read error:", error);
             });
+        }).catch((error) => {
+            console.error("Silent login failed:", error);
         });
 
         function renderQuestCard(board, quest) {
