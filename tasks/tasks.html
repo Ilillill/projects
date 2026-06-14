@@ -274,6 +274,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+        // Added the missing Auth import
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBxKv-xXahSO2TEtwVwXTfU1eJ1ZsaaMAc",
@@ -287,6 +289,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const auth = getAuth(app); // Initialized auth
 
         // Default tasks for the initial setup
         const defaultTasks = [
@@ -314,16 +317,35 @@
 
         let tasks = [];
         const tasksRef = ref(db, 'tasksList');
+        const dbRef = ref(db, 'trackerData');
+        let trackerDataCache = {};
 
-        onValue(tasksRef, (snapshot) => {
-            if (snapshot.exists()) {
-                tasks = snapshot.val().filter(t => t !== null);
-            } else {
-                tasks = defaultTasks;
-                set(tasksRef, tasks);
-            }
-            renderTasks();
-            syncCheckmarks(); // Force sync of checkmarks after render
+        // Wrapped all database reading inside the silent login promise
+        signInAnonymously(auth).then(() => {
+            
+            // 1. Get the Task Structure
+            onValue(tasksRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    tasks = snapshot.val().filter(t => t !== null);
+                } else {
+                    tasks = defaultTasks;
+                    set(tasksRef, tasks);
+                }
+                renderTasks();
+                syncCheckmarks(); // Force sync of checkmarks after render
+            });
+
+            // 2. Get the Checkbox and Bank Data
+            onValue(dbRef, (snapshot) => {
+                trackerDataCache = snapshot.val() || {};
+                syncCheckmarks();
+            }, (error) => {
+                console.error(error);
+                alert("Firebase Error: Your database rules might be locked.");
+            });
+
+        }).catch((error) => {
+            console.error("Silent login failed:", error);
         });
 
         function renderTasks() {
@@ -437,18 +459,6 @@
             document.getElementById('progress-fill').style.width = percentage + '%';
             document.getElementById('progress-text').innerText = `${checked} / ${total} Daily Tasks Completed`;
         }
-
-        // Database Sync Logic for Tracking
-        const dbRef = ref(db, 'trackerData');
-        let trackerDataCache = {};
-        
-        onValue(dbRef, (snapshot) => {
-            trackerDataCache = snapshot.val() || {};
-            syncCheckmarks();
-        }, (error) => {
-            console.error(error);
-            alert("Firebase Error: Your database rules might be locked.");
-        });
 
         function syncCheckmarks() {
             document.querySelectorAll('.check-box').forEach(box => {
