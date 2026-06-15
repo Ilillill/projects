@@ -203,10 +203,8 @@
         <button id="toggle-view-btn" class="manage-toggle-btn"><i class="fa-solid fa-gear"></i> Manage</button>
     </div>
 
-    <!-- MAIN SHOPPING BOARD -->
     <div id="shop-board" class="board"></div>
 
-    <!-- MANAGE BOARD -->
     <div id="manage-board" class="board hidden">
         
         <div class="manage-section">
@@ -232,6 +230,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, updateDoc, addDoc, deleteDoc, setDoc, writeBatch, getDocs } 
         from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBxKv-xXahSO2TEtwVwXTfU1eJ1ZsaaMAc",
@@ -245,6 +244,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
         
         const configRef = doc(db, "shopping_matrix_config", "categories");
         const inventoryRef = collection(db, "shopping_matrix_inventory");
@@ -273,7 +273,6 @@
         }
 
         // --- 1. SEED DATA ---
-        // Completely removed icons and fallbacks from the seed data
         const defaultCategories = ["🍏 Produce", "🥩 Meat & Fish", "🥛 Dairy & Chilled", "🍞 Bakery & Breakfast", "🍕 Meals & Pantry", "🥤 Drinks", "🍫 Sweets & Snacks", "🧼 Household & Pets", "Uncategorized"];
         
         const defaultItems = [
@@ -385,20 +384,24 @@
                 await batch.commit();
             }
         }
-        seedDatabase();
 
+        // --- 2. AUTHENTICATION & REAL-TIME LISTENERS ---
+        signInAnonymously(auth).then(() => {
+            seedDatabase();
 
-        // --- 2. REAL-TIME LISTENERS ---
-        onSnapshot(configRef, (docSnap) => {
-            if (docSnap.exists()) {
-                state.categories = docSnap.data().list || [];
-            }
-            renderApp();
-        });
+            onSnapshot(configRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    state.categories = docSnap.data().list || [];
+                }
+                renderApp();
+            });
 
-        onSnapshot(inventoryRef, (snapshot) => {
-            state.items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderApp();
+            onSnapshot(inventoryRef, (snapshot) => {
+                state.items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderApp();
+            });
+        }).catch((error) => {
+            console.error("Silent login failed:", error);
         });
 
         // --- 3. RENDER LOGIC ---
@@ -449,7 +452,6 @@
                     const btn = document.createElement('button');
                     btn.className = `shop-btn ${item.isActive ? 'active' : ''}`;
                     
-                    // Directly injecting the product name without any icons
                     btn.textContent = item.name;
                     
                     btn.draggable = true;
@@ -606,7 +608,6 @@
                 await setDoc(configRef, { list: [...state.categories, "Uncategorized"] });
             }
 
-            // Removed icon and fallback properties completely
             await addDoc(inventoryRef, {
                 name: itemName,
                 category: "Uncategorized",
