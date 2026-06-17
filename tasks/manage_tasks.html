@@ -242,6 +242,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBxKv-xXahSO2TEtwVwXTfU1eJ1ZsaaMAc",
@@ -255,20 +256,26 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-
+        const auth = getAuth(app); // Initialize Auth
+        
         let tasks = [];
         let editingIndex = -1;
         const tasksRef = ref(db, 'tasksList');
-
-        // Order map for clean sorting
+        
         const orderMap = { 'sd': 1, 'd': 2, 'w': 3, 'm': 4 };
         const nameMap = { 'sd': 'Spanish Daily', 'd': 'Daily', 'w': 'Weekly', 'm': 'Monthly' };
-
-        onValue(tasksRef, (snapshot) => {
-            if (snapshot.exists()) {
-                tasks = snapshot.val().filter(t => t !== null);
-                renderList();
-            }
+        
+        // Wrap the initial data load in the anonymous login
+        signInAnonymously(auth).then(() => {
+            onValue(tasksRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    tasks = snapshot.val().filter(t => t !== null);
+                    renderList();
+                }
+            });
+        }).catch((error) => {
+            console.error("Silent login failed:", error);
+            alert("Database connection failed. Check permissions.");
         });
 
         window.saveTask = function() {
