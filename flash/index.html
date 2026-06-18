@@ -442,9 +442,15 @@
             resetWordForm();
             switchScreen('manage-screen');
 
-            const q = query(collection(db, "flashcard_words"), where("setId", "==", setId), orderBy("createdAt", "desc"));
+            // Ask Firestore ONLY for the matching words (removed the orderBy command)
+            const q = query(collection(db, "flashcard_words"), where("setId", "==", setId));
+            
             manageWordsUnsubscribe = onSnapshot(q, (snapshot) => {
-                currentWords = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                let fetchedWords = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                
+                // Sort the words newest-to-oldest using JavaScript instead
+                currentWords = fetchedWords.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                
                 document.getElementById('manage-word-count').innerText = currentWords.length;
                 renderWordList();
             });
@@ -698,19 +704,25 @@
             hintBtn.style.display = "none";
             
             const card = deck[currentCardIdx];
-            const userInput = inputField.value.trim().toLowerCase();
+            const userInput = inputField.value.trim();
+            const userInputLower = userInput.toLowerCase();
             const correct1 = card.a1.toLowerCase();
             const correct2 = card.a2.toLowerCase();
 
-            const isCorrect = (userInput === correct1) || (card.a2 && userInput === correct2);
+            const isCorrect = (userInputLower === correct1) || (card.a2 && userInputLower === correct2);
             
             const transText = card.a1 + (card.a2 ? ` / ${card.a2}` : '');
-            document.getElementById('feedback-main-text').innerText = transText;
             document.getElementById('play-anote').innerText = card.aNote || '';
 
             if (isCorrect) {
                 document.getElementById('flashcard-ui').style.borderColor = "var(--success)";
                 feedbackBox.classList.add("correct");
+                
+                document.getElementById('feedback-main-text').innerHTML = `
+                    <div style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; opacity: 0.8;">Correct!</div>
+                    <div style="font-size: 1.4rem;">${transText}</div>
+                `;
+                
                 inputField.value = ''; // Clear to look clean
                 mainActionBtn.innerText = "Next Card";
                 mainActionBtn.className = "btn btn-success main-action-btn";
@@ -718,6 +730,13 @@
                 document.getElementById('flashcard-ui').style.borderColor = "var(--danger)";
                 feedbackBox.classList.add("wrong");
                 wrongDeck.push(card);
+                
+                document.getElementById('feedback-main-text').innerHTML = `
+                    <div style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; opacity: 0.8;">Correct Answer:</div>
+                    <div style="font-size: 1.4rem; font-weight: 800; margin-bottom: 10px;">${transText}</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">You typed: <span style="text-decoration: line-through;">${userInput || '[nothing]'}</span></div>
+                `;
+                
                 mainActionBtn.innerText = "Continue";
                 mainActionBtn.className = "btn btn-danger main-action-btn";
             }
