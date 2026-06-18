@@ -110,12 +110,29 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
         }
         .set-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         .set-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
         .set-title { font-size: 1.2rem; font-weight: 700; margin: 0; color: var(--text-main); word-break: break-word; }
         .set-actions { display: flex; gap: 5px; }
+        
+        .badge-recent {
+            background: #fef08a;
+            color: #854d0e;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: -5px;
+            align-self: flex-start;
+            border: 1px solid #fde047;
+        }
 
         /* --- Manage Set Screen --- */
         .manage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
@@ -176,7 +193,7 @@
         .play-controls { width: 100%; max-width: 400px; display: flex; gap: 10px; margin-top: 20px; }
         .main-action-btn { flex: 1; padding: 18px; font-size: 1.2rem; }
 
-        /* --- Full Screen Feedback States (Restored V1 Behavior) --- */
+        /* --- Full Screen Feedback States --- */
         #play-screen.bg-green { background-color: var(--success); }
         #play-screen.bg-red { background-color: var(--danger); }
         
@@ -366,6 +383,7 @@
             if(manageWordsUnsubscribe) manageWordsUnsubscribe();
             switchScreen('dashboard-screen');
             currentManageSetId = null;
+            renderDashboard(); // Re-render to ensure badge updates
         }
 
         // --- Sets CRUD ---
@@ -398,6 +416,10 @@
                 }
 
                 await deleteDoc(doc(db, "flashcard_sets", id));
+                
+                if (localStorage.getItem('lastOpenedFlashcardSetId') === id) {
+                    localStorage.removeItem('lastOpenedFlashcardSetId');
+                }
             }
         }
 
@@ -410,10 +432,25 @@
                 return;
             }
 
-            sets.forEach(set => {
+            const lastOpenedId = localStorage.getItem('lastOpenedFlashcardSetId');
+            
+            // Sort to bring the last opened set to the absolute top
+            const displaySets = [...sets].sort((a, b) => {
+                if (a.id === lastOpenedId) return -1;
+                if (b.id === lastOpenedId) return 1;
+                return b.createdAt - a.createdAt;
+            });
+
+            displaySets.forEach(set => {
+                const isLastOpened = set.id === lastOpenedId;
+                const badgeHtml = isLastOpened ? `<div class="badge-recent"><i class="fa-solid fa-clock-rotate-left"></i> Last Opened</div>` : '';
+                
                 const card = document.createElement('div');
                 card.className = 'set-card';
+                if (isLastOpened) card.style.borderColor = 'var(--warning)';
+
                 card.innerHTML = `
+                    ${badgeHtml}
                     <div class="set-card-header">
                         <h3 class="set-title">${set.name}</h3>
                         <div class="set-actions">
@@ -432,12 +469,12 @@
 
         // --- Words CRUD & Manage Screen ---
         window.openManage = function(setId, setName) {
+            localStorage.setItem('lastOpenedFlashcardSetId', setId);
             currentManageSetId = setId;
             document.getElementById('manage-set-title').innerText = setName;
             resetWordForm();
             switchScreen('manage-screen');
 
-            // Fixed the sorting bug here: Load raw list, then sort in Javascript
             const q = query(collection(db, "flashcard_words"), where("setId", "==", setId));
             manageWordsUnsubscribe = onSnapshot(q, (snapshot) => {
                 let fetchedWords = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -591,7 +628,9 @@
 
         // --- GAMEPLAY ENGINE ---
         window.initPlay = async function(setId, setName) {
+            localStorage.setItem('lastOpenedFlashcardSetId', setId);
             playingSetName = setName;
+            
             const snap = await getDocs(query(collection(db, "flashcard_words"), where("setId", "==", setId)));
             const fetchedWords = snap.docs.map(d => ({id: d.id, ...d.data()}));
             
@@ -672,7 +711,7 @@
         // Global Enter Key Listener: Fixed double-firing bug with e.preventDefault()
         document.addEventListener('keydown', (e) => {
             if(e.key === 'Enter' && document.getElementById('play-screen').classList.contains('active')) {
-                e.preventDefault(); // Prevents "Check Answer" button from firing twice if it has focus
+                e.preventDefault(); 
                 handleMainAction();
             }
         });
