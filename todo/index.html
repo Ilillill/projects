@@ -109,7 +109,6 @@
         .category-box {
             background: var(--surface);
             border-radius: 12px;
-            min-height: 60px; 
             display: flex;
             flex-direction: row; 
             transition: all 0.2s ease;
@@ -124,34 +123,35 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 60px; /* Fixed width to frame the square perfectly */
+            padding: 4px; /* Tight padding to reduce empty space */
             flex-shrink: 0;
             cursor: pointer;
             transition: background 0.2s;
-            overflow: hidden; 
             border-top-left-radius: 12px;
             border-bottom-left-radius: 12px;
-            background: #fafafa;
+            background: #ffffff; /* Pure white background */
             border-right: 1px solid var(--border);
         }
 
-        .category-sidebar:hover { background: #f0f0f0; }
+        .category-sidebar:hover { background: #f9f9f9; }
 
-        /* User Image Styling */
+        /* User Image Styling (75x75) */
         .category-image {
-            width: 40px;
-            height: 40px;
+            width: 75px;
+            height: 75px;
             object-fit: cover;
-            border-radius: 8px; /* Slightly softer corners for the icons */
+            border-radius: 8px; 
             box-shadow: var(--shadow-sm);
-            background: #fff; /* Ensures transparent PNGs look solid against shadows */
+            background: #ffffff; 
+            display: block; /* Removes inline spacing ghost gaps */
         }
 
         /* Generic emoji styling for Intake/Repeat */
         .sidebar-emoji {
-            font-size: 28px;
+            font-size: 40px; /* Scaled up to match the larger 75px footprint */
             line-height: 1;
             user-select: none;
+            padding: 8px;
         }
 
         .task-list {
@@ -197,7 +197,10 @@
         .task-card:active { cursor: grabbing; opacity: 0.7; transform: scale(0.97); }
 
         /* Permanent Category overrides */
-        #main-board .category-box:last-child .category-sidebar { background: #fff4e5; border-right: 1px solid #ffe0b2; }
+        #main-board .category-box:last-child .category-sidebar { 
+            background: #ffffff; /* Pure white */
+            border-right: 1px solid #ffe0b2; /* Keeping the orange hint border */
+        }
         
         /* --- Modal Styles --- */
         .modal-overlay {
@@ -347,7 +350,6 @@
             const intakeZone = document.getElementById('intake');
             const repeatZone = document.getElementById('repeatable_tasks');
             
-            // Remove old dynamic categories
             Array.from(mainBoard.children).forEach(child => {
                 if (child.querySelector('.drop-zone').id !== 'intake' && child.querySelector('.drop-zone').id !== 'repeatable_tasks') {
                     mainBoard.removeChild(child);
@@ -367,11 +369,9 @@
                 const catBox = document.createElement('div');
                 catBox.className = 'category-box';
                 
-                // Pure Image Sidebar with Tooltip fallback for Name
                 const safeName = (cat.name || 'Unnamed').replace(/'/g, "\\'");
                 const safeImage = (cat.imageUrl || '').replace(/'/g, "\\'");
                 
-                // Fallback emoji if old data doesn't have an image
                 const sidebarContent = cat.imageUrl && cat.imageUrl.trim() !== "" 
                     ? `<img src="${cat.imageUrl}" alt="${cat.name}" class="category-image">` 
                     : `<span class="sidebar-emoji">📁</span>`;
@@ -418,7 +418,12 @@
                 });
             });
 
-            Object.entries(currentTasks).forEach(([taskId, task]) => {
+            // NEW: Sort the tasks array alphabetically before building the UI
+            const sortedTasks = Object.entries(currentTasks).sort((a, b) => {
+                return (a[1].text || '').localeCompare(b[1].text || '');
+            });
+
+            sortedTasks.forEach(([taskId, task]) => {
                 const card = document.createElement('div');
                 card.className = 'task-card';
                 card.draggable = true;
@@ -446,7 +451,6 @@
             });
         }
 
-        // --- Form Submissions ---
         document.getElementById('add-task-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const input = document.getElementById('new-task-input');
@@ -487,7 +491,6 @@
             setTimeout(() => modal.style.display = 'none', 200);
         }
 
-        // --- Category Modal Logic ---
         window.openCategoryModal = (catId, currentName, currentImage) => {
             currentEditingCatId = catId;
             document.getElementById('modal-cat-name').value = currentName;
@@ -531,7 +534,6 @@
             }
         });
 
-        // --- Task Modal Logic ---
         window.openTaskModal = (taskId, text) => {
             currentEditingTaskId = taskId;
             document.getElementById('modal-task-text').value = text;
@@ -563,12 +565,13 @@
             } catch (error) { alert("FIREBASE ERROR: " + error.message); }
         });
 
-        // --- Export Logic ---
         document.getElementById('export-btn').addEventListener('click', () => {
             let exportData = "=== INTAKE BENCH ===\n";
             const intakeTasks = Object.values(currentTasks).filter(t => t.category === 'intake' || (!currentCategories[t.category] && t.category !== 'repeatable_tasks'));
             if (intakeTasks.length === 0) exportData += "(Empty)\n";
-            intakeTasks.forEach(t => exportData += `- ${t.text}\n`);
+            
+            // Sort exports alphabetically as well to match the UI
+            intakeTasks.sort((a,b) => (a.text || '').localeCompare(b.text || '')).forEach(t => exportData += `- ${t.text}\n`);
             exportData += "\n";
 
             const sortedCategories = Object.entries(currentCategories).sort((a, b) => { return (a[1].name || '').localeCompare(b[1].name || ''); });
@@ -577,14 +580,16 @@
                 exportData += `=== ${(cat.name || 'UNNAMED').toUpperCase()} ===\n`;
                 const catTasks = Object.values(currentTasks).filter(t => t.category === catId);
                 if (catTasks.length === 0) { exportData += "(Empty)\n"; } 
-                else { catTasks.forEach(t => exportData += `- ${t.text}\n`); }
+                else { 
+                    catTasks.sort((a,b) => (a.text || '').localeCompare(b.text || '')).forEach(t => exportData += `- ${t.text}\n`); 
+                }
                 exportData += "\n";
             });
 
             exportData += "=== 📅 REPEATABLE TASKS BENCH ===\n";
             const repeatableTasks = Object.values(currentTasks).filter(t => t.category === 'repeatable_tasks');
             if (repeatableTasks.length === 0) exportData += "(Empty)\n";
-            repeatableTasks.forEach(t => exportData += `- ${t.text}\n`);
+            repeatableTasks.sort((a,b) => (a.text || '').localeCompare(b.text || '')).forEach(t => exportData += `- ${t.text}\n`);
             exportData += "\n";
 
             const blob = new Blob([exportData], { type: "text/plain" });
