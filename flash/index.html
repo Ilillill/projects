@@ -17,7 +17,9 @@
             --primary: #3b82f6;
             --primary-hover: #2563eb;
             --success: #22c55e;
+            --success-bg: #dcfce7;
             --danger: #ef4444;
+            --danger-bg: #fee2e2;
             --warning: #f59e0b;
         }
 
@@ -88,6 +90,8 @@
             align-items: center;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .nav-title { font-size: 1.25rem; font-weight: 700; color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; }
 
@@ -231,11 +235,16 @@
     <div id="dashboard-screen" class="screen active">
         <div class="navbar">
             <h1 class="nav-title"><i class="fa-solid fa-layer-group"></i> My Flashcards</h1>
-            <button class="btn" onclick="promptCreateSet()"><i class="fa-solid fa-plus"></i> New Set</button>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn btn-success" onclick="promptCreateSetFromCSV()"><i class="fa-solid fa-file-csv"></i> New Set from CSV</button>
+                <button class="btn" onclick="promptCreateSet()"><i class="fa-solid fa-plus"></i> New Set</button>
+            </div>
         </div>
         <div class="container">
             <div class="sets-grid" id="sets-container"></div>
         </div>
+        
+        <input type="file" id="dashboard-csv-upload" accept=".csv" style="display: none;">
     </div>
 
     <div id="manage-screen" class="screen">
@@ -327,7 +336,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, updateDoc, addDoc, deleteDoc, writeBatch, getDocs, query, where, orderBy } 
+        import { getFirestore, collection, onSnapshot, doc, updateDoc, addDoc, deleteDoc, setDoc, writeBatch, getDocs, query, where, orderBy } 
         from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
@@ -351,6 +360,8 @@
         let manageWordsUnsubscribe = null;
         let currentWords = [];
         let editingWordId = null;
+        
+        let pendingNewSetName = ""; // State for Dashboard CSV upload
 
         // Gameplay State
         let deck = [];
@@ -383,7 +394,7 @@
             if(manageWordsUnsubscribe) manageWordsUnsubscribe();
             switchScreen('dashboard-screen');
             currentManageSetId = null;
-            renderDashboard(); // Re-render to ensure badge updates
+            renderDashboard(); 
         }
 
         // --- Sets CRUD ---
@@ -391,6 +402,15 @@
             const name = prompt("Enter a name for the new Flashcard Set:");
             if (name && name.trim()) {
                 await addDoc(collection(db, "flashcard_sets"), { name: name.trim(), createdAt: Date.now() });
+            }
+        }
+
+        // Dashboard: Create Set from CSV
+        window.promptCreateSetFromCSV = function() {
+            const name = prompt("Enter a name for the new Flashcard Set:");
+            if (name && name.trim()) {
+                pendingNewSetName = name.trim();
+                document.getElementById('dashboard-csv-upload').click();
             }
         }
 
@@ -434,7 +454,6 @@
 
             const lastOpenedId = localStorage.getItem('lastOpenedFlashcardSetId');
             
-            // Sort to bring the last opened set to the absolute top
             const displaySets = [...sets].sort((a, b) => {
                 if (a.id === lastOpenedId) return -1;
                 if (b.id === lastOpenedId) return 1;
@@ -467,7 +486,7 @@
             });
         }
 
-        // --- Words CRUD & Manage Screen ---
+        // --- Manage Set Screen ---
         window.openManage = function(setId, setName) {
             localStorage.setItem('lastOpenedFlashcardSetId', setId);
             currentManageSetId = setId;
@@ -575,7 +594,7 @@
             btn.disabled = false;
         }
 
-        // --- CSV Import ---
+        // --- CSV Import (Inside Manage Screen) ---
         document.getElementById('csv-upload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file || !currentManageSetId) return;
@@ -622,6 +641,68 @@
                     alert("Import Complete!");
                 }
                 e.target.value = '';
+            };
+            reader.readAsText(file);
+        });
+
+        // --- CSV Import (Dashboard - Create New Set) ---
+        document.getElementById('dashboard-csv-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file || !pendingNewSetName) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(event) {
+                const text = event.target.result;
+                const lines = text.split(/\r?\n/);
+                const wordsToAdd = [];
+                const baseTime = Date.now();
+
+                for(let i = 1; i < lines.length; i++) {
+                    if(lines[i].trim() === '') continue;
+                    const parts = lines[i].split(',');
+                    if(parts.length >= 5) {
+                        wordsToAdd.push({
+                            q: parts[0].trim(),
+                            a1: parts[1].trim(),
+                            a2: parts[2].trim(),
+                            qNote: parts[3].trim(),
+                            aNote: parts[4].trim(),
+                            createdAt: baseTime + i
+                        });
+                    }
+                }
+
+                if(wordsToAdd.length === 0) {
+                    alert("No valid rows found. Ensure CSV has exactly 5 columns with commas.");
+                    e.target.value = '';
+                    return;
+                }
+
+                if(confirm(`Ready to create set "${pendingNewSetName}" and import ${wordsToAdd.length} words?`)) {
+                    try {
+                        const newSetRef = await addDoc(collection(db, "flashcard_sets"), { name: pendingNewSetName, createdAt: Date.now() });
+                        const newSetId = newSetRef.id;
+
+                        wordsToAdd.forEach(w => w.setId = newSetId);
+
+                        const chunks = [];
+                        for(let i=0; i<wordsToAdd.length; i+=400) chunks.push(wordsToAdd.slice(i, i+400));
+
+                        for(const chunk of chunks) {
+                            const batch = writeBatch(db);
+                            chunk.forEach(w => {
+                                batch.set(doc(collection(db, "flashcard_words")), w);
+                            });
+                            await batch.commit();
+                        }
+                        alert("Set created and import complete!");
+                    } catch (error) {
+                        console.error("Error creating set from CSV: ", error);
+                        alert("There was an error importing the CSV. Check the console.");
+                    }
+                }
+                e.target.value = ''; 
+                pendingNewSetName = ""; 
             };
             reader.readAsText(file);
         });
@@ -708,7 +789,7 @@
             }
         });
 
-        // Global Enter Key Listener: Fixed double-firing bug with e.preventDefault()
+        // Global Enter Key Listener
         document.addEventListener('keydown', (e) => {
             if(e.key === 'Enter' && document.getElementById('play-screen').classList.contains('active')) {
                 e.preventDefault(); 
