@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spanish Lessons</title>
+    <style>
+        :root {
+            --bg: #f9fafb; --sidebar: #2c3e50; --text: #333; --accent: #3498db; 
+            --success: #27ae60; --error: #e74c3c; --card-bg: #ffffff;
+        }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; background: var(--bg); color: var(--text); }
+        
+        /* Layout */
+        .sidebar { width: 250px; background: var(--sidebar); color: white; padding: 20px; overflow-y: auto; }
+        .main { flex: 1; padding: 40px; overflow-y: auto; }
+        
+        /* Sidebar Elements */
+        .sidebar h2 { margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 10px;}
+        .lesson-item { padding: 12px; margin: 5px 0; background: rgba(255,255,255,0.05); cursor: pointer; border-radius: 6px; transition: background 0.2s;}
+        .lesson-item:hover { background: rgba(255,255,255,0.15); }
+        .lesson-item.active { background: var(--accent); font-weight: bold; }
+        
+        /* Content Elements */
+        .card { background: var(--card-bg); padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .lesson-title { margin-top: 0; font-size: 2em; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .lesson-body { line-height: 1.6; font-size: 1.1em; }
+        
+        /* Tables (Vocabulary) */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f1f5f9; color: #475569; font-weight: 600; }
+        
+        /* Exercises */
+        .exercise-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee; }
+        .exercise-question { width: 40%; font-weight: 500; }
+        .exercise-input-group { width: 60%; display: flex; align-items: center; gap: 10px; }
+        .exercise-input-group input { flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 4px; font-size: 1em; outline: none; transition: border-color 0.2s;}
+        .exercise-input-group input:focus { border-color: var(--accent); }
+        .feedback { font-weight: bold; font-size: 0.9em; min-width: 150px;}
+        
+        .btn { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 1em; font-weight: bold; margin-top: 15px;}
+        .btn:hover { background: #2980b9; }
+
+        /* Loader */
+        #loader { text-align: center; color: #7f8c8d; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <h2>Lessons</h2>
+        <div id="lessonList">Loading...</div>
+    </nav>
+
+    <main class="main">
+        <div id="welcomeScreen" class="card">
+            <h2>Welcome to Spanish Lessons</h2>
+            <p>Please select a lesson from the menu on the left to begin.</p>
+        </div>
+
+        <div id="lessonContent" style="display: none;">
+            <div class="card">
+                <h1 id="displayTitle" class="lesson-title"></h1>
+                <div id="displayBody" class="lesson-body"></div>
+            </div>
+
+            <div id="vocabContainer"></div>
+            <div id="exerciseContainer"></div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBxKv-xXahSO2TEtwVwXTfU1eJ1ZsaaMAc",
+            authDomain: "tasks-de4d9.firebaseapp.com",
+            databaseURL: "https://tasks-de4d9-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "tasks-de4d9",
+            storageBucket: "tasks-de4d9.firebasestorage.app",
+            messagingSenderId: "908733856196",
+            appId: "1:908733856196:web:b8d268a692a0e079be4c91"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // Authenticate anonymously immediately
+        signInAnonymously(auth).then(() => {
+            loadSidebarLessons();
+        }).catch(e => console.error("Auth failed:", e));
+
+        // --- 1. Load Sidebar ---
+        async function loadSidebarLessons() {
+            const listEl = document.getElementById('lessonList');
+            listEl.innerHTML = '';
+            try {
+                const snap = await getDocs(collection(db, "lessons"));
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const div = document.createElement('div');
+                    div.className = 'lesson-item';
+                    div.innerText = data.title;
+                    div.onclick = () => {
+                        // UI Active state
+                        document.querySelectorAll('.lesson-item').forEach(el => el.classList.remove('active'));
+                        div.classList.add('active');
+                        // Load Content
+                        renderLesson(docSnap.id, data);
+                    };
+                    listEl.appendChild(div);
+                });
+            } catch (error) {
+                listEl.innerHTML = "Error loading lessons.";
+            }
+        }
+
+        // --- 2. Render Main Lesson Content ---
+        function renderLesson(lessonId, lessonData) {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('lessonContent').style.display = 'block';
+            
+            document.getElementById('displayTitle').innerText = lessonData.title;
+            // The Rich Text HTML from Quill is safely injected here
+            document.getElementById('displayBody').innerHTML = lessonData.bodyHTML || ''; 
+            
+            loadResources(lessonId);
+        }
+
+        // --- 3. Fetch and Render Resources (Vocab & Exercises) ---
+        async function loadResources(lessonId) {
+            const vContainer = document.getElementById('vocabContainer');
+            const eContainer = document.getElementById('exerciseContainer');
+            vContainer.innerHTML = '<div id="loader">Loading resources...</div>';
+            eContainer.innerHTML = '';
+
+            try {
+                // Fetch Vocabularies
+                const vQuery = query(collection(db, "vocabSets"), where("lessonId", "==", lessonId));
+                const vSnap = await getDocs(vQuery);
+                vContainer.innerHTML = ''; 
+                vSnap.forEach(doc => renderVocabTable(doc.data()));
+
+                // Fetch Exercises
+                const eQuery = query(collection(db, "exerciseSets"), where("lessonId", "==", lessonId));
+                const eSnap = await getDocs(eQuery);
+                eSnap.forEach(doc => renderExerciseSet(doc.id, doc.data()));
+
+            } catch (error) {
+                vContainer.innerHTML = "Error loading resources.";
+                console.error(error);
+            }
+        }
+
+        // --- 4. Build Vocabulary UI ---
+        function renderVocabTable(data) {
+            if (!data.items || data.items.length === 0) return;
+            
+            let html = `
+            <div class="card">
+                <h2>${data.title}</h2>
+                <table>
+                    <thead><tr><th>English</th><th>Spanish</th><th>Notes</th></tr></thead>
+                    <tbody>
+            `;
+            
+            data.items.forEach(item => {
+                const spanishStr = item.spanish2 ? `${item.spanish1} / ${item.spanish2}` : item.spanish1;
+                const noteStr = (item.qNote || item.aNote) ? `${item.qNote} ${item.aNote}` : '';
+                html += `<tr><td>${item.english}</td><td><strong>${spanishStr}</strong></td><td><small>${noteStr}</small></td></tr>`;
+            });
+            
+            html += `</tbody></table></div>`;
+            document.getElementById('vocabContainer').innerHTML += html;
+        }
+
+        // --- 5. Build Interactive Exercises UI ---
+        function renderExerciseSet(setId, data) {
+            if (!data.items || data.items.length === 0) return;
+
+            let html = `
+            <div class="card">
+                <h2>${data.title}</h2>
+                <div id="form-${setId}">
+            `;
+
+            data.items.forEach((item, index) => {
+                // We store the correct answer directly in a 'data-answer' attribute for instant checking
+                html += `
+                <div class="exercise-row">
+                    <div class="exercise-question">${item.question}</div>
+                    <div class="exercise-input-group">
+                        <input type="text" class="student-input-${setId}" data-answer="${item.answer}" placeholder="Type Spanish here...">
+                        <span class="feedback" id="feedback-${setId}-${index}"></span>
+                    </div>
+                </div>`;
+            });
+
+            html += `
+                <button class="btn" onclick="window.checkAnswers('${setId}')">Check Answers</button>
+                </div>
+            </div>`;
+            
+            document.getElementById('exerciseContainer').innerHTML += html;
+        }
+
+        // --- 6. Grading Logic ---
+        window.checkAnswers = (setId) => {
+            const inputs = document.querySelectorAll(`.student-input-${setId}`);
+            
+            inputs.forEach((input, index) => {
+                // Clean the text: lower case, remove extra spaces, ignore punctuation for forgiving grading
+                const cleanText = (text) => text.toLowerCase().trim().replace(/[.,!¡?¿]/g, "");
+                
+                const studentAnswer = cleanText(input.value);
+                const correctAnswer = cleanText(input.getAttribute('data-answer'));
+                const feedbackSpan = document.getElementById(`feedback-${setId}-${index}`);
+
+                if (studentAnswer === correctAnswer) {
+                    input.style.borderColor = "var(--success)";
+                    input.style.backgroundColor = "#f0fdf4";
+                    feedbackSpan.style.color = "var(--success)";
+                    feedbackSpan.innerHTML = "✅ Correct";
+                } else {
+                    input.style.borderColor = "var(--error)";
+                    input.style.backgroundColor = "#fef2f2";
+                    feedbackSpan.style.color = "var(--error)";
+                    feedbackSpan.innerHTML = `❌ Correct: <strong>${input.getAttribute('data-answer')}</strong>`;
+                }
+            });
+        };
+    </script>
+</body>
+</html>
