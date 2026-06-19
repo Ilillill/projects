@@ -7,24 +7,32 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <style>
         :root {
-            --bg: #f4f4f9; --sidebar: #2c3e50; --text: #333; --accent: #27ae60;
+            --bg: #f4f4f9; --sidebar: #2c3e50; --text: #333; --accent: #27ae60; --blue: #3498db; --red: #e74c3c;
         }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; background: var(--bg); }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; background: var(--bg); color: var(--text); }
         
-        /* Layout */
         .sidebar { width: 250px; background: var(--sidebar); color: white; padding: 20px; overflow-y: auto; }
         .main { flex: 1; padding: 30px; overflow-y: auto; }
         
-        /* Elements */
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input[type="text"], textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .btn { background: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
-        .btn-danger { background: #e74c3c; }
-        .lesson-item { padding: 10px; margin: 5px 0; background: rgba(255,255,255,0.1); cursor: pointer; border-radius: 4px; display: flex; justify-content: space-between;}
-        .lesson-item:hover { background: rgba(255,255,255,0.2); }
+        .sub-card { background: #fafafa; padding: 15px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 15px; }
         
-        /* Quill Editor Container */
+        input[type="text"], textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        
+        .btn { background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;}
+        .btn-blue { background: var(--blue); }
+        .btn-danger { background: var(--red); }
+        .btn-small { padding: 4px 8px; font-size: 12px; }
+        
+        .lesson-item { padding: 10px; margin: 5px 0; background: rgba(255,255,255,0.1); cursor: pointer; border-radius: 4px; }
+        .lesson-item:hover { background: rgba(255,255,255,0.2); }
+        .set-item { display: flex; justify-content: space-between; padding: 10px; background: white; border: 1px solid #eee; margin-bottom: 5px; border-radius: 4px;}
+        
         #editor-container { height: 200px; margin-bottom: 20px; background: white; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 5px; text-align: left; }
+        td input { margin: 0; }
     </style>
 </head>
 <body>
@@ -32,38 +40,83 @@
     <div class="sidebar">
         <h2>Spanish Lessons</h2>
         <button class="btn" id="btnNewLesson" style="width: 100%; margin-bottom: 15px;">+ Create New Lesson</button>
-        <div id="lessonList">
-            <div class="lesson-item">Loading...</div>
-        </div>
+        <div id="lessonList">Loading...</div>
     </div>
 
     <div class="main">
+        
         <div class="card" id="editorCard" style="display: none;">
             <h2 id="formTitle">Edit Lesson</h2>
-            
             <label>Lesson Title:</label>
             <input type="text" id="lessonTitle" placeholder="e.g., Lesson 1: El Reino Animal">
-            
             <label>Teacher's Comments (Private Notes):</label>
-            <textarea id="teacherComments" rows="3" placeholder="Notes regarding this lesson's progress or student focus areas..."></textarea>
-
+            <textarea id="teacherComments" rows="2"></textarea>
             <label>Main Lesson Body:</label>
             <div id="editor-container"></div>
 
             <div style="margin-top: 20px; display: flex; gap: 10px;">
-                <button class="btn" id="btnSaveLesson">Save Lesson</button>
+                <button class="btn btn-blue" id="btnSaveLesson">Save Lesson</button>
                 <button class="btn btn-danger" id="btnDeleteLesson">Delete Lesson</button>
             </div>
+        </div>
+
+        <div id="resourcesContainer" style="display: none;">
+            <hr style="border: 1px solid #ddd; margin: 30px 0;">
+            <h2>Associated Resources</h2>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Vocabulary Sets</h3>
+                    <button class="btn" onclick="openVocabEditor(null, null)">+ Add Vocab Set</button>
+                </div>
+                <div id="vocabSetsList"></div>
+
+                <div id="vocabEditor" class="sub-card" style="display: none; border-left: 4px solid var(--accent);">
+                    <h4>Edit Vocabulary Set</h4>
+                    <input type="text" id="vocabSetTitle" placeholder="Set Title (e.g., Nouns - Animals)">
+                    <table>
+                        <thead><tr><th>English</th><th>Spanish 1</th><th>Spanish 2</th><th>Q. Note</th><th>A. Note</th><th></th></tr></thead>
+                        <tbody id="vocabTableBody"></tbody>
+                    </table>
+                    <div style="margin-top: 10px; display: flex; gap: 10px;">
+                        <button class="btn btn-small" onclick="addVocabRow()">+ Add Row</button>
+                        <button class="btn btn-blue btn-small" onclick="saveVocabSet()">Save Set</button>
+                        <button class="btn btn-small" style="background:#7f8c8d;" onclick="document.getElementById('vocabEditor').style.display='none'">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Exercise Sets</h3>
+                    <button class="btn" onclick="openExerciseEditor(null, null)">+ Add Exercise Set</button>
+                </div>
+                <div id="exerciseSetsList"></div>
+
+                <div id="exerciseEditor" class="sub-card" style="display: none; border-left: 4px solid var(--accent);">
+                    <h4>Edit Exercise Set</h4>
+                    <input type="text" id="exerciseSetTitle" placeholder="Set Title (e.g., Translation Practice)">
+                    <table>
+                        <thead><tr><th width="45%">Question (English)</th><th width="45%">Answer (Spanish)</th><th></th></tr></thead>
+                        <tbody id="exerciseTableBody"></tbody>
+                    </table>
+                    <div style="margin-top: 10px; display: flex; gap: 10px;">
+                        <button class="btn btn-small" onclick="addExerciseRow()">+ Add Row</button>
+                        <button class="btn btn-blue btn-small" onclick="saveExerciseSet()">Save Set</button>
+                        <button class="btn btn-small" style="background:#7f8c8d;" onclick="document.getElementById('exerciseEditor').style.display='none'">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBxKv-xXahSO2TEtwVwXTfU1eJ1ZsaaMAc",
             authDomain: "tasks-de4d9.firebaseapp.com",
@@ -76,77 +129,213 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        // Initialize Rich Text Editor
-        const quill = new Quill('#editor-container', {
-            theme: 'snow',
-            modules: { toolbar: [ ['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean'] ] }
-        });
+        // Silent Auth
+        signInAnonymously(auth).then(() => loadLessons()).catch(e => console.error("Auth:", e));
 
-        // App State
+        const quill = new Quill('#editor-container', { theme: 'snow', modules: { toolbar: [ ['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean'] ] } });
+
+        // Global State
         let currentLessonId = null;
+        let currentVocabSetId = null;
+        let currentExerciseSetId = null;
 
-        // --- DOM Elements ---
-        const lessonListEl = document.getElementById('lessonList');
-        const editorCard = document.getElementById('editorCard');
-        const titleInput = document.getElementById('lessonTitle');
-        const commentsInput = document.getElementById('teacherComments');
-
-        // --- Functions ---
+        // --- CORE LESSON LOGIC ---
         async function loadLessons() {
-            lessonListEl.innerHTML = '';
-            const querySnapshot = await getDocs(collection(db, "lessons"));
-            querySnapshot.forEach((docSnap) => {
+            const listEl = document.getElementById('lessonList');
+            listEl.innerHTML = '';
+            const snap = await getDocs(collection(db, "lessons"));
+            snap.forEach(docSnap => {
                 const data = docSnap.data();
                 const div = document.createElement('div');
                 div.className = 'lesson-item';
-                div.innerHTML = `<span>${data.title}</span>`;
-                div.onclick = () => openEditor(docSnap.id, data);
-                lessonListEl.appendChild(div);
+                div.innerText = data.title;
+                div.onclick = () => openMainEditor(docSnap.id, data);
+                listEl.appendChild(div);
             });
         }
 
-        function openEditor(id, data) {
+        function openMainEditor(id, data) {
             currentLessonId = id;
-            editorCard.style.display = 'block';
-            titleInput.value = data ? data.title : '';
-            commentsInput.value = data ? data.teacherComments : '';
-            quill.root.innerHTML = data ? data.bodyHTML : ''; // Load HTML into editor
+            document.getElementById('editorCard').style.display = 'block';
+            document.getElementById('lessonTitle').value = data ? data.title : '';
+            document.getElementById('teacherComments').value = data ? data.teacherComments : '';
+            quill.root.innerHTML = data ? data.bodyHTML : ''; 
             
             document.getElementById('formTitle').innerText = id ? "Edit Lesson" : "New Lesson";
             document.getElementById('btnDeleteLesson').style.display = id ? 'block' : 'none';
+            
+            // Toggle Resources visibility based on if lesson exists
+            const resContainer = document.getElementById('resourcesContainer');
+            if (id) {
+                resContainer.style.display = 'block';
+                loadResourceSets();
+            } else {
+                resContainer.style.display = 'none';
+            }
         }
 
-        // --- Event Listeners ---
-        document.getElementById('btnNewLesson').onclick = () => openEditor(null, null);
+        document.getElementById('btnNewLesson').onclick = () => openMainEditor(null, null);
 
         document.getElementById('btnSaveLesson').onclick = async () => {
-            const lessonData = {
-                title: titleInput.value,
-                teacherComments: commentsInput.value,
-                bodyHTML: quill.root.innerHTML // Save the formatted HTML
-            };
-
+            const data = { title: document.getElementById('lessonTitle').value || "Untitled", teacherComments: document.getElementById('teacherComments').value, bodyHTML: quill.root.innerHTML };
             if (currentLessonId) {
-                await updateDoc(doc(db, "lessons", currentLessonId), lessonData);
+                await updateDoc(doc(db, "lessons", currentLessonId), data);
                 alert("Lesson Updated!");
             } else {
-                await addDoc(collection(db, "lessons"), lessonData);
-                alert("Lesson Created!");
+                const docRef = await addDoc(collection(db, "lessons"), data);
+                currentLessonId = docRef.id;
+                document.getElementById('resourcesContainer').style.display = 'block'; // Unlock resources!
+                alert("Lesson Created! You can now add vocabulary and exercises below.");
             }
             loadLessons();
         };
 
         document.getElementById('btnDeleteLesson').onclick = async () => {
-            if(confirm("Are you sure you want to delete this lesson?")) {
+            if(confirm("Delete this lesson? This will not auto-delete associated sets yet.")) {
                 await deleteDoc(doc(db, "lessons", currentLessonId));
-                editorCard.style.display = 'none';
+                document.getElementById('editorCard').style.display = 'none';
+                document.getElementById('resourcesContainer').style.display = 'none';
                 loadLessons();
             }
         };
 
-        // Init
-        loadLessons();
+        // --- RESOURCES LOGIC ---
+        async function loadResourceSets() {
+            // Load Vocab Sets
+            const vList = document.getElementById('vocabSetsList');
+            vList.innerHTML = '';
+            const vQuery = query(collection(db, "vocabSets"), where("lessonId", "==", currentLessonId));
+            const vSnap = await getDocs(vQuery);
+            vSnap.forEach(d => {
+                const data = d.data();
+                vList.innerHTML += `<div class="set-item">
+                    <span><strong>${data.title}</strong> (${data.items.length} words)</span>
+                    <div>
+                        <button class="btn btn-small btn-blue" onclick='window.editVocabSet("${d.id}", ${JSON.stringify(data).replace(/'/g, "&#39;")})'>Edit</button>
+                        <button class="btn btn-small btn-danger" onclick='window.deleteSet("vocabSets", "${d.id}")'>Del</button>
+                    </div>
+                </div>`;
+            });
+
+            // Load Exercise Sets
+            const eList = document.getElementById('exerciseSetsList');
+            eList.innerHTML = '';
+            const eQuery = query(collection(db, "exerciseSets"), where("lessonId", "==", currentLessonId));
+            const eSnap = await getDocs(eQuery);
+            eSnap.forEach(d => {
+                const data = d.data();
+                eList.innerHTML += `<div class="set-item">
+                    <span><strong>${data.title}</strong> (${data.items.length} exercises)</span>
+                    <div>
+                        <button class="btn btn-small btn-blue" onclick='window.editExerciseSet("${d.id}", ${JSON.stringify(data).replace(/'/g, "&#39;")})'>Edit</button>
+                        <button class="btn btn-small btn-danger" onclick='window.deleteSet("exerciseSets", "${d.id}")'>Del</button>
+                    </div>
+                </div>`;
+            });
+        }
+
+        window.deleteSet = async (collectionName, id) => {
+            if(confirm("Delete this set forever?")) {
+                await deleteDoc(doc(db, collectionName, id));
+                loadResourceSets();
+            }
+        };
+
+        // --- VOCABULARY CRUD ---
+        window.openVocabEditor = (id, data) => {
+            currentVocabSetId = id;
+            document.getElementById('vocabEditor').style.display = 'block';
+            document.getElementById('vocabSetTitle').value = data ? data.title : '';
+            const tbody = document.getElementById('vocabTableBody');
+            tbody.innerHTML = '';
+            if (data && data.items) {
+                data.items.forEach(item => window.addVocabRow(item));
+            } else {
+                window.addVocabRow(); // Start with one empty row
+            }
+        };
+
+        window.addVocabRow = (item = {}) => {
+            const tr = document.createElement('tr');
+            tr.className = 'v-row';
+            tr.innerHTML = `
+                <td><input type="text" class="v-eng" value="${item.english || ''}"></td>
+                <td><input type="text" class="v-sp1" value="${item.spanish1 || ''}"></td>
+                <td><input type="text" class="v-sp2" value="${item.spanish2 || ''}"></td>
+                <td><input type="text" class="v-qn" value="${item.qNote || ''}"></td>
+                <td><input type="text" class="v-an" value="${item.aNote || ''}"></td>
+                <td><button class="btn btn-danger btn-small" onclick="this.closest('tr').remove()">X</button></td>
+            `;
+            document.getElementById('vocabTableBody').appendChild(tr);
+        };
+
+        window.saveVocabSet = async () => {
+            const title = document.getElementById('vocabSetTitle').value || "Untitled Vocab Set";
+            const rows = document.querySelectorAll('.v-row');
+            const items = Array.from(rows).map(row => ({
+                english: row.querySelector('.v-eng').value,
+                spanish1: row.querySelector('.v-sp1').value,
+                spanish2: row.querySelector('.v-sp2').value,
+                qNote: row.querySelector('.v-qn').value,
+                aNote: row.querySelector('.v-an').value
+            })).filter(i => i.english !== ""); // Filter out completely empty rows
+
+            const data = { lessonId: currentLessonId, title: title, items: items };
+
+            if (currentVocabSetId) {
+                await updateDoc(doc(db, "vocabSets", currentVocabSetId), data);
+            } else {
+                await addDoc(collection(db, "vocabSets"), data);
+            }
+            document.getElementById('vocabEditor').style.display = 'none';
+            loadResourceSets();
+        };
+
+        // --- EXERCISE CRUD ---
+        window.openExerciseEditor = (id, data) => {
+            currentExerciseSetId = id;
+            document.getElementById('exerciseEditor').style.display = 'block';
+            document.getElementById('exerciseSetTitle').value = data ? data.title : '';
+            const tbody = document.getElementById('exerciseTableBody');
+            tbody.innerHTML = '';
+            if (data && data.items) {
+                data.items.forEach(item => window.addExerciseRow(item));
+            } else {
+                window.addExerciseRow();
+            }
+        };
+
+        window.addExerciseRow = (item = {}) => {
+            const tr = document.createElement('tr');
+            tr.className = 'e-row';
+            tr.innerHTML = `
+                <td><input type="text" class="e-q" value="${item.question || ''}"></td>
+                <td><input type="text" class="e-a" value="${item.answer || ''}"></td>
+                <td><button class="btn btn-danger btn-small" onclick="this.closest('tr').remove()">X</button></td>
+            `;
+            document.getElementById('exerciseTableBody').appendChild(tr);
+        };
+
+        window.saveExerciseSet = async () => {
+            const title = document.getElementById('exerciseSetTitle').value || "Untitled Exercise Set";
+            const rows = document.querySelectorAll('.e-row');
+            const items = Array.from(rows).map(row => ({
+                question: row.querySelector('.e-q').value,
+                answer: row.querySelector('.e-a').value
+            })).filter(i => i.question !== "");
+
+            const data = { lessonId: currentLessonId, title: title, items: items };
+
+            if (currentExerciseSetId) {
+                await updateDoc(doc(db, "exerciseSets", currentExerciseSetId), data);
+            } else {
+                await addDoc(collection(db, "exerciseSets"), data);
+            }
+            document.getElementById('exerciseEditor').style.display = 'none';
+            loadResourceSets();
+        };
     </script>
 </body>
 </html>
