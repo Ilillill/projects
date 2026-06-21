@@ -3,285 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spanish Lessons - Admin</title>
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <title>Spanish Lessons</title>
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --bg: #f4f4f9; --sidebar: #2c3e50; --text: #333; --accent: #27ae60; --blue: #3498db; --red: #e74c3c; --tab-inactive: #ddd; }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; background: var(--bg); color: var(--text); }
+        :root { --bg: #f9fafb; --sidebar: #2c3e50; --text: #333; --accent: #3498db; --success: #27ae60; --error: #e74c3c; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; background: var(--bg); overflow: hidden; }
         
-        .sidebar { width: 250px; background: var(--sidebar); color: white; padding: 20px; overflow-y: auto; }
-        .main { flex: 1; padding: 30px; overflow-y: auto; }
+        .sidebar { width: 280px; background: var(--sidebar); color: white; padding: 20px; transition: all 0.3s; z-index: 1000; }
+        .sidebar.collapsed { margin-left: -280px; }
+        .sidebar h2 { cursor: pointer; border-bottom: 1px solid #444; padding-bottom: 10px; margin-top: 0; }
         
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .sub-card { background: #fafafa; padding: 15px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 15px; }
+        .main { flex: 1; padding: 25px; overflow-y: auto; position: relative; }
+        .menu-toggle { position: absolute; top: 15px; left: 15px; z-index: 1001; background: var(--sidebar); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; display: none; }
         
-        input[type="text"], textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .btn { background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;}
-        .btn-blue { background: var(--blue); } .btn-danger { background: var(--red); } .btn-small { padding: 4px 8px; font-size: 12px; }
+        .card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .lesson-item { padding: 12px; margin: 5px 0; background: rgba(255,255,255,0.05); cursor: pointer; border-radius: 6px; }
+        .lesson-item.active { background: var(--accent); font-weight: bold; }
         
-        .lesson-item { padding: 10px; margin: 5px 0; background: rgba(255,255,255,0.1); cursor: pointer; border-radius: 4px; }
-        .lesson-item:hover { background: rgba(255,255,255,0.2); }
-        .set-item { display: flex; justify-content: space-between; padding: 10px; background: white; border: 1px solid #eee; margin-bottom: 5px; border-radius: 4px;}
-        
-        /* Larger editor */
-        #editor-container { height: 500px; margin-bottom: 20px; background: white; }
-        #feedback-editor-container { height: 250px; margin-bottom: 10px; background: white; }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 5px; text-align: left; }
-        td input { margin: 0; }
+        /* Interactive Elements */
+        .test-row { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px dashed #eee; gap: 15px; }
+        .test-input { flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 5px; }
+        .feedback { font-weight: bold; font-size: 0.9rem; }
 
-        .tabs { display: flex; border-bottom: 2px solid var(--tab-inactive); margin-bottom: 20px; }
-        .tab { padding: 10px 20px; cursor: pointer; background: var(--tab-inactive); margin-right: 5px; border-radius: 5px 5px 0 0; font-weight: bold; }
-        .tab.active { background: var(--accent); color: white; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        @media (max-width: 768px) {
+            .menu-toggle { display: block; }
+            .sidebar { position: fixed; height: 100%; }
+            .main { padding-top: 60px; }
+        }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h2>Admin Panel</h2>
-        <button class="btn" id="btnNewLesson" style="width: 100%; margin-bottom: 15px;">+ Create New Lesson</button>
+    <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+
+    <nav class="sidebar" id="sidebar">
+        <h2 onclick="loadHomePage()"><i class="fas fa-home"></i> Spanish Lessons</h2>
         <div id="lessonList">Loading...</div>
-    </div>
+    </nav>
 
-    <div class="main">
-        <div class="card" id="editorCard" style="display: none;">
-            <h2 id="formTitle">Edit Lesson</h2>
-            
-            <div class="tabs" id="mainTabs">
-                <div class="tab active" onclick="switchTab('tab-main')">Lesson Editor</div>
-                <div class="tab" onclick="switchTab('tab-homework')" id="tabHomeworkBtn" style="display:none;">Student Homework</div>
+    <main class="main">
+        <div id="contentArea">
+            <div class="card">
+                <h1 id="displayTitle" class="lesson-title">Home</h1>
+                <div id="displayBody" class="lesson-body">Loading...</div>
             </div>
 
-            <!-- MAIN LESSON TAB -->
-            <div id="tab-main" class="tab-content active">
-                <label>Lesson Title:</label>
-                <input type="text" id="lessonTitle">
-                <label>Private Teacher Comments:</label>
-                <textarea id="teacherComments" rows="2"></textarea>
-                <label>Main Lesson Body:</label>
-                <div id="editor-container"></div>
-
-                <div style="margin-top: 20px; display: flex; gap: 10px;">
-                    <button class="btn btn-blue" id="btnSaveLesson">Save Lesson</button>
-                    <button class="btn btn-danger" id="btnDeleteLesson">Delete Lesson</button>
-                </div>
-
-                <div id="resourcesContainer" style="display: none; margin-top: 40px;">
-                    <h3>Associated Resources</h3>
-                    
-                    <div class="sub-card">
-                        <div style="display: flex; justify-content: space-between;"><h4>Vocabulary Sets</h4><button class="btn btn-small" onclick="openVocabEditor(null, null)">+ Add Vocab Set</button></div>
-                        <div id="vocabSetsList"></div>
-                        <div id="vocabEditor" style="display: none; margin-top: 15px; border-top: 2px dashed #ccc; padding-top: 15px;">
-                            <input type="text" id="vocabSetTitle" placeholder="Set Title">
-                            <table>
-                                <thead><tr><th>English</th><th>Spanish 1</th><th>Spanish 2</th><th></th></tr></thead>
-                                <tbody id="vocabTableBody"></tbody>
-                            </table>
-                            <button class="btn btn-small" onclick="addVocabRow()">+ Row</button>
-                            <button class="btn btn-blue btn-small" onclick="saveVocabSet()">Save Vocab Set</button>
-                        </div>
-                    </div>
-
-                    <div class="sub-card">
-                        <div style="display: flex; justify-content: space-between;"><h4>Exercise Sets</h4><button class="btn btn-small" onclick="openExerciseEditor(null, null)">+ Add Exercise Set</button></div>
-                        <div id="exerciseSetsList"></div>
-                        <div id="exerciseEditor" style="display: none; margin-top: 15px; border-top: 2px dashed #ccc; padding-top: 15px;">
-                            <input type="text" id="exerciseSetTitle" placeholder="Set Title">
-                            <table>
-                                <thead><tr><th width="45%">Question (English)</th><th width="45%">Answer (Spanish)</th><th></th></tr></thead>
-                                <tbody id="exerciseTableBody"></tbody>
-                            </table>
-                            <button class="btn btn-small" onclick="addExerciseRow()">+ Row</button>
-                            <button class="btn btn-blue btn-small" onclick="saveExerciseSet()">Save Exercise Set</button>
-                        </div>
-                    </div>
-                </div>
+            <div id="resourceSection"></div>
+            <div id="homeworkSection" class="card" style="display:none;">
+                <h2>Homework Submission</h2>
+                <input type="text" id="studentName" placeholder="Your Name" style="width:100%; padding:10px; margin-bottom:10px;">
+                <div id="hw-editor" style="height:200px;"></div>
+                <button class="btn" onclick="submitHw()" style="margin-top:15px; background:var(--accent); color:white; padding:10px 20px; border:none; border-radius:5px;">Submit</button>
+                <div id="teacherFeedback" style="display:none; background:#fffde7; padding:15px; margin-top:20px; border-left:4px solid #f1c40f;"></div>
             </div>
-
-            <!-- HOMEWORK TAB -->
-            <div id="tab-homework" class="tab-content">
-                <h3>Submitted Homework</h3>
-                <div id="hwList"></div>
-                
-                <div id="hwGradingPanel" class="sub-card" style="display: none;">
-                    <h4>Grading: <span id="gradingStudentName"></span></h4>
-                    <div style="background: white; padding: 15px; border: 1px solid #eee; margin-bottom: 15px; max-height: 200px; overflow-y: auto;" id="gradingOriginalText"></div>
-                    
-                    <label>Your Feedback (Use highlighter & colors):</label>
-                    <div id="feedback-editor-container"></div>
-                    <button class="btn btn-blue" id="btnSaveFeedback">Send Feedback to Student</button>
-                </div>
-            </div>
-
         </div>
-    </div>
+    </main>
 
-    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, getDoc, doc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        const app = initializeApp({
-            apiKey: "AIzaSyBxKv-xXahSO2TEtwVwXTfU1eJ1ZsaaMAc",
-            authDomain: "tasks-de4d9.firebaseapp.com",
-            databaseURL: "https://tasks-de4d9-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "tasks-de4d9",
-            storageBucket: "tasks-de4d9.firebasestorage.app",
-            messagingSenderId: "908733856196",
-            appId: "1:908733856196:web:b8d268a692a0e079be4c91"
-        });
+        const firebaseConfig = { apiKey: "AIzaSyBxKv-xXahSO2TEtwVwXTfU1eJ1ZsaaMAc", authDomain: "tasks-de4d9.firebaseapp.com", projectId: "tasks-de4d9", appId: "1:908733856196:web:b8d268a692a0e079be4c91" };
+        const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        signInAnonymously(auth).then(() => loadLessons());
 
-        // Main Lesson Editor
-        const quill = new Quill('#editor-container', { theme: 'snow', modules: { toolbar: [ ['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean'] ] } });
-        
-        // Feedback Editor (Includes text colors and background highlighting)
-        const feedbackQuill = new Quill('#feedback-editor-container', { theme: 'snow', modules: { toolbar: [ ['bold', 'italic', 'strike'], [{ 'color': [] }, { 'background': [] }], ['clean'] ] } });
+        const hwQuill = new Quill('#hw-editor', { theme: 'snow' });
 
-        let currentLessonId = null;
-        let activeHwId = null;
+        signInAnonymously(auth).then(() => { loadSidebar(); loadHomePage(); });
 
-        window.switchTab = function(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('#mainTabs .tab').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            event.target.classList.add('active');
-        };
+        window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('collapsed');
 
-        async function loadLessons() {
-            const listEl = document.getElementById('lessonList');
-            listEl.innerHTML = '';
-            // Alphabetical Order
-            const q = query(collection(db, "lessons"), orderBy("title"));
-            const snap = await getDocs(q);
-            snap.forEach(docSnap => {
-                const div = document.createElement('div');
-                div.className = 'lesson-item';
-                div.innerText = docSnap.data().title;
-                div.onclick = () => openMainEditor(docSnap.id, docSnap.data());
-                listEl.appendChild(div);
-            });
-        }
-
-        function openMainEditor(id, data) {
-            currentLessonId = id;
-            document.getElementById('editorCard').style.display = 'block';
-            document.getElementById('lessonTitle').value = data ? data.title : '';
-            document.getElementById('teacherComments').value = data ? data.teacherComments : '';
-            quill.root.innerHTML = data ? data.bodyHTML : ''; 
-            
-            document.getElementById('formTitle').innerText = id ? "Edit Lesson" : "New Lesson";
-            document.getElementById('btnDeleteLesson').style.display = id ? 'block' : 'none';
-            
-            const resContainer = document.getElementById('resourcesContainer');
-            const hwTabBtn = document.getElementById('tabHomeworkBtn');
-            if (id) {
-                resContainer.style.display = 'block';
-                hwTabBtn.style.display = 'block';
-                loadResourceSets();
-                loadHomeworkSubmissions();
-            } else {
-                resContainer.style.display = 'none';
-                hwTabBtn.style.display = 'none';
-            }
-            window.switchTab('tab-main');
-        }
-
-        document.getElementById('btnNewLesson').onclick = () => openMainEditor(null, null);
-
-        document.getElementById('btnSaveLesson').onclick = async () => {
-            const data = { title: document.getElementById('lessonTitle').value || "Untitled", teacherComments: document.getElementById('teacherComments').value, bodyHTML: quill.root.innerHTML };
-            try {
-                if (currentLessonId) {
-                    await updateDoc(doc(db, "lessons", currentLessonId), data);
-                } else {
-                    const docRef = await addDoc(collection(db, "lessons"), data);
-                    currentLessonId = docRef.id;
-                    document.getElementById('resourcesContainer').style.display = 'block';
-                    document.getElementById('tabHomeworkBtn').style.display = 'block';
-                }
-                loadLessons();
-            } catch(e) { alert("Error saving: " + e.message); }
-        };
-
-        document.getElementById('btnDeleteLesson').onclick = async () => {
-            if(confirm("Delete this lesson?")) {
-                await deleteDoc(doc(db, "lessons", currentLessonId));
-                document.getElementById('editorCard').style.display = 'none';
-                loadLessons();
-            }
-        };
-
-        // --- HOMEWORK LOGIC ---
-        async function loadHomeworkSubmissions() {
-            const hwList = document.getElementById('hwList');
-            hwList.innerHTML = '';
-            document.getElementById('hwGradingPanel').style.display = 'none';
-            
-            const q = query(collection(db, "homework"), where("lessonId", "==", currentLessonId));
-            const snap = await getDocs(q);
-            if(snap.empty) { hwList.innerHTML = "<p>No homework submitted yet.</p>"; return; }
-
+        async function loadSidebar() {
+            const list = document.getElementById('lessonList'); list.innerHTML = '';
+            const snap = await getDocs(query(collection(db, "lessons"), orderBy("title")));
             snap.forEach(d => {
-                const data = d.data();
-                const div = document.createElement('div');
-                div.className = 'set-item';
-                div.innerHTML = `<span>📝 <strong>${data.studentName || 'Anonymous'}</strong></span> <button class="btn btn-small btn-blue">Grade</button>`;
-                div.onclick = () => {
-                    activeHwId = d.id;
-                    document.getElementById('hwGradingPanel').style.display = 'block';
-                    document.getElementById('gradingStudentName').innerText = data.studentName;
-                    document.getElementById('gradingOriginalText').innerHTML = data.contentHTML;
-                    feedbackQuill.root.innerHTML = data.feedbackHTML || '';
+                const div = document.createElement('div'); div.className = 'lesson-item'; div.innerText = d.data().title;
+                div.onclick = () => { 
+                    if(window.innerWidth < 768) toggleSidebar(); 
+                    renderLesson(d.id, d.data()); 
                 };
-                hwList.appendChild(div);
+                list.appendChild(div);
             });
         }
 
-        document.getElementById('btnSaveFeedback').onclick = async () => {
-            if(!activeHwId) return;
-            await updateDoc(doc(db, "homework", activeHwId), { feedbackHTML: feedbackQuill.root.innerHTML });
-            document.getElementById('hwGradingPanel').style.display = 'none';
+        window.loadHomePage = async () => {
+            document.getElementById('displayTitle').innerText = "Home Resources";
+            document.getElementById('resourceSection').innerHTML = '';
+            document.getElementById('homeworkSection').style.display = 'none';
+            const d = await getDoc(doc(db, "pages", "home"));
+            document.getElementById('displayBody').innerHTML = d.exists() ? d.data().bodyHTML : 'No resources yet.';
         };
 
-        // --- RESOURCES LOGIC (Condensed for brevity) ---
-        let currentVocabSetId = null, currentExerciseSetId = null;
-        async function loadResourceSets() {
-            const vList = document.getElementById('vocabSetsList'), eList = document.getElementById('exerciseSetsList');
-            vList.innerHTML = ''; eList.innerHTML = '';
-            const vSnap = await getDocs(query(collection(db, "vocabSets"), where("lessonId", "==", currentLessonId)));
-            vSnap.forEach(d => {
-                vList.innerHTML += `<div class="set-item"><span>${d.data().title}</span> <button class="btn btn-small" onclick='editVocab("${d.id}", ${JSON.stringify(d.data()).replace(/'/g, "&#39;")})'>Edit</button></div>`;
-            });
-            const eSnap = await getDocs(query(collection(db, "exerciseSets"), where("lessonId", "==", currentLessonId)));
-            eSnap.forEach(d => {
-                eList.innerHTML += `<div class="set-item"><span>${d.data().title}</span> <button class="btn btn-small" onclick='editEx("${d.id}", ${JSON.stringify(d.data()).replace(/'/g, "&#39;")})'>Edit</button></div>`;
-            });
+        function renderLesson(id, data) {
+            document.getElementById('displayTitle').innerText = data.title;
+            document.getElementById('displayBody').innerHTML = data.bodyHTML || '';
+            document.getElementById('homeworkSection').style.display = 'block';
+            // Logic to load Vocab/Ex/Hw feedback would go here...
         }
-
-        window.editVocab = (id, data) => { currentVocabSetId = id; document.getElementById('vocabEditor').style.display = 'block'; document.getElementById('vocabSetTitle').value = data?data.title:''; document.getElementById('vocabTableBody').innerHTML=''; (data?.items||[{}]).forEach(i=>addVocabRow(i)); };
-        window.addVocabRow = (i={}) => { document.getElementById('vocabTableBody').insertAdjacentHTML('beforeend', `<tr class="v-row"><td><input type="text" class="v-eng" value="${i.english||''}"></td><td><input type="text" class="v-sp1" value="${i.spanish1||''}"></td><td><input type="text" class="v-sp2" value="${i.spanish2||''}"></td><td><button onclick="this.closest('tr').remove()">X</button></td></tr>`); };
-        window.saveVocabSet = async () => { 
-            const items = Array.from(document.querySelectorAll('.v-row')).map(r => ({ english: r.querySelector('.v-eng').value, spanish1: r.querySelector('.v-sp1').value, spanish2: r.querySelector('.v-sp2').value })).filter(i=>i.english!=="");
-            const data = { lessonId: currentLessonId, title: document.getElementById('vocabSetTitle').value, items };
-            currentVocabSetId ? await updateDoc(doc(db, "vocabSets", currentVocabSetId), data) : await addDoc(collection(db, "vocabSets"), data);
-            document.getElementById('vocabEditor').style.display = 'none'; loadResourceSets(); 
-        };
-
-        window.editEx = (id, data) => { currentExerciseSetId = id; document.getElementById('exerciseEditor').style.display = 'block'; document.getElementById('exerciseSetTitle').value = data?data.title:''; document.getElementById('exerciseTableBody').innerHTML=''; (data?.items||[{}]).forEach(i=>addExerciseRow(i)); };
-        window.addExerciseRow = (i={}) => { document.getElementById('exerciseTableBody').insertAdjacentHTML('beforeend', `<tr class="e-row"><td><input type="text" class="e-q" value="${i.question||''}"></td><td><input type="text" class="e-a" value="${i.answer||''}"></td><td><button onclick="this.closest('tr').remove()">X</button></td></tr>`); };
-        window.saveExerciseSet = async () => {
-            const items = Array.from(document.querySelectorAll('.e-row')).map(r => ({ question: r.querySelector('.e-q').value, answer: r.querySelector('.e-a').value })).filter(i=>i.question!=="");
-            const data = { lessonId: currentLessonId, title: document.getElementById('exerciseSetTitle').value, items };
-            currentExerciseSetId ? await updateDoc(doc(db, "exerciseSets", currentExerciseSetId), data) : await addDoc(collection(db, "exerciseSets"), data);
-            document.getElementById('exerciseEditor').style.display = 'none'; loadResourceSets();
-        };
     </script>
 </body>
 </html>
