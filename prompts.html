@@ -17,6 +17,8 @@
             --tag-hover: #3f3f46;
             --tag-active: #10b981;
             --border-color: #333;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
         }
 
         body {
@@ -25,7 +27,7 @@
             color: var(--text-color);
             margin: 0;
             padding: 15px;
-            padding-bottom: 250px; /* Extra space for the larger bottom panel */
+            padding-bottom: 250px; 
             line-height: 1.4;
         }
 
@@ -45,42 +47,57 @@
         .header-controls {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 10px;
             flex-wrap: wrap;
         }
 
-        .wotd-box {
-            background-color: var(--card-bg);
-            padding: 5px 10px;
-            border-radius: 6px;
-            border: 1px dashed var(--accent-color);
-            font-size: 0.85rem;
-        }
-
-        .wotd-word {
-            color: var(--accent-hover);
-            font-weight: bold;
-            text-transform: uppercase;
-            cursor: pointer;
-        }
-        
-        /* Instant Heroine Button */
+        .btn-flow { background-color: #10b981; color: white; font-weight: bold; font-size: 1rem; padding: 8px 16px;}
+        .btn-flow:hover { background-color: #059669; }
         .btn-heroine { background-color: #ec4899; color: white; }
         .btn-heroine:hover { background-color: #f472b6; }
-
-        /* Instant Paleo Button */
         .btn-paleo { background-color: #f59e0b; color: white; }
         .btn-paleo:hover { background-color: #fbbf24; }
+        .btn-edit-mode { background-color: var(--warning-color); color: #fff; }
+        .btn-cheatsheet { background-color: #6366f1; color: white; }
+
+        button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 0.8rem;
+        }
 
         .search-bar {
             width: 100%;
-            max-width: 300px;
+            max-width: 250px;
             padding: 6px 10px;
             border-radius: 6px;
             border: 1px solid var(--border-color);
             background-color: var(--card-bg);
             color: #fff;
             font-size: 0.85rem;
+        }
+
+        /* Views */
+        #builder-view, #cheatsheet-view { display: block; }
+        #cheatsheet-view { display: none; }
+
+        /* Cheatsheet Area */
+        .cheatsheet-container {
+            width: 100%;
+            height: 60vh;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            box-sizing: border-box;
+            color: #fff;
+            font-family: monospace;
+            font-size: 1rem;
+            resize: vertical;
         }
 
         /* Macro-Group Styling */
@@ -106,7 +123,7 @@
 
         .builder-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 10px;
         }
 
@@ -115,15 +132,33 @@
             border-radius: 6px;
             border: 1px solid var(--border-color);
             padding: 10px;
+            position: relative;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
         }
 
         .category-title {
             font-size: 0.85rem;
             color: var(--text-muted);
-            margin: 0 0 8px 0;
+            margin: 0;
             text-transform: uppercase;
             font-weight: 600;
         }
+
+        .copy-all-btn {
+            background: none;
+            border: none;
+            color: var(--accent-color);
+            font-size: 0.75rem;
+            cursor: pointer;
+            padding: 0;
+        }
+        .copy-all-btn:hover { text-decoration: underline; }
 
         .tag-container {
             display: flex;
@@ -141,22 +176,55 @@
             user-select: none;
             transition: all 0.15s ease;
             border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .tag:hover { background-color: var(--tag-hover); }
-        .tag.active {
-            background-color: var(--tag-active);
-            color: #fff;
-            border-color: var(--tag-active);
-        }
         .tag.hidden { display: none; }
 
-        /* Complex Output Panel */
+        /* Edit Mode Styles */
+        .edit-controls { display: none; gap: 4px; }
+        body.edit-mode .edit-controls { display: inline-flex; }
+        body.edit-mode .copy-all-btn { display: none; }
+        
+        .icon-btn {
+            background: none;
+            border: none;
+            padding: 0 4px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .icon-btn:hover { color: #fff; }
+        .icon-btn.delete:hover { color: var(--danger-color); }
+
+        .add-tag-btn {
+            background-color: transparent;
+            border: 1px dashed var(--border-color);
+            color: var(--text-muted);
+            width: 100%;
+            margin-top: 8px;
+            padding: 4px;
+            display: none;
+        }
+        body.edit-mode .add-tag-btn { display: block; }
+        .add-tag-btn:hover { border-color: var(--text-color); color: #fff; }
+
+        .add-cat-btn {
+            display: none;
+            margin-top: 10px;
+            background: transparent;
+            border: 1px dashed var(--border-color);
+            color: var(--text-muted);
+        }
+        body.edit-mode .add-cat-btn { display: inline-block; }
+
+        /* Output Panel */
         .output-panel {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            bottom: 0; left: 0; right: 0;
             background-color: #09090b;
             border-top: 1px solid var(--border-color);
             padding: 15px;
@@ -175,102 +243,38 @@
         }
 
         .custom-input-group {
-            display: flex;
-            gap: 5px;
-            flex-grow: 1;
-            max-width: 400px;
+            display: flex; gap: 5px; flex-grow: 1; max-width: 400px;
         }
 
         .custom-input-group input {
-            flex-grow: 1;
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            color: #fff;
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 0.85rem;
+            flex-grow: 1; background-color: var(--card-bg); border: 1px solid var(--border-color);
+            color: #fff; padding: 6px 10px; border-radius: 4px; font-size: 0.85rem;
         }
 
         .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
-
-        button {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 4px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-size: 0.8rem;
-        }
-
-        
         .btn-add { background-color: #4b5563; color: white; }
-        .btn-add:hover { background-color: #6b7280; }
         .btn-chaos { background-color: #ef4444; color: white; }
-        .btn-chaos:hover { background-color: #f87171; }
         .btn-random { background-color: #8b5cf6; color: white; }
-        .btn-random:hover { background-color: #a78bfa; }
         .btn-copy { background-color: var(--accent-color); color: white; }
-        .btn-copy:hover { background-color: var(--accent-hover); }
         .btn-clear { background-color: transparent; color: #9ca3af; border: 1px solid #4b5563; }
-        .btn-clear:hover { background-color: #374151; color: white; }
 
-        /* Draggable Staging Area */
         .staging-area {
-            width: 100%;
-            max-width: 1600px;
-            min-height: 80px;
-            max-height: 120px;
-            overflow-y: auto;
-            margin: 0 auto;
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 10px;
-            box-sizing: border-box;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            align-content: flex-start;
+            width: 100%; max-width: 1600px; min-height: 80px; max-height: 120px;
+            overflow-y: auto; margin: 0 auto; background-color: var(--card-bg);
+            border: 1px solid var(--border-color); border-radius: 6px; padding: 10px;
+            box-sizing: border-box; display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;
         }
 
         .active-tag {
-            background-color: var(--accent-color);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: grab;
-            user-select: none;
-            border: 1px solid transparent;
+            background-color: var(--accent-color); color: white; padding: 4px 8px;
+            border-radius: 4px; font-size: 0.8rem; display: flex; align-items: center;
+            gap: 6px; cursor: grab; user-select: none;
         }
-
-        .active-tag:active { cursor: grabbing; }
-        
-        .active-tag.dragging {
-            opacity: 0.4;
-            border: 1px dashed #fff;
-        }
-
-        .active-tag .remove-btn {
-            background: none;
-            border: none;
-            color: #d1d5db;
-            font-size: 1rem;
-            line-height: 1;
-            padding: 0;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
+        .active-tag.dragging { opacity: 0.4; border: 1px dashed #fff; }
+        .active-tag .remove-btn { background: none; border: none; color: #d1d5db; cursor: pointer; font-weight: bold; }
         .active-tag .remove-btn:hover { color: #fff; }
 
-        /* Hidden textarea for actual clipboard copying */
         #hidden-clipboard { position: absolute; left: -9999px; }
-
     </style>
 </head>
 <body>
@@ -278,405 +282,442 @@
     <header>
         <h1>Ultimate AI Prompt Builder</h1>
         <div class="header-controls">
-            <div class="wotd-box">Word of the Day: <span class="wotd-word" id="wotd" onclick="addWotd()" title="Click to add to prompt">Loading...</span></div>
+            <button class="btn-flow" onclick="window.open('https://labs.google/fx/tools/flow', '_blank')">🚀 Open Google Flow</button>
+            <button class="btn-cheatsheet" onclick="window.toggleCheatsheet()">📝 Cheatsheets</button>
+            <button class="btn-edit-mode" id="edit-toggle-btn" onclick="window.toggleEditMode()">🛠 Edit Mode: OFF</button>
             <input type="text" id="search" class="search-bar" placeholder="Search across all categories...">
         </div>
     </header>
 
-    <div id="main-container"></div>
+    <!-- PROMPT BUILDER VIEW -->
+    <div id="builder-view">
+        <div id="main-container">Loading Database...</div>
+    </div>
 
-    <div class="output-panel">
+    <!-- CHEATSHEET VIEW -->
+    <div id="cheatsheet-view">
+        <h2 class="macro-title"><span style="color:#6366f1">■</span> Cheatsheet Manager</h2>
+        <textarea id="cheatsheet-content" class="cheatsheet-container" placeholder="Write your cheatsheets here..."></textarea>
+        <button class="btn-copy" style="margin-top: 10px;" onclick="window.saveCheatsheet()">Save Cheatsheet</button>
+        <span id="save-status" style="margin-left: 10px; color: var(--tag-active); display: none;">Saved!</span>
+    </div>
+
+    <div class="output-panel" id="output-panel">
         <div class="output-header">
             <div class="custom-input-group">
-                <input type="text" id="custom-input" placeholder="Type custom detail here..." onkeypress="handleEnter(event)">
-                <button class="btn-add" onclick="addCustomText()">Add</button>
+                <input type="text" id="custom-input" placeholder="Type custom detail here..." onkeypress="window.handleEnter(event)">
+                <button class="btn-add" onclick="window.addCustomText()">Add</button>
             </div>
             <div class="btn-group">
-                <button class="btn-copy" onclick="window.open('https://labs.google/fx/tools/flow', '_blank')">Open Google Flow</button>
-                <button class="btn-copy" onclick="window.open('https://docs.google.com/document/d/1gU0-H3SX7xetV8cD-aLJc8YslqrMBtSg5zAfuyViB_0/edit?tab=t.0#heading=h.n30hyuxsfupn', '_blank')">Cheatsheet</button>
-                <button class="btn-heroine" id="btn-heroine-ui" onclick="generateAndCopyHeroine()">👸 Instant Heroine</button>
-                <button class="btn-paleo" id="btn-paleo-ui" onclick="generateAndCopyPaleo()">🦖 Instant Paleo</button>
-                <button class="btn-chaos" onclick="triggerChaos()" title="Randomly select conflicting items">🌪️ Chaos</button>
-                <button class="btn-random" onclick="randomizePrompt()">🎲 Randomize</button>
-                <button class="btn-clear" onclick="clearPrompt()">Clear All</button>
-                <button class="btn-copy" onclick="copyPrompt()">Copy Prompt</button>
+                <button class="btn-heroine" id="btn-heroine-ui" onclick="window.generateAndCopyHeroine()">👸 Instant Heroine</button>
+                <button class="btn-paleo" id="btn-paleo-ui" onclick="window.generateAndCopyPaleo()">🦖 Instant Paleo</button>
+                <button class="btn-chaos" onclick="window.triggerChaos()" title="Randomly select conflicting items">🌪️ Chaos</button>
+                <button class="btn-random" onclick="window.randomizePrompt()">🎲 Randomize</button>
+                <button class="btn-clear" onclick="window.clearPrompt()">Clear All</button>
+                <button class="btn-copy" id="btn-copy-main" onclick="window.copyPrompt()">Copy Prompt</button>
             </div>
         </div>
         <div class="staging-area" id="staging-area"></div>
         <textarea id="hidden-clipboard"></textarea>
     </div>
 
-    <script>
-        // Grouped Data Structure for Macro Visuals
-        const groupedData = {
-    "Core Settings & Styles": {
-        color: "#6366f1", // Indigo
-        categories: {
-            "Common": [
-                "close-up", "macro", "worm's-eye view", "underwater and overwater view", "pristine", "ultra-high-resolution",
-                "hyper realistic", "digital art", "fantasy", "anime", "8k resolution", 
-                "soft golden hour", "god rays", "magical", "mysterious",
-                "Gravity Falls", "Amphibia show", "Owls House", "World of Warcraft", "Lord of the Rings",
-                "Gruncle Stan", "Mabel Pines", "Dipper Pines", "Anne Boonchuy", "Luz Noceda", "Eda Clawthorne",
-                "Jaina Proudmoore", "Arthas Menethil", "Sylvanas Windrunner",
-                "young woman", "frostfire mage", "beautiful", "gorgeous", "very cute", "long hair", "hair blue and orange", "no runes as decorations",
-                "laughing", "smiling", "breathing underwater", "levitating",
-                "Deinonychus", "Allosaurus", "Dilophosaurus", "Dimetrodon", "Gorgonops", "Dunkleosteus",
-                "ancient forest", "frozen tundra", "blizzard and snowstorm", "misty moors", "rolling hills", "floating islands", "deciduous forest", "coniferous forest",
-                "underwater", "beautiful wild beach", "idyllic magical lake", "mysterious magical swamp", "mangrove swamp",
-            ],
-            "Quick Starts & Favourites": [
-                "A beautiful and hyper realistic, full of detail depiction. Background low in detail and blurred out. The character has incredible amount of detail and realism",
-                "fantasy", "frostfire mage", "hyper realistic", "full of detail", "stunning, gorgeous and beautiful", "cute", 
-                "dressed in 2 part swimming suit", "blue and orange hair", "No runes as decorations", "hair is very long", 
-                "Background low in detail and blurred out", "Underwater and overwater view", "she can breath underwater", 
-                "Instead of wearing a swimsuit, few thin water splashes cover her in few places.",
-                "intricate", "storytelling", "8k resolution"
-            ],
-            "Layouts & Perspectives": [
-                "vertical view close-up", "macro photography", "wide angle shot", "fisheye lens", "drone photography", "satellite imagery",
-                "isometric view", "orthographic projection",
-                "dutch angle", "bird's-eye view", "worm's-eye view", "telephoto lens compression", "panorama", "360-degree panoramic view", "ultra-wide angle", "split screen view", "extreme extreme close-up on the eye", "over-the-shoulder shot"
-            ],
-            "Camera & Mediums": [
-                "photograph", 
-                "pristine", "ultra-high-resolution", "advanced natural lighting", "exceptional clarity and macro-level detail",
-                "polaroid", "35mm film", "tintype", "daguerreotype", "cyanotype", "polaroid sx-70", "disposable camera aesthetic",
-                "thermal imaging", "x-ray aesthetic", "mobile phone camera footage", "Expert RAW app photography", "f/1.4 aperture bokeh", "f/22 deep depth of field", "high-speed photography", "1/4000s shutter speed",
-                "detailed sketch", 
-                "oil painting", "watercolor", "acrylic painting", "charcoal drawing", "pastel art", "ink wash", "linocut print", "woodblock print", "fresco", "gouache",
-                "stained glass", "mosaic", "tapestry", "cross-stitch", "embroidery", "ice sculpture", "wood carving", "marble statue", "bronze bust",
-                "3d render", "unreal engine 5 render", "octane render", "blender render", "claymation", "stop motion", "pixel art", "voxel art", "low poly", "ray tracing reflections",
-                "concept art", "matte painting", "storyboard", "comic book panel", "graphic novel page", "manga page", "anime cel", "synthography"
-            ],
-            "Core Art Styles": [
-                "fantasy", "hyper realistic", "digital art", "manga", "anime", "computer graphic", "Gravity Falls style", "Studio Ghibli style", 
-                "Disney renaissance", "Pixar style", "cyberpunk", "steampunk", "dieselpunk", "solarpunk", "biopunk", "gothic", "dark fantasy", 
-                "high fantasy", "low fantasy", "grimdark", "fairy tale", "vaporwave", "synthwave", "outrun", "pop art", "surrealism", 
-                "cubism", "impressionism", "retro 80s", "retro 90s", "y2k aesthetic", "kawaii", "chibi", "mecha", "art nouveau", "art deco", "bauhaus", "minimalist philosophy art", "maximalism", "ukiyo-e woodblock"
-            ],
-            "Lighting & Atmosphere": [
-                "cinematic lighting", "dramatic chiaroscuro", "soft golden hour", "bioluminescent glow", "neon glow", "hard shadows", 
-                "soft diffused light", "volumetric fog", "god rays", "lens flare", "low key lighting", "high key lighting", "rim lighting", 
-                "backlighting", "silhouette", "moody atmosphere", "ethereal lighting", "studio lighting", "natural sunlight", "moonlight", 
-                "starlight", "overcast sky", "stormy lighting", "lightning flashes", "firelight", "candlelight", "glowing runes", "crepuscular rays", "foggy", "misty blue hour", "harsh strobe lighting"
-            ],
-            "Color Palettes & Effects": [
-                "chromatic aberration", "film grain", "vignette", "depth of field", "tilt-shift", "macro bokeh", "motion blur", 
-                "double exposure", "high contrast", "light painting", "long exposure", "glowing embers in the air", "floating dust motes", 
-                "magical sparks", "underwater caustics", "dappled sunlight through leaves", "color grading teal and orange", "monochrome", 
-                "sepia tone", "selective color", "infrared photography", "thermal color palette", "pastel color palette", "neon color palette", "desaturated muted tones", "vibrant high saturation", "duotone"
-            ]
-        }
-    },
-    "Subjects, Characters & Lore": {
-        color: "#a855f7", // Purple
-        categories: {
-            "Lore: Fantasy": [
-                "Gravity Falls", "Amphibia", "The Owl House", "Lord of the Rings", "World of Warcraft", "Off to be the Wizard", "The Fear Saga", "Harry Potter", "Dungeons & Dragons", 
-                 "The Witcher", "Skyrim", "Studio Ghibli films"
-                
-            ],
-            "Lore: Sci-Fi & Video Games": [
-                "Star Wars", "Star Trek", "Marvel Cinematic Universe", "DC Comics", "Matrix", "Blade Runner", "Dune", "Doctor Who", 
-                "Stranger Things", "Cyberpunk 2077", "Halo", "Fallout", "Mass Effect", "Overwatch", "Valorant", "Minecraft", 
-                "Roblox", "Kaiju Alpha", "The Last of Us", "Godzilla universe", "Monsterverse", "Jurassic Park", "Warhammer 40k", "Destiny 2", "Half-Life", "Bioshock", "Monster Hunter"
-            ],
+    <!-- FIREBASE MODULE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, set, get, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-            "Characters: Fantasy Races": [
-                "young woman", "frostfire mage", "elven archer", "dwarven blacksmith", "orc warrior", "goblin rogue", "human paladin", 
-                "tiefling warlock", "dragonborn sorcerer", "vampiric lord", "werewolf alpha", "fairy princess", "dryad guardian", 
-                "mermaid siren", "lich king", "necromancer", "archmage", "spellblade", "valkyrie", "dark knight", "ninja", "samurai", 
-                "alchemist", "centaur scout", "minotaur champion", "harpy", "gorgon", "cyclops"
-            ],
-            "Characters: Sci-Fi & Modern": [
-                "astronaut", "cyborg", "android", "space marine", "alien grey", "time traveler", "hacker", "cyberpunk runner", "mutant", 
-                "superhero", "mad scientist", "robotic dog", "mech pilot", "bounty hunter", "jedi knight", "sith lord", "Mandalorian", 
-                "post-apocalyptic survivor", "zombie", "ghost hunter", "secret agent", "assassin", "detective", "sniper", "deep sea diver", 
-                "archaeologist", "paleontologist", "IT specialist", "software developer", "minimalist practitioner", "archery instructor", "piano player", "noir PI", "cyberpunk street samurai"
-            ],
-            "Characters: Specific Names": [
-                "Jaina Proudmoore", "Arthas Menethil", "Thrall", "Sylvanas Windrunner", "Illidan Stormrage", "Aragorn", "Legolas", 
-                "Gandalf", "Gruncle Stan", "Mabel Pines", "Dipper Pines", "Bill Cipher", "Anne Boonchuy", "Luz Noceda", "Eda Clawthorne", 
-                "Homer Simpson", "Rick Sanchez", "Batman", "Spider-Man", "Goku", "Naruto Uzumaki", "Monkey D. Luffy", "Totoro", "Geralt of Rivia", "Ciri", "Yennefer", "Master Chief", "Kratos", "Aloy", "Samus Aran", "Lara Croft"
-            ],
-            "Subject: Physical Traits": [
-                "stunning gorgeous beautiful", "very cute", "blue and orange hair", "hair is very long", "glowing eyes", "heterochromia", 
-                "scars across the face", "mechanical prosthetic arm", "elven pointed ears", "angelic wings", 
-                "scales on skin", "bioluminescent tattoos", "dreadlocks", "windswept hair", "glowing hair", "floating hair", "freckles", "dimples", "cybernetic implants", "muscular build", "slender elegant build"
-            ],
-            "Subject: Clothing & Apparel": [
-                "dressed in 2 part swimming suit", "dressed in slimming very tight dress, hugs the skin without creases", "dress does not cover the neck shoulders or arms", 
-                "dress is frost and fire decorated", "heavy plate armor", "wizard robes", "cloaked in shadows", "hooded cloak", "royal crown", 
-                "cyberpunk visor", "gas mask", "plague doctor mask", "elegant evening gown", "torn rags", "space suit", "hazmat suit", 
-                "diving suit", "ninja gi", "steampunk corset", "trench coat", "leather jacket", "power armor", "kimono", "yukata", "cheongsam", "suit and tie", "ballgown"
-            ],
-            "Subject: Accessories & Weapons": [
-                "no runes as decorations", "utility belt", "carrying a glowing staff", "holding a massive sword", "dual wielding daggers", "magical staff",
-                "holding a Samick Sage recurve bow", "carrying a heavy tome", "holding a glowing orb", "wearing headphones", "VR headset", "glowing halo", 
-                "floating crystals around the body", "magic wand", "spellbook", "potion bottle", "laser sword", "blaster pistol", "sniper rifle", "katana", "broadsword", "shield", "crossbow"
-            ]
-        }
-    },
-        "Creatures & Nature": {
-        color: "#10b981", // Green
-        categories: {
-            "Dinosaurs: Theropods": [
-                "Deinonychus", "Velociraptor", "Utahraptor", "Microraptor", "Dakotaraptor", "Dromaeosaurus", "Tyrannosaurus rex", "Spinosaurus", 
-                "Allosaurus", "Giganotosaurus", "Carnotaurus", "Dilophosaurus", "Therizinosaurus", "Oviraptor", "Troodon", "Yutyrannus", "Baryonyx", "Carcharodontosaurus", "Ceratosaurus", "Cryolophosaurus", "Megalosaurus", "Monolophosaurus", "Acrocanthosaurus",
-                "Triceratops", "Styracosaurus", "Pachyrhinosaurus", "Protoceratops", "Stegosaurus", "Ankylosaurus", "Borealopelta", 
-                "Pachycephalosaurus", "Iguanodon", "Edmontosaurus", "Parasaurolophus", "Brachiosaurus", "Diplodocus", "Argentinosaurus", "Apatosaurus", "Camarasaurus", "Gallimimus", "Maiasaura", "Muttaburrasaurus", "Ouranosaurus", "Corythosaurus"
-            ],
-            "Prehistoric: Pre-Dinosaurs": [
-                "Dimetrodon", "Edaphosaurus", "Inostrancevia", "Gorgonops", "Scutosaurus", "Cynognathus", "Lystrosaurus", "Diplocaulus", 
-                "Koolasuchus", "Tiktaalik", "Dunkleosteus", "Arthropleura", "Meganeura", "Anomalocaris", "Trilobite", "Postosuchus", "Desmatosuchus", "Eryops", "Prionosuchus", "Placerias", "Smilosuchus"
-            ],
-            "Prehistoric: Marine & Flying": [
-                "Tupandactylus", "Pteranodon", "Quetzalcoatlus", "Dimorphodon", "Tapejara", "Mosasaurus", "Tylosaurus", "Plesiosaurus", 
-                "Elasmosaurus", "Liopleurodon", "Kronosaurus", "Ichthyosaurus", "Ophthalmosaurus", "Archelon", "Rhamphorhynchus", "Pterodactylus", "Tropeognathus", "Shastasaurus"
-            ],
-            "Modern: Reptiles & Exotics": [
-                "Red-tailed boa", "ball python", "rainbow boa", "corn snake", "house snake", "amur rat snake", "king snake", "anaconda", 
-                "crested gecko", "leopard gecko", "gargoyle gecko", "day gecko", "bearded dragon", "chameleon", "komodo dragon", 
-                "tarantula", "jumping spider", "scorpion", "alligator", "crocodile", "monitor lizard", "skink", "tortoise", "sea turtle", "poison dart frog", "axolotl"
-            ],
-            "Modern: Mammals & Birds": [
-                "parrot", "macaw", "cockatoo", "cockatiel", "parakeet", "owl", "eagle", "raven", "gerbil", "hamster", "dog", "golden retriever", 
-                "german shepherd", "husky", "cat", "maine coon", "sphynx", "tiger", "lion", "leopard", "bear", "wolf", "fox", "deer", "horse", "elephant", "giraffe", "rhinoceros", "hippopotamus", "kangaroo", "koala", "penguin", "peacock", "hummingbird"
-            ],
-        }
-    },
-    "Actions & Behaviors": {
-        color: "#ef4444", // Red
-        categories: {
-            "Actions: Melee & Physical Combat": [
-                "swinging a massive sword", "dodging an attack", "parrying a blow", "performing a roundhouse kick", "punching the ground", 
-                "slaying a dragon", "wrestling a monster", "slicing through armor", "grappling an opponent", "blocking with a shield", 
-                "striking with a thunderous blow", "lunging forward", "drawing a sword from a scabbard"
-            ],
-            "Actions: Magic & Spellcasting": [
-                "casting spells", "creating a brilliant crystalline frost shield", "shattering an incoming spell", 
-                "bending water", "teleporting", "turning invisible", "casting a massive fireball", "summoning lightning from the sky", 
-                "engaging in a high-intensity magical duel", "reading from a spellbook", "brewing a potion", "enchanting a weapon", "chanting a spell", "summoning a familiar", "healing a wound", "levitating an object", "opening a portal to another dimension"
-            ],
-            "Actions: Ranged & Tactical Combat": [
-                "hunting", "shooting an arrow", "instinctive archery target shooting", "drawing a bowstring", "throwing a dagger", "firing a laser rifle", 
-                "hacking a mainframe", "assassinating a target from the shadows", "ambushing from the trees", "dropping from the ceiling", 
-                "reloading a weapon", "planting an explosive", "setting a trap", "aiming down sights", "throwing a smoke grenade", "taking cover behind debris", "sniping from a distance"
-            ],
-            "Actions: Movement & Traversal": [
-                "leaping into the air", "calmly walking on top of very calm water", "exploring a mysterious magical swamp", "swimming underwater", 
-                "breathing underwater", "flying at high speed", "levitating", "riding a warhorse", "driving a car", "sailing a boat", 
-                "hiking up a mountain", "climbing a cliff", "sprinting through the forest", "vaulting over an obstacle", "falling gracefully through the sky"
-            ],
-            "Actions: Peaceful & Leisure": [
-                "sitting in shallow water enjoying the beautiful weather", "swimming with beautiful underwater magical creature", "reading a book", 
-                "drinking coffee", "sleeping peacefully", "stargazing", "sunbathing", "collecting seashells", "meditating peacefully", "drinking tea", "eating a meal", "tending to a garden"
-            ],
-            "Actions: Creativity & Arts": [
-                "playing the piano", "playing the guitar", "dancing gracefully", "painting on a canvas", "sketching in a notebook", 
-                "taking a photograph", "singing a song", "writing a letter", "composing sheet music"
-            ],
-            "Actions: Crafting & Work": [
-                "fixing a machine", "forging a sword", "coding a Python program", "writing HTML and CSS", "building a robot", "planting a tree", "picking herbs", 
-                "crafting a tool", "sewing a dress", "cooking over a campfire", "studying for an IT university exam", "clearing out unused items for a minimalist lifestyle"
-            ],
-            "Actions: Expressions & Emotions": [
-                "laughing", "smiling warmly", "crying softly", "yawning", "smirking confidently", "staring down the enemy", 
-                "roaring fiercely", "unleashing a battle cry", "looking determined", "frowning intensely", "yelling in anger", "looking completely surprised", "blushing"
-            ]
-        }
-    },
+        const firebaseConfig = {
+            apiKey: "AIzaSyBxKv-xXahSO2TEtwVwXTfU1eJ1ZsaaMAc",
+            authDomain: "tasks-de4d9.firebaseapp.com",
+            databaseURL: "https://tasks-de4d9-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "tasks-de4d9",
+            storageBucket: "tasks-de4d9.firebasestorage.app",
+            messagingSenderId: "908733856196",
+            appId: "1:908733856196:web:b8d268a692a0e079be4c91"
+        };
 
-"Environment": {
-        color: "#10b981", // Green
-        categories: {
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-            "Wild Nature": [
-                "Wigry Lake", "Muliczne lake", "Cairngorms mountain range", "dense ancient forest", "tropical jungle", "vast desert dunes", 
-                "frozen tundra", "misty moors", "rolling hills", "waterfall cascade", "active volcano", "meteor crater", "giant mushroom forest", 
-                "floating islands", "enchanted woods", "high-intensity magic battlefield", "fairy ring", "sunflower field", "savanna", "taiga", "deciduous forest", "coniferous forest", "mangrove swamp", "glacier"
-            ],
-            "Water Landscapes": [
-                "underwater and overwater view", "underwater view", "submerged in deep dark reedy green water", "beautiful wild beach", 
-                "idyllic magical lake", "mysterious magical swamp", "coral reef", "kelp forest", "deep sea trench", "bioluminescent cave", 
-                "stagnant pond", "geothermal hot spring", "subterranean river", "underground lake", "tidal pools", "river rapids", "stormy ocean", "tsunami", "whirlpool", "geyser", "oasis"
-            ],
-            "Urban & Architecture": [
-                "medieval castle courtyard", "gothic cathedral interior", "bustling marketplace", "tavern interior", "wizard's tower", 
-                "alchemist's laboratory", "blacksmith's forge", "royal throne room", "grand library", "haunted mansion", "modern skyscraper roof", 
-                "cozy coffee shop", "subway station", "gladiatorial arena", "museum exhibit", "greenhouse", "crypt", "abandoned factory", "ancient temple", "pyramid", "colosseum"
-            ],
-            "Sci-Fi & Fantasy": [
-                "cyberpunk city street", "neon-lit alleyway", "futuristic metropolis", "flying car traffic", "dystopian slums", "steampunk factory", 
-                "spaceship bridge", "sci-fi corridor", "alien city", "underwater dome city", "subterranean dwarven city", "laboratory", 
-                "server room", "bunker", "lunar colony", "martian outpost", "space station", "moon base", "Mars colony", "dyson sphere", "crystal cavern", "underground city"
-            ]
-        }
-    },
-
-    "The Universe & Sci-Fi": {
-        color: "#d946ef", // Cosmic Magenta
-        categories: {
-            "Celestial Bodies": [
-                "universe", "black hole", "planet", "star", "exoplanet", 
-                "gas giant", "red dwarf star", "neutron star", "pulsar", "quasar", 
-                "rogue planet", "binary star system", "supermassive black hole", "event horizon", "accretion disk", 
-                "supernova explosion", "white dwarf", "brown dwarf", "asteroid", "comet with a glowing tail", 
-                "meteor shower", "planetary ring system", "solar flare", "coronal mass ejection", "wormhole"
-            ],
-            "Galaxies & Deep Space": [
-                "galaxy", "spiral galaxy", "elliptical galaxy", "irregular galaxy", "stellar nursery", 
-                "emission nebula", "reflection nebula", "dark nebula", "planetary nebula", "cosmic dust clouds", 
-                "galactic core", "local group", "galaxy cluster", "supercluster", "cosmic web", 
-                "deep space void", "milky way", "andromeda galaxy", "pillars of creation", "interstellar medium", 
-                "cosmic microwave background", "dark matter halo", "stellar collision", "gamma-ray burst"
-            ],
-            "Sci-Fi Vehicles & Tech": [
-                "alien spaceship", "alien armada", "futuristic spaceship", "generation ship", "orbital space station", 
-                "dyson sphere", "ringworld", "space elevator", "warp drive trail", "interstellar probe", 
-                "mothership", "star dreadnought", "scout ship", "cargo freighter", "mining vessel", 
-                "terraforming platform", "orbital defense satellite", "solar sail ship", "escape pod", "faster-than-light travel", 
-                "drop pod", "battlecruiser", "starfighter", "derelict ghost ship"
-            ],
-            "Astronauts & Alien Life": [
-                "astronaut", "cosmonaut", "spacewalk (EVA)", "spacesuit with glowing visor", "alien civilization", 
-                "ancient alien ruins", "space colony", "lunar base", "martian settlement", "extraterrestrial being", 
-                "biomechanical alien", "energy being", "galactic emperor", "star fleet commander", "xenobiologist in the field", 
-                "cyborg navigator", "space pirate crew", "asteroid miner", "sentient AI core", "monolithic alien artifact", 
-                "hive mind species", "humanoid alien", "intergalactic ambassador"
-            ]
-        }
-    }
-};
-
+        // State Variables
+        let groupedData = {};
+        let heroineData = {};
+        let paleoData = {};
+        let editMode = false;
+        let isCheatsheetView = false;
+        
         const mainContainer = document.getElementById('main-container');
         const stagingArea = document.getElementById('staging-area');
         const searchInput = document.getElementById('search');
         const hiddenClipboard = document.getElementById('hidden-clipboard');
-        let dragSourceEl = null;
 
-        // Fetch Word of the Day
-        async function fetchWord() {
-            try {
-                const res = await fetch('https://random-word-api.herokuapp.com/word');
-                const data = await res.json();
-                document.getElementById('wotd').textContent = data[0];
-            } catch(e) {
-                document.getElementById('wotd').textContent = "serendipity"; // Fallback
+        // ==========================================
+        // AUTO-POPULATION (HARDCODED DEFAULTS)
+        // ==========================================
+        const defaultGroupedData = {
+            "Core Settings & Styles": {
+                color: "#6366f1",
+                categories: {
+                    "Common": ["close-up", "macro", "worm's-eye view", "underwater and overwater view", "pristine", "ultra-high-resolution", "hyper realistic", "digital art", "fantasy", "anime", "8k resolution", "soft golden hour", "god rays", "magical", "mysterious", "Gravity Falls", "Amphibia show", "Owls House", "World of Warcraft", "Lord of the Rings", "Gruncle Stan", "Mabel Pines", "Dipper Pines", "Anne Boonchuy", "Luz Noceda", "Eda Clawthorne", "Jaina Proudmoore", "Arthas Menethil", "Sylvanas Windrunner", "young woman", "frostfire mage", "beautiful", "gorgeous", "very cute", "long hair", "hair blue and orange", "no runes as decorations", "laughing", "smiling", "breathing underwater", "levitating", "Deinonychus", "Allosaurus", "Dilophosaurus", "Dimetrodon", "Gorgonops", "Dunkleosteus", "ancient forest", "frozen tundra", "blizzard and snowstorm", "misty moors", "rolling hills", "floating islands", "deciduous forest", "coniferous forest", "underwater", "beautiful wild beach", "idyllic magical lake", "mysterious magical swamp", "mangrove swamp"],
+                    "Quick Starts & Favourites": ["A beautiful and hyper realistic, full of detail depiction. Background low in detail and blurred out. The character has incredible amount of detail and realism", "fantasy", "frostfire mage", "hyper realistic", "full of detail", "stunning, gorgeous and beautiful", "cute", "dressed in 2 part swimming suit", "blue and orange hair", "No runes as decorations", "hair is very long", "Background low in detail and blurred out", "Underwater and overwater view", "she can breath underwater", "Instead of wearing a swimsuit, few thin water splashes cover her in few places.", "intricate", "storytelling", "8k resolution"],
+                    "Layouts & Perspectives": ["vertical view close-up", "macro photography", "wide angle shot", "fisheye lens", "drone photography", "satellite imagery", "isometric view", "orthographic projection", "dutch angle", "bird's-eye view", "worm's-eye view", "telephoto lens compression", "panorama", "360-degree panoramic view", "ultra-wide angle", "split screen view", "extreme extreme close-up on the eye", "over-the-shoulder shot"],
+                    "Camera & Mediums": ["photograph", "pristine", "ultra-high-resolution", "advanced natural lighting", "exceptional clarity and macro-level detail", "polaroid", "35mm film", "tintype", "daguerreotype", "cyanotype", "polaroid sx-70", "disposable camera aesthetic", "thermal imaging", "x-ray aesthetic", "mobile phone camera footage", "Expert RAW app photography", "f/1.4 aperture bokeh", "f/22 deep depth of field", "high-speed photography", "1/4000s shutter speed", "detailed sketch", "oil painting", "watercolor", "acrylic painting", "charcoal drawing", "pastel art", "ink wash", "linocut print", "woodblock print", "fresco", "gouache", "stained glass", "mosaic", "tapestry", "cross-stitch", "embroidery", "ice sculpture", "wood carving", "marble statue", "bronze bust", "3d render", "unreal engine 5 render", "octane render", "blender render", "claymation", "stop motion", "pixel art", "voxel art", "low poly", "ray tracing reflections", "concept art", "matte painting", "storyboard", "comic book panel", "graphic novel page", "manga page", "anime cel", "synthography"],
+                    "Core Art Styles": ["fantasy", "hyper realistic", "digital art", "manga", "anime", "computer graphic", "Gravity Falls style", "Studio Ghibli style", "Disney renaissance", "Pixar style", "cyberpunk", "steampunk", "dieselpunk", "solarpunk", "biopunk", "gothic", "dark fantasy", "high fantasy", "low fantasy", "grimdark", "fairy tale", "vaporwave", "synthwave", "outrun", "pop art", "surrealism", "cubism", "impressionism", "retro 80s", "retro 90s", "y2k aesthetic", "kawaii", "chibi", "mecha", "art nouveau", "art deco", "bauhaus", "minimalist philosophy art", "maximalism", "ukiyo-e woodblock"],
+                    "Lighting & Atmosphere": ["cinematic lighting", "dramatic chiaroscuro", "soft golden hour", "bioluminescent glow", "neon glow", "hard shadows", "soft diffused light", "volumetric fog", "god rays", "lens flare", "low key lighting", "high key lighting", "rim lighting", "backlighting", "silhouette", "moody atmosphere", "ethereal lighting", "studio lighting", "natural sunlight", "moonlight", "starlight", "overcast sky", "stormy lighting", "lightning flashes", "firelight", "candlelight", "glowing runes", "crepuscular rays", "foggy", "misty blue hour", "harsh strobe lighting"],
+                    "Color Palettes & Effects": ["chromatic aberration", "film grain", "vignette", "depth of field", "tilt-shift", "macro bokeh", "motion blur", "double exposure", "high contrast", "light painting", "long exposure", "glowing embers in the air", "floating dust motes", "magical sparks", "underwater caustics", "dappled sunlight through leaves", "color grading teal and orange", "monochrome", "sepia tone", "selective color", "infrared photography", "thermal color palette", "pastel color palette", "neon color palette", "desaturated muted tones", "vibrant high saturation", "duotone"]
+                }
+            },
+            "Subjects, Characters & Lore": {
+                color: "#a855f7",
+                categories: {
+                    "Lore: Fantasy": ["Gravity Falls", "Amphibia", "The Owl House", "Lord of the Rings", "World of Warcraft", "Off to be the Wizard", "The Fear Saga", "Harry Potter", "Dungeons & Dragons", "The Witcher", "Skyrim", "Studio Ghibli films"],
+                    "Lore: Sci-Fi & Video Games": ["Star Wars", "Star Trek", "Marvel Cinematic Universe", "DC Comics", "Matrix", "Blade Runner", "Dune", "Doctor Who", "Stranger Things", "Cyberpunk 2077", "Halo", "Fallout", "Mass Effect", "Overwatch", "Valorant", "Minecraft", "Roblox", "Kaiju Alpha", "The Last of Us", "Godzilla universe", "Monsterverse", "Jurassic Park", "Warhammer 40k", "Destiny 2", "Half-Life", "Bioshock", "Monster Hunter"],
+                    "Characters: Fantasy Races": ["young woman", "frostfire mage", "elven archer", "dwarven blacksmith", "orc warrior", "goblin rogue", "human paladin", "tiefling warlock", "dragonborn sorcerer", "vampiric lord", "werewolf alpha", "fairy princess", "dryad guardian", "mermaid siren", "lich king", "necromancer", "archmage", "spellblade", "valkyrie", "dark knight", "ninja", "samurai", "alchemist", "centaur scout", "minotaur champion", "harpy", "gorgon", "cyclops"],
+                    "Characters: Sci-Fi & Modern": ["astronaut", "cyborg", "android", "space marine", "alien grey", "time traveler", "hacker", "cyberpunk runner", "mutant", "superhero", "mad scientist", "robotic dog", "mech pilot", "bounty hunter", "jedi knight", "sith lord", "Mandalorian", "post-apocalyptic survivor", "zombie", "ghost hunter", "secret agent", "assassin", "detective", "sniper", "deep sea diver", "archaeologist", "paleontologist", "IT specialist", "software developer", "minimalist practitioner", "archery instructor", "piano player", "noir PI", "cyberpunk street samurai"],
+                    "Characters: Specific Names": ["Jaina Proudmoore", "Arthas Menethil", "Thrall", "Sylvanas Windrunner", "Illidan Stormrage", "Aragorn", "Legolas", "Gandalf", "Gruncle Stan", "Mabel Pines", "Dipper Pines", "Bill Cipher", "Anne Boonchuy", "Luz Noceda", "Eda Clawthorne", "Homer Simpson", "Rick Sanchez", "Batman", "Spider-Man", "Goku", "Naruto Uzumaki", "Monkey D. Luffy", "Totoro", "Geralt of Rivia", "Ciri", "Yennefer", "Master Chief", "Kratos", "Aloy", "Samus Aran", "Lara Croft"],
+                    "Subject: Physical Traits": ["stunning gorgeous beautiful", "very cute", "blue and orange hair", "hair is very long", "glowing eyes", "heterochromia", "scars across the face", "mechanical prosthetic arm", "elven pointed ears", "angelic wings", "scales on skin", "bioluminescent tattoos", "dreadlocks", "windswept hair", "glowing hair", "floating hair", "freckles", "dimples", "cybernetic implants", "muscular build", "slender elegant build"],
+                    "Subject: Clothing & Apparel": ["dressed in 2 part swimming suit", "dressed in slimming very tight dress, hugs the skin without creases", "dress does not cover the neck shoulders or arms", "dress is frost and fire decorated", "heavy plate armor", "wizard robes", "cloaked in shadows", "hooded cloak", "royal crown", "cyberpunk visor", "gas mask", "plague doctor mask", "elegant evening gown", "torn rags", "space suit", "hazmat suit", "diving suit", "ninja gi", "steampunk corset", "trench coat", "leather jacket", "power armor", "kimono", "yukata", "cheongsam", "suit and tie", "ballgown"],
+                    "Subject: Accessories & Weapons": ["no runes as decorations", "utility belt", "carrying a glowing staff", "holding a massive sword", "dual wielding daggers", "magical staff", "holding a Samick Sage recurve bow", "carrying a heavy tome", "holding a glowing orb", "wearing headphones", "VR headset", "glowing halo", "floating crystals around the body", "magic wand", "spellbook", "potion bottle", "laser sword", "blaster pistol", "sniper rifle", "katana", "broadsword", "shield", "crossbow"]
+                }
+            },
+            "Creatures & Nature": {
+                color: "#10b981",
+                categories: {
+                    "Dinosaurs: Theropods": ["Deinonychus", "Velociraptor", "Utahraptor", "Microraptor", "Dakotaraptor", "Dromaeosaurus", "Tyrannosaurus rex", "Spinosaurus", "Allosaurus", "Giganotosaurus", "Carnotaurus", "Dilophosaurus", "Therizinosaurus", "Oviraptor", "Troodon", "Yutyrannus", "Baryonyx", "Carcharodontosaurus", "Ceratosaurus", "Cryolophosaurus", "Megalosaurus", "Monolophosaurus", "Acrocanthosaurus", "Triceratops", "Styracosaurus", "Pachyrhinosaurus", "Protoceratops", "Stegosaurus", "Ankylosaurus", "Borealopelta", "Pachycephalosaurus", "Iguanodon", "Edmontosaurus", "Parasaurolophus", "Brachiosaurus", "Diplodocus", "Argentinosaurus", "Apatosaurus", "Camarasaurus", "Gallimimus", "Maiasaura", "Muttaburrasaurus", "Ouranosaurus", "Corythosaurus"],
+                    "Prehistoric: Pre-Dinosaurs": ["Dimetrodon", "Edaphosaurus", "Inostrancevia", "Gorgonops", "Scutosaurus", "Cynognathus", "Lystrosaurus", "Diplocaulus", "Koolasuchus", "Tiktaalik", "Dunkleosteus", "Arthropleura", "Meganeura", "Anomalocaris", "Trilobite", "Postosuchus", "Desmatosuchus", "Eryops", "Prionosuchus", "Placerias", "Smilosuchus"],
+                    "Prehistoric: Marine & Flying": ["Tupandactylus", "Pteranodon", "Quetzalcoatlus", "Dimorphodon", "Tapejara", "Mosasaurus", "Tylosaurus", "Plesiosaurus", "Elasmosaurus", "Liopleurodon", "Kronosaurus", "Ichthyosaurus", "Ophthalmosaurus", "Archelon", "Rhamphorhynchus", "Pterodactylus", "Tropeognathus", "Shastasaurus"],
+                    "Modern: Reptiles & Exotics": ["Red-tailed boa", "ball python", "rainbow boa", "corn snake", "house snake", "amur rat snake", "king snake", "anaconda", "crested gecko", "leopard gecko", "gargoyle gecko", "day gecko", "bearded dragon", "chameleon", "komodo dragon", "tarantula", "jumping spider", "scorpion", "alligator", "crocodile", "monitor lizard", "skink", "tortoise", "sea turtle", "poison dart frog", "axolotl"],
+                    "Modern: Mammals & Birds": ["parrot", "macaw", "cockatoo", "cockatiel", "parakeet", "owl", "eagle", "raven", "gerbil", "hamster", "dog", "golden retriever", "german shepherd", "husky", "cat", "maine coon", "sphynx", "tiger", "lion", "leopard", "bear", "wolf", "fox", "deer", "horse", "elephant", "giraffe", "rhinoceros", "hippopotamus", "kangaroo", "koala", "penguin", "peacock", "hummingbird"]
+                }
+            },
+            "Actions & Behaviors": {
+                color: "#ef4444",
+                categories: {
+                    "Actions: Melee & Physical Combat": ["swinging a massive sword", "dodging an attack", "parrying a blow", "performing a roundhouse kick", "punching the ground", "slaying a dragon", "wrestling a monster", "slicing through armor", "grappling an opponent", "blocking with a shield", "striking with a thunderous blow", "lunging forward", "drawing a sword from a scabbard"],
+                    "Actions: Magic & Spellcasting": ["casting spells", "creating a brilliant crystalline frost shield", "shattering an incoming spell", "bending water", "teleporting", "turning invisible", "casting a massive fireball", "summoning lightning from the sky", "engaging in a high-intensity magical duel", "reading from a spellbook", "brewing a potion", "enchanting a weapon", "chanting a spell", "summoning a familiar", "healing a wound", "levitating an object", "opening a portal to another dimension"],
+                    "Actions: Ranged & Tactical Combat": ["hunting", "shooting an arrow", "instinctive archery target shooting", "drawing a bowstring", "throwing a dagger", "firing a laser rifle", "hacking a mainframe", "assassinating a target from the shadows", "ambushing from the trees", "dropping from the ceiling", "reloading a weapon", "planting an explosive", "setting a trap", "aiming down sights", "throwing a smoke grenade", "taking cover behind debris", "sniping from a distance"],
+                    "Actions: Movement & Traversal": ["leaping into the air", "calmly walking on top of very calm water", "exploring a mysterious magical swamp", "swimming underwater", "breathing underwater", "flying at high speed", "levitating", "riding a warhorse", "driving a car", "sailing a boat", "hiking up a mountain", "climbing a cliff", "sprinting through the forest", "vaulting over an obstacle", "falling gracefully through the sky"],
+                    "Actions: Peaceful & Leisure": ["sitting in shallow water enjoying the beautiful weather", "swimming with beautiful underwater magical creature", "reading a book", "drinking coffee", "sleeping peacefully", "stargazing", "sunbathing", "collecting seashells", "meditating peacefully", "drinking tea", "eating a meal", "tending to a garden"],
+                    "Actions: Creativity & Arts": ["playing the piano", "playing the guitar", "dancing gracefully", "painting on a canvas", "sketching in a notebook", "taking a photograph", "singing a song", "writing a letter", "composing sheet music"],
+                    "Actions: Crafting & Work": ["fixing a machine", "forging a sword", "coding a Python program", "writing HTML and CSS", "building a robot", "planting a tree", "picking herbs", "crafting a tool", "sewing a dress", "cooking over a campfire", "studying for an IT university exam", "clearing out unused items for a minimalist lifestyle"],
+                    "Actions: Expressions & Emotions": ["laughing", "smiling warmly", "crying softly", "yawning", "smirking confidently", "staring down the enemy", "roaring fiercely", "unleashing a battle cry", "looking determined", "frowning intensely", "yelling in anger", "looking completely surprised", "blushing"]
+                }
+            },
+            "Environment": {
+                color: "#10b981",
+                categories: {
+                    "Wild Nature": ["Wigry Lake", "Muliczne lake", "Cairngorms mountain range", "dense ancient forest", "tropical jungle", "vast desert dunes", "frozen tundra", "misty moors", "rolling hills", "waterfall cascade", "active volcano", "meteor crater", "giant mushroom forest", "floating islands", "enchanted woods", "high-intensity magic battlefield", "fairy ring", "sunflower field", "savanna", "taiga", "deciduous forest", "coniferous forest", "mangrove swamp", "glacier"],
+                    "Water Landscapes": ["underwater and overwater view", "underwater view", "submerged in deep dark reedy green water", "beautiful wild beach", "idyllic magical lake", "mysterious magical swamp", "coral reef", "kelp forest", "deep sea trench", "bioluminescent cave", "stagnant pond", "geothermal hot spring", "subterranean river", "underground lake", "tidal pools", "river rapids", "stormy ocean", "tsunami", "whirlpool", "geyser", "oasis"],
+                    "Urban & Architecture": ["medieval castle courtyard", "gothic cathedral interior", "bustling marketplace", "tavern interior", "wizard's tower", "alchemist's laboratory", "blacksmith's forge", "royal throne room", "grand library", "haunted mansion", "modern skyscraper roof", "cozy coffee shop", "subway station", "gladiatorial arena", "museum exhibit", "greenhouse", "crypt", "abandoned factory", "ancient temple", "pyramid", "colosseum"],
+                    "Sci-Fi & Fantasy": ["cyberpunk city street", "neon-lit alleyway", "futuristic metropolis", "flying car traffic", "dystopian slums", "steampunk factory", "spaceship bridge", "sci-fi corridor", "alien city", "underwater dome city", "subterranean dwarven city", "laboratory", "server room", "bunker", "lunar colony", "martian outpost", "space station", "moon base", "Mars colony", "dyson sphere", "crystal cavern", "underground city"]
+                }
+            },
+            "The Universe & Sci-Fi": {
+                color: "#d946ef",
+                categories: {
+                    "Celestial Bodies": ["universe", "black hole", "planet", "star", "exoplanet", "gas giant", "red dwarf star", "neutron star", "pulsar", "quasar", "rogue planet", "binary star system", "supermassive black hole", "event horizon", "accretion disk", "supernova explosion", "white dwarf", "brown dwarf", "asteroid", "comet with a glowing tail", "meteor shower", "planetary ring system", "solar flare", "coronal mass ejection", "wormhole"],
+                    "Galaxies & Deep Space": ["galaxy", "spiral galaxy", "elliptical galaxy", "irregular galaxy", "stellar nursery", "emission nebula", "reflection nebula", "dark nebula", "planetary nebula", "cosmic dust clouds", "galactic core", "local group", "galaxy cluster", "supercluster", "cosmic web", "deep space void", "milky way", "andromeda galaxy", "pillars of creation", "interstellar medium", "cosmic microwave background", "dark matter halo", "stellar collision", "gamma-ray burst"],
+                    "Sci-Fi Vehicles & Tech": ["alien spaceship", "alien armada", "futuristic spaceship", "generation ship", "orbital space station", "dyson sphere", "ringworld", "space elevator", "warp drive trail", "interstellar probe", "mothership", "star dreadnought", "scout ship", "cargo freighter", "mining vessel", "terraforming platform", "orbital defense satellite", "solar sail ship", "escape pod", "faster-than-light travel", "drop pod", "battlecruiser", "starfighter", "derelict ghost ship"],
+                    "Astronauts & Alien Life": ["astronaut", "cosmonaut", "spacewalk (EVA)", "spacesuit with glowing visor", "alien civilization", "ancient alien ruins", "space colony", "lunar base", "martian settlement", "extraterrestrial being", "biomechanical alien", "energy being", "galactic emperor", "star fleet commander", "xenobiologist in the field", "cyborg navigator", "space pirate crew", "asteroid miner", "sentient AI core", "monolithic alien artifact", "hive mind species", "humanoid alien", "intergalactic ambassador"]
+                }
             }
-        }
+        };
 
-        function addWotd() {
-            const word = document.getElementById('wotd').textContent;
-            if (word && word !== "Loading...") {
-                createActiveTag(word);
+        const defaultHeroineData = {
+            base: "Ultra-high-resolution, beautiful, gorgeous, very cute young female, long hair, incredible amount of detail, no runes as decorations, background is low in detail and blurred out",
+            classes: ["frostfire mage", "druid", "sorceress of light", "paladin"],
+            styles: ["Fantasy style", "Anime", "Photo realistic style", "Cinematic"],
+            cameras: ["face close up", "worm's-eye view", "Underwater", "Under and over water view"],
+            clothes: ["2 part swimming suit", "Airship captain uniform", "Arcane battle dress", "wizard robes"],
+            actions: ["She is sitting in a shallow water enjoying the beautiful weather", "She is casting a spell", "She is dreaming", "She is flying"],
+            environments: ["Floating islands", "Crystal cave", "Ancient magical ruins", "Forgotten temple"]
+        };
+
+        const defaultPaleoData = {
+            base: "Ultra-high-resolution, photorealistic, scientifically accurate paleoart, incredible amount of crisp detail on the subject's textures, sharp focus on the animal, naturalistic, background is low in detail and beautifully blurred out",
+            species: ["Tyrannosaurus rex", "Velociraptor", "Triceratops", "Stegosaurus", "Brachiosaurus"],
+            styles: ["photorealistic cinematic photograph", "shot on 35mm lens", "f/2.8 aperture"],
+            cameras: ["face close-up", "extreme macro close-up of scales", "wide cinematic shot"],
+            actions: ["stalking prey through tall grass", "roaring fiercely to establish dominance"],
+            environments: ["dense ancient redwood forest", "tropical prehistoric jungle", "Wigry Lake shoreline"]
+        };
+
+        // Initialize Data
+        get(ref(db, 'promptBuilder/groupedData')).then((snapshot) => {
+            if (!snapshot.exists()) {
+                console.log("Initializing database with defaults...");
+                set(ref(db, 'promptBuilder/groupedData'), defaultGroupedData);
+                set(ref(db, 'promptBuilder/heroineData'), defaultHeroineData);
+                set(ref(db, 'promptBuilder/paleoData'), defaultPaleoData);
+                set(ref(db, 'cheatsheets/content'), "Your cheatsheets live here. Safe and synced.");
             }
-        }
+        });
 
-        // Initialize Builder UI
-        function initBuilder() {
+        // Listen for real-time updates
+        onValue(ref(db, 'promptBuilder/groupedData'), (snapshot) => {
+            groupedData = snapshot.val() || {};
+            // Ensure default safety net category exists
+            if (!groupedData['Uncategorized / Rescued']) {
+                groupedData['Uncategorized / Rescued'] = { color: "#9ca3af", categories: { "Orphaned Tags": [] } };
+            }
+            renderBuilder();
+        });
+
+        onValue(ref(db, 'promptBuilder/heroineData'), (snapshot) => { heroineData = snapshot.val() || defaultHeroineData; });
+        onValue(ref(db, 'promptBuilder/paleoData'), (snapshot) => { paleoData = snapshot.val() || defaultPaleoData; });
+        onValue(ref(db, 'cheatsheets/content'), (snapshot) => {
+            document.getElementById('cheatsheet-content').value = snapshot.val() || "";
+        });
+
+        // ==========================================
+        // RENDER LOGIC
+        // ==========================================
+        function renderBuilder() {
+            mainContainer.innerHTML = '';
             for (const [groupName, groupData] of Object.entries(groupedData)) {
+                if(!groupData.categories) groupData.categories = {};
                 
-                // Create Macro Group Frame
                 const groupDiv = document.createElement('div');
                 groupDiv.className = 'macro-group';
-                groupDiv.style.borderLeftColor = groupData.color;
+                groupDiv.style.borderLeftColor = groupData.color || '#333';
 
                 const groupTitle = document.createElement('h2');
                 groupTitle.className = 'macro-title';
-                groupTitle.innerHTML = `<span style="color:${groupData.color}">■</span> ${groupName}`;
+                groupTitle.innerHTML = `<span style="color:${groupData.color || '#333'}">■</span> ${groupName}`;
+                
+                // Group Edit Controls
+                const groupEditSpan = document.createElement('span');
+                groupEditSpan.className = 'edit-controls';
+                groupEditSpan.innerHTML = `
+                    <button class="icon-btn delete" title="Delete Group" onclick="window.deleteGroup('${groupName}')">🗑</button>
+                `;
+                if(groupName !== 'Uncategorized / Rescued') groupTitle.appendChild(groupEditSpan);
                 groupDiv.appendChild(groupTitle);
 
                 const gridContainer = document.createElement('div');
                 gridContainer.className = 'builder-container';
 
-                // Populate Categories inside Group
+                // Render Categories
                 for (const [category, items] of Object.entries(groupData.categories)) {
+                    const safeItems = items || [];
                     const card = document.createElement('div');
                     card.className = 'category-card';
 
+                    const header = document.createElement('div');
+                    header.className = 'category-header';
+                    
                     const title = document.createElement('h3');
                     title.className = 'category-title';
                     title.textContent = category;
-                    card.appendChild(title);
+
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'copy-all-btn';
+                    copyBtn.textContent = '[Copy All]';
+                    copyBtn.onclick = () => {
+                        navigator.clipboard.writeText(safeItems.join(', ')).then(() => {
+                            copyBtn.textContent = '[Copied!]';
+                            setTimeout(() => copyBtn.textContent = '[Copy All]', 1500);
+                        });
+                    };
+
+                    const catEditSpan = document.createElement('span');
+                    catEditSpan.className = 'edit-controls';
+                    catEditSpan.innerHTML = `
+                        <button class="icon-btn delete" title="Delete Category" onclick="window.deleteCategory('${groupName}', '${category}')">🗑</button>
+                    `;
+
+                    header.appendChild(title);
+                    header.appendChild(catEditSpan);
+                    header.appendChild(copyBtn);
+                    card.appendChild(header);
 
                     const tagContainer = document.createElement('div');
                     tagContainer.className = 'tag-container';
 
-                    items.forEach(item => {
+                    // Render Tags
+                    safeItems.forEach((item, index) => {
                         const tag = document.createElement('span');
                         tag.className = 'tag';
-                        tag.textContent = item;
+                        tag.innerHTML = `<span>${item}</span>`;
                         tag.dataset.text = item.toLowerCase();
                         
-                        tag.addEventListener('click', () => {
-                            // Instead of toggling, clicking the board adds it to the staging area
-                            createActiveTag(item);
-                            // Brief visual flash to show it was clicked
-                            tag.style.backgroundColor = groupData.color;
-                            tag.style.color = "white";
-                            setTimeout(() => {
-                                tag.style.backgroundColor = "";
-                                tag.style.color = "";
-                            }, 200);
+                        const tagEditSpan = document.createElement('span');
+                        tagEditSpan.className = 'edit-controls';
+                        tagEditSpan.innerHTML = `
+                            <button class="icon-btn delete" onclick="event.stopPropagation(); window.deleteTag('${groupName}', '${category}', ${index})">&times;</button>
+                        `;
+                        tag.appendChild(tagEditSpan);
+                        
+                        tag.addEventListener('click', (e) => {
+                            if(editMode && e.target.tagName !== 'BUTTON') {
+                                window.editTag(groupName, category, index, item);
+                                return;
+                            }
+                            if(!editMode) {
+                                window.createActiveTag(item);
+                                tag.style.backgroundColor = groupData.color;
+                                tag.style.color = "white";
+                                setTimeout(() => {
+                                    tag.style.backgroundColor = ""; tag.style.color = "";
+                                }, 200);
+                            }
                         });
                         tagContainer.appendChild(tag);
                     });
 
                     card.appendChild(tagContainer);
+
+                    // Add Tag Button
+                    const addTagBtn = document.createElement('button');
+                    addTagBtn.className = 'add-tag-btn';
+                    addTagBtn.textContent = '+ Add Phrase';
+                    addTagBtn.onclick = () => window.addTag(groupName, category);
+                    card.appendChild(addTagBtn);
+
                     gridContainer.appendChild(card);
                 }
 
+                // Add Category Button
+                const addCatBtn = document.createElement('button');
+                addCatBtn.className = 'add-cat-btn';
+                addCatBtn.textContent = '+ Add Category to ' + groupName;
+                addCatBtn.onclick = () => window.addCategory(groupName);
+
                 groupDiv.appendChild(gridContainer);
+                groupDiv.appendChild(addCatBtn);
                 mainContainer.appendChild(groupDiv);
             }
         }
 
-        // --- Drag & Drop Staging Area Logic ---
+        // ==========================================
+        // UI & CRUD FUNCTIONS (ATTACHED TO WINDOW)
+        // ==========================================
         
-        function handleEnter(e) {
-            if (e.key === 'Enter') addCustomText();
-        }
+        window.toggleEditMode = () => {
+            editMode = !editMode;
+            document.body.classList.toggle('edit-mode', editMode);
+            const btn = document.getElementById('edit-toggle-btn');
+            btn.textContent = editMode ? '🛠 Edit Mode: ON' : '🛠 Edit Mode: OFF';
+            btn.style.backgroundColor = editMode ? '#ef4444' : 'var(--warning-color)';
+        };
 
-        function addCustomText() {
+        window.toggleCheatsheet = () => {
+            isCheatsheetView = !isCheatsheetView;
+            document.getElementById('builder-view').style.display = isCheatsheetView ? 'none' : 'block';
+            document.getElementById('output-panel').style.display = isCheatsheetView ? 'none' : 'block';
+            document.getElementById('cheatsheet-view').style.display = isCheatsheetView ? 'block' : 'none';
+            const btn = document.querySelector('.btn-cheatsheet');
+            btn.textContent = isCheatsheetView ? '🔙 Back to Builder' : '📝 Cheatsheets';
+        };
+
+        window.saveCheatsheet = () => {
+            const content = document.getElementById('cheatsheet-content').value;
+            set(ref(db, 'cheatsheets/content'), content).then(() => {
+                const status = document.getElementById('save-status');
+                status.style.display = 'inline';
+                setTimeout(() => status.style.display = 'none', 2000);
+            });
+        };
+
+        // --- Database Modifiers ---
+        window.addTag = (group, category) => {
+            const text = prompt("Enter new phrase:");
+            if(text && text.trim()) {
+                if(!groupedData[group].categories[category]) groupedData[group].categories[category] = [];
+                groupedData[group].categories[category].push(text.trim());
+                set(ref(db, 'promptBuilder/groupedData'), groupedData);
+            }
+        };
+
+        window.editTag = (group, category, index, oldText) => {
+            const text = prompt("Edit phrase:", oldText);
+            if(text && text.trim()) {
+                groupedData[group].categories[category][index] = text.trim();
+                set(ref(db, 'promptBuilder/groupedData'), groupedData);
+            }
+        };
+
+        window.deleteTag = (group, category, index) => {
+            groupedData[group].categories[category].splice(index, 1);
+            set(ref(db, 'promptBuilder/groupedData'), groupedData);
+        };
+
+        window.addCategory = (group) => {
+            const name = prompt("Enter new category name:");
+            if(name && name.trim()) {
+                if(!groupedData[group].categories) groupedData[group].categories = {};
+                groupedData[group].categories[name.trim()] = [];
+                set(ref(db, 'promptBuilder/groupedData'), groupedData);
+            }
+        };
+
+        window.deleteCategory = (group, category) => {
+            if(confirm(`Delete category "${category}"? \nAll tags inside will be moved to the Default 'Uncategorized' group.`)) {
+                // Rescue tags
+                const orphanedTags = groupedData[group].categories[category] || [];
+                if(orphanedTags.length > 0) {
+                    if(!groupedData['Uncategorized / Rescued']) groupedData['Uncategorized / Rescued'] = { color: "#9ca3af", categories: { "Orphaned Tags": [] } };
+                    if(!groupedData['Uncategorized / Rescued'].categories["Orphaned Tags"]) groupedData['Uncategorized / Rescued'].categories["Orphaned Tags"] = [];
+                    groupedData['Uncategorized / Rescued'].categories["Orphaned Tags"].push(...orphanedTags);
+                }
+                delete groupedData[group].categories[category];
+                set(ref(db, 'promptBuilder/groupedData'), groupedData);
+            }
+        };
+
+        window.deleteGroup = (group) => {
+            if(confirm(`Delete entire group "${group}" and rescue ALL tags inside?`)) {
+                let allTags = [];
+                for(let cat in groupedData[group].categories) {
+                    allTags = allTags.concat(groupedData[group].categories[cat] || []);
+                }
+                if(allTags.length > 0) {
+                    if(!groupedData['Uncategorized / Rescued']) groupedData['Uncategorized / Rescued'] = { color: "#9ca3af", categories: { "Orphaned Tags": [] } };
+                    if(!groupedData['Uncategorized / Rescued'].categories["Orphaned Tags"]) groupedData['Uncategorized / Rescued'].categories["Orphaned Tags"] = [];
+                    groupedData['Uncategorized / Rescued'].categories["Orphaned Tags"].push(...allTags);
+                }
+                delete groupedData[group];
+                set(ref(db, 'promptBuilder/groupedData'), groupedData);
+            }
+        };
+
+        // ==========================================
+        // PROMPT BUILDING ENGINE
+        // ==========================================
+        window.handleEnter = (e) => { if (e.key === 'Enter') window.addCustomText(); };
+
+        window.addCustomText = () => {
             const input = document.getElementById('custom-input');
             const text = input.value.trim();
             if (text) {
-                createActiveTag(text);
+                window.createActiveTag(text);
                 input.value = '';
             }
-        }
+        };
 
-        function createActiveTag(text) {
+        window.createActiveTag = (text) => {
             const tag = document.createElement('div');
             tag.className = 'active-tag';
             tag.draggable = true;
             
-            // The text node
             const textNode = document.createElement('span');
             textNode.textContent = text;
             tag.appendChild(textNode);
 
-            // Remove button
             const removeBtn = document.createElement('button');
             removeBtn.className = 'remove-btn';
             removeBtn.innerHTML = '&times;';
             removeBtn.onclick = () => tag.remove();
             tag.appendChild(removeBtn);
 
-            // HTML5 Drag Events
             tag.addEventListener('dragstart', handleDragStart);
             tag.addEventListener('dragend', handleDragEnd);
 
             stagingArea.appendChild(tag);
-        }
+        };
 
-        function clearPrompt() {
-            stagingArea.innerHTML = '';
-        }
+        window.clearPrompt = () => { stagingArea.innerHTML = ''; };
 
-        // Flat array of all items for randomization
         function getAllItems() {
             let all = [];
             for (let g in groupedData) {
@@ -687,29 +728,26 @@
             return all;
         }
 
-        function randomizePrompt() {
-            clearPrompt();
-            // Just simulate the structured logic previously built, using flat arrays 
+        window.randomizePrompt = () => {
+            window.clearPrompt();
             const all = getAllItems();
-            const picks = [];
+            if(all.length === 0) return;
             for(let i=0; i<8; i++) {
-                picks.push(all[Math.floor(Math.random() * all.length)]);
+                window.createActiveTag(all[Math.floor(Math.random() * all.length)]);
             }
-            picks.forEach(p => createActiveTag(p));
-        }
+        };
 
-        function triggerChaos() {
-            clearPrompt();
+        window.triggerChaos = () => {
+            window.clearPrompt();
             const all = getAllItems();
-            // Generates a random number between 3 and 15
+            if(all.length === 0) return;
             const numItems = Math.floor(Math.random() * 13) + 3; 
             for(let i=0; i<numItems; i++) {
-                createActiveTag(all[Math.floor(Math.random() * all.length)]);
+                window.createActiveTag(all[Math.floor(Math.random() * all.length)]);
             }
-        }
+        };
 
-        function copyPrompt() {
-            // Extract text from staging area
+        window.copyPrompt = () => {
             const tags = stagingArea.querySelectorAll('.active-tag span');
             const promptText = Array.from(tags).map(span => span.textContent).join(', ');
             
@@ -717,7 +755,7 @@
             hiddenClipboard.select();
             
             navigator.clipboard.writeText(promptText).then(() => {
-                const btn = document.querySelector('.btn-copy');
+                const btn = document.getElementById('btn-copy-main');
                 const orig = btn.textContent;
                 btn.textContent = "Copied!";
                 btn.style.backgroundColor = "#10b981";
@@ -726,51 +764,37 @@
                     btn.style.backgroundColor = "";
                 }, 1500);
             });
-        }
+        };
 
-        // --- Drag and Drop Handlers ---
+        // --- Drag and Drop ---
+        let dragSourceEl = null;
         function handleDragStart(e) {
             dragSourceEl = this;
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/html', this.innerHTML);
             setTimeout(() => this.classList.add('dragging'), 0);
         }
-
-        function handleDragEnd(e) {
-            this.classList.remove('dragging');
-            dragSourceEl = null;
-        }
+        function handleDragEnd(e) { this.classList.remove('dragging'); dragSourceEl = null; }
 
         stagingArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
-            
             const dragging = document.querySelector('.dragging');
             if (!dragging) return;
-
             const afterElement = getDragAfterElement(stagingArea, e.clientX, e.clientY);
-            if (afterElement == null) {
-                stagingArea.appendChild(dragging);
-            } else {
-                stagingArea.insertBefore(dragging, afterElement);
-            }
+            if (afterElement == null) stagingArea.appendChild(dragging);
+            else stagingArea.insertBefore(dragging, afterElement);
         });
 
         function getDragAfterElement(container, x, y) {
             const draggableElements = [...container.querySelectorAll('.active-tag:not(.dragging)')];
-
             return draggableElements.reduce((closest, child) => {
                 const box = child.getBoundingClientRect();
-                // Measure 2D distance to the center of each box
                 const centerX = box.left + box.width / 2;
                 const centerY = box.top + box.height / 2;
                 const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
-                
-                if (distance < closest.distance) {
-                    return { offset: distance, element: child };
-                } else {
-                    return closest;
-                }
+                if (distance < closest.distance) return { offset: distance, element: child };
+                else return closest;
             }, { distance: Number.POSITIVE_INFINITY }).element;
         }
 
@@ -778,15 +802,12 @@
         searchInput.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             const groups = document.querySelectorAll('.macro-group');
-
             groups.forEach(group => {
                 let groupHasMatch = false;
                 const cards = group.querySelectorAll('.category-card');
-
                 cards.forEach(card => {
                     let cardHasMatch = false;
                     const tags = card.querySelectorAll('.tag');
-
                     tags.forEach(tag => {
                         if (tag.dataset.text.includes(term)) {
                             tag.classList.remove('hidden');
@@ -796,336 +817,47 @@
                             tag.classList.add('hidden');
                         }
                     });
-
                     card.style.display = cardHasMatch || term === "" ? 'block' : 'none';
                 });
-
                 group.style.display = groupHasMatch || term === "" ? 'block' : 'none';
             });
         });
 
-        // Run setup
-        fetchWord();
-        initBuilder();
-// --- INSTANT HEROINE GENERATOR ---
-        const heroineData = {
-            base: "Ultra-high-resolution, beautiful, gorgeous, very cute young female, long hair, incredible amount of detail, no runes as decorations, background is low in detail and blurred out",
-            classes: [
-                "frostfire mage", "druid", "sorceress of light", "paladin", "futuristic space pilot", "elven archer", 
-                "archmage", "space marine", "superhero", "Elementalist", "Storm Mage", "Ice Sorceress", "Fire Witch", 
-                "Arcane Scholar", "Time Mage", "Shadow Sorceress", "Void Mage", "Crystal Mage", "Rune Weaver", "Blood Mage", 
-                "Dream Mage", "Celestial Mage", "Moon Priestess", "Sun Priestess", "Starcaller", "Spirit Channeler", 
-                "Enchantress", "Oracle", "Necromancer", "Illusionist", "Battle Mage", "Forest Guardian", "Nature Priestess", 
-                "Keeper of the Wilds", "Beast Whisperer", "Fairy Queen", "Dryad", "Spirit Walker", "Flower Mage", 
-                "Ocean Priestess", "Coral Queen", "Storm Druid", "Moon Druid", "Sacred Grove Guardian", "Animal Shapeshifter", 
-                "High Priestess", "Divine Champion", "Angelic Guardian", "Sacred Knight", "Lightbringer", "Temple Guardian", 
-                "Celestial Herald", "Oracle of the Gods", "Holy Healer", "Sun Empress", "Moon Queen", "Queen of Light", 
-                "Dragon Knight", "Valkyrie", "Monster Hunter", "Swordmaster", "Duelist", "Shield Maiden", "Royal Guard", 
-                "Mercenary Captain", "Ranger", "Beast Rider", "Pirate Captain", "Treasure Hunter", "Explorer", "Relic Seeker", 
-                "High Queen of the Elves", "Dragon Empress", "Sorceress Queen", "Queen of the Seas", "Queen of Shadows", 
-                "Star Empress", "Ruler of the Crystal Kingdom", "Fairy Monarch", "Celestial Empress", "Dragon Tamer", 
-                "Phoenix Guardian", "Mermaid Queen", "Siren", "Vampire Noble", "Werewolf Alpha", "Spirit Queen", "Ancient Immortal", 
-                "Demi-Goddess", "Goddess of the Moon", "Goddess of Nature", "Goddess of Magic", "Cosmic Entity", "Starship Captain", 
-                "Galactic Explorer", "Space Ranger", "Bounty Hunter", "Cybernetic Operative", "Android", "AI Avatar", "Mecha Pilot", 
-                "Interstellar Diplomat", "Quantum Scientist", "Time Traveler", "Planetary Surveyor", "Alien Princess", "Cosmic Defender", 
-                "Telepath", "Telekinetic", "Energy Manipulator", "Gravity Controller", "Time Controller", "Reality Bender", 
-                "Elemental Hero", "Speedster", "Shape Shifter", "Dimensional Guardian", "Guardian of Earth", "Star Guardian", 
-                "Crystal Empress", "Keeper of Dreams", "Mistress of Seasons", "Weaver of Fate", "Guardian of Time", "Keeper of Lost Knowledge", 
-                "Collector of Stars", "Mistress of the Aurora", "Walker Between Worlds", "Guardian of Ancient Portals", "Keeper of Forgotten Realms", 
-                "Navigator of the Cosmic Sea", "Frostfire Archmage", "Dragon-Riding Paladin", "Celestial Druid", "Shadow Valkyrie", 
-                "Starborn Sorceress", "Crystal Queen", "Arcane Space Pilot", "Time-Weaving Enchantress", "Moonlight Assassin", 
-                "Cosmic Priestess", "Phoenix Mage", "Dreamwalking Oracle", "Void Ranger", "Storm Empress", "Astral Dragon Tamer"
-            ],
-            styles: [
-                "Fantasy style", "Anime", "Photo realistic style", "World of Warcraft Style", "high fantasy style", 
-                "fairy tale style", "Photorealistic", "Cinematic", "Ultra-realistic", "Hyperrealistic", "Movie concept art", 
-                "Hollywood fantasy", "Epic cinematic fantasy", "Fantasy photography", "Naturalistic fantasy", "Fine art realism", 
-                "Dark fantasy", "Epic fantasy", "Mythological fantasy", "Enchanted fantasy", "Magical realism", "Sword and sorcery", 
-                "Arthurian fantasy", "Elven fantasy", "Celestial fantasy", "Dream fantasy", "Gothic fantasy", "Whimsical fantasy", 
-                "The Elder Scrolls style", "Guild Wars style", "Final Fantasy style", "Dragon Age style", "Diablo style", 
-                "League of Legends splash art style", "MMORPG concept art style", "RPG character art style", "Fantasy game cinematic style", 
-                "Action RPG style", "Hero character concept art", "Modern anime", "Fantasy anime", "Shōjo anime", "Isekai anime", 
-                "Dark fantasy anime", "Magical girl anime", "Anime movie style", "Manga illustration", "Chibi style", "JRPG art style", 
-                "Studio Ghibli-inspired style", "Japanese fantasy illustration", "Digital painting", "Fantasy illustration", 
-                "Book cover illustration", "Children's book illustration", "Storybook style", "Watercolor illustration", "Ink illustration", 
-                "Pencil illustration", "Oil painting", "Acrylic painting", "Pastel painting", "Mixed media illustration", "Storybook fantasy", 
-                "Dreamscape style", "Ethereal fantasy", "Enchanted forest style", "Magical princess style", "Soft fantasy illustration", 
-                "Romantic fantasy", "Wonderland-inspired style", "Fairy realm style", "Mythic dream style", "Grimdark", "Dark fairy tale", 
-                "Vampire gothic style", "Eldritch fantasy", "Haunted fantasy", "Victorian gothic", "Shadow fantasy", "Moonlit gothic fantasy", 
-                "Stylized fantasy", "Semi-realistic fantasy", "Painterly fantasy", "Concept art style", "Splash art style", "Character design sheet style", 
-                "Trading card art style", "Poster art style", "Fantasy mural style", "Matte painting style", "Space fantasy", "Cosmic fantasy", 
-                "Science fantasy", "Galactic fantasy", "Futuristic fantasy", "Arcane technology style", "Magitech fantasy", "Celestial sci-fi fantasy", 
-                "Space opera fantasy", "Starborn fantasy"
-            ],
-            cameras: [
-                "face close up", "worm's-eye view", "Underwater", "Under and over water view", "Underwater view with tiny slit of over water view", 
-                "Face close-up", "Extreme face close-up", "Eyes close-up", "Head and shoulders portrait", "Bust portrait", "Half-body portrait", 
-                "Full-body portrait", "Character centered portrait", "Looking directly at the viewer", "Looking away from the viewer", 
-                "Dramatic low-angle shot", "Heroic low-angle perspective", "Looking up from the ground", "Looking up through flowers", 
-                "Looking up through water", "Looking up through crystal formations", "Bird's-eye view", "Top-down view", "Aerial view", 
-                "Looking down from a cliff", "Looking down from a floating island", "Looking down through tree branches", "Overhead drone-like shot", 
-                "Over-the-shoulder view", "Side profile", "Three-quarter view", "Behind-the-back view", "First-person perspective", 
-                "Looking through an object", "Looking through foliage", "Looking through magical energy", "Looking through a crystal", 
-                "Looking through a portal", "Wide cinematic shot", "Ultra-wide landscape shot", "Establishing shot", "Medium shot", 
-                "Telephoto shot", "Panoramic shot", "Epic movie scene framing", "Character dwarfed by environment", "Character silhouetted against the horizon", 
-                "Standing in shallow water", "Floating on calm water", "Walking on mirror-like water", "Reflections dominating the scene", 
-                "Reflection-only composition", "Water-level camera view", "Fully underwater view", "Deep underwater perspective", 
-                "Underwater cave view", "Underwater abyss view", "Swimming beside giant creatures", "Looking through underwater ruins", 
-                "Half-submerged camera", "Split-level photography", "Underwater perspective showing distant shoreline", "Surface reflection combined with underwater life", 
-                "Character partly above and below water", "Looking from beneath a transparent lake", "Looking upward through crystal-clear water", 
-                "Beneath ice looking upward", "Deep ocean looking toward sunlight", "Tiny fish perspective", "Giant sea creature perspective"
-            ],
-            clothes: [
-                "2 part swimming suit", "Airship captain uniform", "Airship explorer attire", "Arcane battle dress", "Archaeologist-inspired attire", 
-                "Astral traveler robes", "Astral traveler suit", "Aurora-inspired gown", "Autumn leaf gown", "Ballroom gown", 
-                "Bioluminescent underwater attire", "Brass-and-leather adventurer gear", "Butterfly-wing cape and dress", "Celestial guardian armor", 
-                "Celestial priestess attire", "Cherry blossom kimono-inspired outfit", "Clockwork engineer attire", "Cloud-woven dress", 
-                "Constellation-themed gown", "Coral queen attire", "corset without neck or arms", "Cosmic mage robes", "Crystal armor", 
-                "Crystal gown", "Deep-sea explorer suit", "Desert wanderer robes", "Dimensional traveler attire", "Dragon knight armor", 
-                "Dragon mage outfit", "Dreamweaver robes", "dress made of fire", "Dress made of flowers", "dress made of frost", 
-                "Dress made of leaves and vines", "Dress made of moonlight", "dress made of shadows", "Dress made of starlight", 
-                "Dress woven from magical energy", "Elegant steam-age ball gown", "Elegant white beach dress", "Elven battle attire", 
-                "Embroidered royal gown", "Enchanted forest guardian attire", "Enchanted silk dress", "Ethereal spirit robes", "Explorer's travel clothes", 
-                "Fairy queen gown", "Floating silk gown", "Flower petal dress", "Flowing aquatic robes", "Futuristic explorer suit", 
-                "Galactic empress attire", "Glowing energy dress", "Golden royal armor", "High fantasy empress attire", "High-waisted vintage swimsuit", 
-                "instead of clothes her hair covers parts of her body", "instead of clothes water splashes cover parts of her body", "Jewel-encrusted dress", 
-                "Jungle explorer outfit", "Leather adventurer outfit", "Light fantasy armor", "Light-born celestial robes", "Lotus flower dress", 
-                "Lunar priestess robes", "Magical battle dress", "Mechanical wings and corset", "Mermaid tail and top", "Mermaid-inspired bikini", 
-                "Mist-covered attire", "Monster hunter outfit", "Moon-themed armor", "Moss and vine dress", "Nautical fantasy outfit", "Nebula-inspired dress", 
-                "Noblewoman's attire", "Ocean spirit dress", "One-piece swimsuit", "Ornate ceremonial armor", "Pearl-adorned swimwear", "Pearl-covered gown", 
-                "Pirate captain outfit", "Princess gown", "Queen's ceremonial dress", "Rainbow crystal dress", "Renaissance-inspired gown", "Rose-themed ball gown", 
-                "Rune-covered ceremonial robes", "Sarong with decorative jewelry", "Seafoam-inspired outfit", "Seashell top and flowing skirt", "Sheer ocean-inspired cover-up", 
-                "Silk evening dress", "Space suit", "Starwoven gown", "Steampunk corset", "Steampunk explorer outfit", "Transparent spirit robes", "Treasure hunter attire", 
-                "Tropical beach wrap and swimsuit", "Two-piece swimsuit", "Underwater royal garments", "Valkyrie-inspired armor", "Victorian mechanical dress", 
-                "Victorian-inspired dress", "Waterfall-inspired flowing gown", "Wildflower crown and dress", "wizard robes", "Woodland ranger attire"
-            ],
-            actions: [
-                "She is sitting in a shallow water enjoying the beautiful weather", "She is swimming with beautiful underwater magical creature", 
-                "She is calmly walking on a beautiful wild beach", "She is calmly walking on top of very calm water of a beautiful idyllic magical lake, the water is like a mirror, there isn't a single wave.", 
-                "She is exploring a mysterious magical swamp", "She is swimming underwater, she can breath underwater", "She is exploring underwater abys", 
-                "She is casting a spell", "She is interacting with a magical creature", "She is dreaming", "She is flying", "She is opening a magical portal", 
-                "She is lying in a field of glowing flowers beneath a star-filled sky.", "She is resting on a giant tree branch overlooking a magical valley.", 
-                "She is watching a sunset from a cliff above the ocean.", "She is floating peacefully among luminous water lilies.", "She is meditating beside an ancient waterfall.", 
-                "She is collecting beautiful seashells on a pristine beach.", "She is sitting inside a circle of giant mushrooms.", "She is enjoying the gentle rain in an enchanted forest.", 
-                "She is walking through a meadow filled with butterflies.", "She is listening to the songs of magical birds.", "She is exploring ancient ruins hidden deep in the jungle.", 
-                "She is climbing a colossal crystal formation.", "She is navigating a forgotten underground city.", "She is discovering a hidden valley untouched by time.", 
-                "She is crossing a bridge made of light.", "She is exploring floating islands in the sky.", "She is following mysterious glowing footprints.", 
-                "She is descending into a magical cavern.", "She is uncovering an ancient treasure.", "She is mapping unexplored lands.", "She is swimming through a glowing coral kingdom.", 
-                "She is riding a giant sea creature through the deep ocean.", "She is discovering a lost underwater palace.", "She is dancing among schools of colorful fish.", 
-                "She is exploring a submerged temple.", "She is communicating with ancient aquatic spirits.", "She is watching bioluminescent creatures illuminate the abyss.", 
-                "She is tending a magical underwater garden.", "She is gliding through underwater crystal tunnels.", "She is searching for a legendary pearl.", 
-                "She is reading from an ancient magical book.", "She is creating stars with her fingertips.", "She is summoning glowing spirits.", 
-                "She is weaving magical energy into intricate patterns.", "She is awakening an ancient guardian.", "She is performing a ritual beneath the full moon.", 
-                "She is speaking with celestial beings.", "She is crafting magical artifacts.", "She is enchanting a crystal with powerful magic.", 
-                "She is opening a doorway between worlds.", "She is manipulating the flow of time.", "She is creating an illusionary landscape.", 
-                "She is feeding a gentle dragon.", "She is riding a majestic flying creature.", "She is befriending a shy forest spirit.", "She is playing with magical foxes.", 
-                "She is helping an injured mythical creature.", "She is communicating with a giant whale.", "She is dancing alongside fairies.", "She is guiding a herd of luminous deer.", 
-                "She is training a young dragon.", "She is flying beside a flock of giant birds.", "She is soaring through clouds at sunrise.", "She is gliding over endless mountain ranges.", 
-                "She is riding the northern lights across the sky.", "She is flying through floating crystal arches.", "She is drifting among giant sky whales.", 
-                "She is standing on a cloud overlooking a magical world.", "She is chasing shooting stars.", "She is traveling between floating islands.", 
-                "She is surfing on a river of light in the sky.", "She is exploring celestial realms above the clouds.", "She is reliving a cherished memory.", 
-                "She is wandering through a dreamscape.", "She is gazing into a magical mirror showing possible futures.", "She is searching for someone important in a mystical realm.", 
-                "She is embracing a long-lost friend.", "She is watching memories drift through the air like lanterns.", "She is standing between dream and reality.", 
-                "She is exploring the landscape of her own imagination.", "She is following a mysterious voice through a dream.", "She is witnessing the birth of a new star.", 
-                "She is standing atop an ancient tower during a magical storm.", "She is confronting a powerful sorcerer.", "She is sealing away an ancient evil.", 
-                "She is protecting a sacred artifact.", "She is awakening a sleeping kingdom.", "She is leading a procession of magical beings.", 
-                "She is restoring life to a dying forest.", "She is forging a legendary weapon.", "She is entering a forgotten realm beyond reality.", 
-                "She is witnessing the creation of a new world.", "She is painting reality with a magical brush.", "She is walking through a forest made entirely of crystal.", 
-                "She is collecting fragments of fallen stars.", "She is planting seeds that instantly grow into enormous trees.", "She is arranging floating lanterns in the night sky.", 
-                "She is playing a magical instrument that shapes the world around her.", "She is tending a garden of glowing moons.", "She is riding on the back of a giant turtle carrying an island.", 
-                "She is walking through a field of floating crystals.", "She is gathering stardust from a cosmic river.", "She is watching giant celestial creatures move across the heavens.", 
-                "She is stepping between reflections in magical mirrors."
-            ],
-            environments: [
-                "Floating islands", "Crystal cave", "Ancient magical ruins", "Forgotten temple", "Living tree city", "Celestial observatory", 
-                "Realm between worlds", "Dragon sanctuary", "Hall of the gods", "Dream realm", "Time-distorted landscape", "Floating crystal kingdom", 
-                "Above the clouds", "Star-filled sky", "Aurora-filled sky", "Celestial realm", "Sky ocean", "Endless cloudscape", "Flying through clouds", 
-                "Storm clouds", "Rainbow skies", "Blooming meadow", "Cherry blossom grove", "Wildflower valley", "Sunny beach", "Golden fields", 
-                "Warm magical forest", "Orange forest", "Falling leaves", "Misty autumn valley", "Frozen lake", "Snow-covered forest", "Ice cave", 
-                "Arctic landscape", "Blizzard conditions", "Sunny day", "Perfect weather", "Golden hour", "Sunrise", "Sunset", "Gentle rain", 
-                "Heavy rain", "Morning mist", "Thick fog", "Snowfall", "Blizzard", "Thunderstorm", "Falling glowing petals", "Floating magical particles", 
-                "Crystal snow", "Falling stardust", "Arcane energy storm", "Glowing fog", "Aurora overhead", "Floating lanterns"
-            ]
-        };
-
-        function generateAndCopyHeroine() {
-            // Helper function to pick a random item from an array
-            const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-            
-            // Build the prompt string
+        // --- Generators ---
+        const pick = (arr) => arr && arr.length > 0 ? arr[Math.floor(Math.random() * arr.length)] : "";
+        
+        window.generateAndCopyHeroine = () => {
             const promptParts = [
-                heroineData.base,
-                pick(heroineData.classes),
-                pick(heroineData.styles),
-                pick(heroineData.cameras),
-                pick(heroineData.clothes),
-                pick(heroineData.actions),
-                pick(heroineData.environments)
-            ];
+                heroineData.base, pick(heroineData.classes), pick(heroineData.styles),
+                pick(heroineData.cameras), pick(heroineData.clothes), pick(heroineData.actions), pick(heroineData.environments)
+            ].filter(Boolean);
             
-            // Join them all with a comma and a space
             const finalPrompt = promptParts.join(", ");
-            
-            // Use the hidden clipboard textarea already in your HTML
-            const hiddenCb = document.getElementById('hidden-clipboard');
-            hiddenCb.value = finalPrompt;
-            hiddenCb.select();
-            
-            // Copy and show visual feedback
             navigator.clipboard.writeText(finalPrompt).then(() => {
                 const btn = document.getElementById('btn-heroine-ui');
                 const orig = btn.innerHTML;
                 btn.innerHTML = "✨ Copied to Clipboard!";
-                btn.style.backgroundColor = "#10b981"; // Success green
-                
-                setTimeout(() => {
-                    btn.innerHTML = orig;
-                    btn.style.backgroundColor = ""; // Reset
-                }, 1500);
+                btn.style.backgroundColor = "#10b981";
+                setTimeout(() => { btn.innerHTML = orig; btn.style.backgroundColor = ""; }, 1500);
             });
-        }
-
-        // --- INSTANT PALEO GENERATOR ---
-        const paleoData = {
-            base: "Ultra-high-resolution, photorealistic, scientifically accurate paleoart, incredible amount of crisp detail on the subject's textures, sharp focus on the animal, naturalistic, background is low in detail and beautifully blurred out",
-            species: [
-                // Theropods
-                "Tyrannosaurus rex", "Velociraptor", "Deinonychus", "Utahraptor", "Spinosaurus", "Allosaurus", "Carnotaurus", "Giganotosaurus", 
-                "Dilophosaurus", "Ceratosaurus", "Baryonyx", "Suchomimus", "Majungasaurus", "Tarbosaurus", "Albertosaurus", "Acrocanthosaurus", 
-                "Carcharodontosaurus", "Therizinosaurus", "Deinocheirus", "Gallimimus", "Oviraptor", "Troodon", "Yutyrannus", "Guanlong", 
-                "Microraptor", "Dakotaraptor", "Dromaeosaurus", "Gorgosaurus", "Daspletosaurus", "Alioramus", "Irritator", "Saurophaganax", 
-                "Mapusaurus", "Cryolophosaurus", "Monolophosaurus", "Megalosaurus", "Torvosaurus", "Neovenator", "Concavenator", "Australovenator", 
-                "Struthiomimus", "Ornithomimus", "Citipati", "Gigantoraptor", "Saurornithoides", "Anchiornis", "Archaeopteryx", "Buitreraptor", 
-                "Austroraptor", "Balaur", "Pyroraptor", "Saurornitholestes", "Bambiraptor", "Atrociraptor", "Acheroraptor", "Linheraptor", 
-                "Tsaagan", "Zhenyuanlong", "Changyuraptor", "Sinornithosaurus", "Mahakala", "Halszkaraptor", "Herrerasaurus", "Coelophysis", 
-                "Compsognathus", "Sinosauropteryx", "Proceratosaurus", "Stokesosaurus", "Eotyrannus", "Dryptosaurus", "Qianzhousaurus", 
-                "Nanuqsaurus", "Lythronax", "Teratophoneus", "Bistahieversor", "Zhuchengtyrannus",
-                // Herbivores (Ceratopsians, Ankylosaurs, Stegosaurs, Ornithopods, Pachycephalosaurs)
-                "Triceratops", "Torosaurus", "Styracosaurus", "Centrosaurus", "Pachyrhinosaurus", "Chasmosaurus", "Pentaceratops", "Diabloceratops", 
-                "Nasutoceratops", "Protoceratops", "Psittacosaurus", "Stegosaurus", "Kentrosaurus", "Tuojiangosaurus", "Miragaia", "Dacentrurus", 
-                "Ankylosaurus", "Euoplocephalus", "Borealopelta", "Nodosaurus", "Edmontonia", "Sauropelta", "Gastonia", "Minmi", "Pachycephalosaurus", 
-                "Stygimoloch", "Dracorex", "Homalocephale", "Stegoceras", "Iguanodon", "Muttaburrasaurus", "Ouranosaurus", "Tenontosaurus", 
-                "Camptosaurus", "Edmontosaurus", "Parasaurolophus", "Corythosaurus", "Lambeosaurus", "Tsintaosaurus", "Maiasaura", "Olorotitan", 
-                "Heterodontosaurus", "Lesothosaurus", "Scelidosaurus", "Hypsilophodon", "Dryosaurus", "Thescelosaurus", "Orodromeus", "Leaellynasaura", 
-                "Zalmoxes", "Rhabdodon", "Mochlodon",
-                // Sauropods
-                "Brachiosaurus", "Giraffatitan", "Diplodocus", "Apatosaurus", "Brontosaurus", "Camarasaurus", "Argentinosaurus", "Patagotitan", 
-                "Dreadnoughtus", "Alamosaurus", "Saltasaurus", "Amargasaurus", "Dicraeosaurus", "Nigersaurus", "Mamenchisaurus", "Omeisaurus", 
-                "Shunosaurus", "Vulcanodon", "Plateosaurus", "Massospondylus", "Lufengosaurus", "Riojasaurus",
-                // Pre-Dinosaurs, Synapsids, Early Archosaurs, Early Amphibians
-                "Dimetrodon", "Edaphosaurus", "Inostrancevia", "Gorgonops", "Scutosaurus", "Estemmenosuchus", "Moschops", "Scylacosaurus", 
-                "Cynognathus", "Thrinaxodon", "Lystrosaurus", "Placerias", "Kannemeyeria", "Dicynodon", "Ophiacodon", "Sphenacodon", 
-                "Cotylorhynchus", "Eryops", "Diplocaulus", "Prionosuchus", "Koolasuchus", "Mastodonsaurus", "Gerrothorax", "Crassigyrinus", 
-                "Ichthyostega", "Acanthostega", "Tiktaalik", "Dunkleosteus", "Titanichthys", "Bothriolepis", "Arthropleura", "Meganeura", 
-                "Pulmonoscorpius", "Jaekelopterus", "Pterygotus", "Eurypterus", "Anomalocaris", "Opabinia", "Hallucigenia", "Wiwaxia", 
-                "Trilobite", "Postosuchus", "Desmatosuchus", "Fasolasuchus", "Saurosuchus", "Prestosuchus", "Rutiodon", "Phytosaurus", 
-                "Smilosuchus", "Redondasaurus", "Aetosaurus", "Stagonolepis", "Typothorax", "Scleromochlus", "Lagosuchus", "Marasuchus", 
-                "Silesaurus", "Asilisaurus", "Euparkeria", "Proterosuchus", "Erythrosuchus", "Tanystropheus"
-            ],
-            styles: [
-                "photorealistic cinematic photograph", "shot on 35mm lens", "f/2.8 aperture", "natural organic textures", 
-                "organic lighting", "true-to-life color grading", "unedited genuine wildlife photograph", 
-                "pristine ultra-high-resolution photographic reconstruction", "advanced natural lighting", "exceptional clarity and macro-level detail", 
-                "museum paleoart illustration", "scientifically accurate digital painting", "wildlife photography documentary style", 
-                "National Geographic aesthetic", "BBC Walking with Dinosaurs aesthetic", "hyper-detailed 3d render", "Unreal Engine 5 render", 
-                "cinematic lighting", "dramatic chiaroscuro", "soft golden hour", "volumetric fog", "god rays", "lens flare", 
-                "natural sunlight", "overcast sky", "stormy lighting", "film grain", "depth of field", "tilt-shift", "macro bokeh", "motion blur"
-            ],
-            cameras: [
-                "face close-up", "extreme macro close-up of scales", "worm's-eye view", "dramatic low-angle shot", "heroic low-angle perspective", 
-                "bird's-eye view", "aerial drone view", "side profile", "three-quarter view", "wide cinematic shot", "ultra-wide landscape shot", 
-                "establishing shot", "medium wildlife shot", "telephoto lens compression", "wide angle shot", "split-level water photography", 
-                "underwater view", "looking up from the ground", "character dwarfed by environment", "character silhouetted against the horizon", 
-                "over-the-shoulder view of predator", "looking through dense foliage"
-            ],
-            actions: [
-                "stalking prey through tall grass", "leaping to attack", "tearing flesh from a carcass", "crushing a thick bone", 
-                "swallowing prey whole", "chasing a smaller animal", "ambushing from the trees", "dragging a carcass into the brush", 
-                "fishing in a shallow stream", "snapping its jaws at a flying insect", "grazing on low ferns", "browsing leaves from a tall conifer", 
-                "stripping bark from a tree", "uprooting a small bush", "chewing tough vegetation", "drinking water from a calm lake", 
-                "foraging for roots", "sniffing the air for a scent", "digging for buried eggs", "lunging forward with mouth wide open", 
-                "roaring fiercely to establish dominance", "calling out to its herd", "performing a complex mating dance", "shaking its colorful feathers", 
-                "flaring its neck frill", "headbutting a rival", "locking horns in a territorial dispute", "nuzzling its offspring", 
-                "regurgitating food for its young", "standing guard over a nest of eggs", "playfully nipping at a sibling", "running in a massive stampede", 
-                "communicating through deep subsonic rumbles", "aggressively waving its tail", "flashing warning colors on its skin", 
-                "sunning itself on a large rock to warm up", "huddling together for warmth", "following the matriarch", "challenging the alpha male", 
-                "grooming its feathers", "sprinting across an open plain", "trudging heavily through deep mud", "swimming powerfully through a river", 
-                "drifting lazily in a swamp", "breaching the water surface to breathe", "diving deep underwater", "shaking off water after a swim", 
-                "leaving massive footprints in the wet sand", "navigating a dense jungle", "climbing a steep rocky incline", 
-                "resting under the shade of a giant fern", "sleeping curled up in a ball", "waking up and stretching its limbs", 
-                "fleeing in panic from a massive predator", "cautiously stepping over a fallen log", "camouflaging itself against the foliage", 
-                "emerging from a thick morning fog", "shaking volcanic ash from its back", "roaring at a stormy sky", "observing a distant volcanic eruption",
-                "hiding perfectly still in the underbrush", "pouncing on a small lizard", "cracking open a hard-shelled mollusk", 
-                "shaking a prey item vigorously", "standing on its hind legs to reach high branches", "swatting away a swarm of prehistoric insects", 
-                "snorting loudly and stamping its feet", "vocalizing with a loud honking sound", "flapping its wings to intimidate a rival", 
-                "gliding gracefully from tree to tree", "soaring high on a thermal updraft", "diving from the sky to catch a fish", 
-                "skimming the water surface with its lower jaw", "wading through a shallow prehistoric marsh", "scratching its flank against a rough tree trunk", 
-                "rolling in the dust to remove parasites", "panting heavily in the hot midday sun", "licking its jaws clean after a meal", 
-                "scanning the horizon for danger", "freezing in place upon hearing a twig snap", "rearing up on its hind legs in defense", 
-                "swinging its heavy tail like a club", "shielding its vulnerable underbelly", "snapping viciously at an attacker", 
-                "retreating slowly while facing a threat", "limping slightly from an old injury", "displaying brightly colored crests", 
-                "inflating a large throat pouch", "bobbing its head in a territorial display", "rubbing its snout against a mate", 
-                "carefully turning an egg in the nest", "carrying a hatchling gently in its mouth", "teaching its young how to hunt", 
-                "leading its offspring to a watering hole", "protecting the herd by forming a defensive circle", "migrating across a vast arid desert", 
-                "struggling through a heavy blizzard", "crossing a dangerous raging river", "slipping on wet mossy rocks", 
-                "basking in the first rays of morning light", "seeking shelter under a rocky overhang during a storm", "staring intently into a dark cave", 
-                "snapping at a reflection in the water", "sneezing violently to clear its nasal passages", "stretching its neck to its absolute limit", 
-                "sniffing the ground tracking a blood trail", "abandoning a kill to a larger predator", "scavenging the remains of a massive sauropod", 
-                "crunching loudly on prehistoric horsetails", "plucking cycad cones from a thick stem", "swallowing gastrolith stones to aid digestion", 
-                "bellowing into the misty dawn", "listening intently to rustling in the bushes", "snapping its jaws shut with a loud crack", 
-                "shaking its head to dislodge a biting insect", "staring directly into the camera lens", "blinking slowly with reptilian eyes", 
-                "exhaling a puff of visible breath in the cold air", "drooling thickly in anticipation of a meal", "tensing its muscles before a sprint", 
-                "leaping gracefully over a wide chasm", "tumbling down a dusty embankment", "swimming with only its eyes and nostrils above water", 
-                "lying completely submerged in mud", "paddling slowly against a strong current", "exploring a tidal pool at low tide", 
-                "crunching on an armored horseshoe crab", "snapping a fern frond neatly in half", "vocalizing with a terrifying low-frequency hum", 
-                "puffing up its feathers to appear larger", "strutting proudly through its territory", "digging a deep burrow with powerful claws", 
-                "peeking cautiously out of its underground den", "scrambling up a steep muddy riverbank", "slipping stealthily into the dark water", 
-                "shaking a small mammal from its burrow", "pinning its prey to the ground with a heavy foot", "gnawing patiently on an old bone", 
-                "resting heavily with its head on the ground", "flicking its tongue out to taste the air", "shedding patches of scaly skin", 
-                "shaking out its wet plumage", "balancing perfectly on a narrow rocky ledge", "surveying its domain from a high vantage point", 
-                "prowling silently through the shadows of the forest canopy"
-            ],
-            environments: [
-                "Wigry Lake shoreline", "Muliczne lake", "Cairngorms mountain range", "dense ancient redwood forest", "tropical prehistoric jungle", 
-                "vast desert dunes", "misty moors", "rolling hills", "waterfall cascade", "active volcano in the distance", "meteor crater", 
-                "flooded coastal plains", "mesozoic swamp", "arid rocky canyon", "rocky shoreline", "prehistoric river delta", "cycad grove", 
-                "fern prairie", "volcanic ash fields", "dense coniferous forest", "shallow tidal pools", "deep ocean trench", "sunlit coral reef", 
-                "moss-covered rocky outcrop", "frozen prehistoric tundra", "ancient glacial valley", "dark subterranean cave entrance"
-            ]
         };
 
-        function generateAndCopyPaleo() {
-            const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-            
+        window.generateAndCopyPaleo = () => {
             const promptParts = [
-                paleoData.base,
-                pick(paleoData.species),
-                pick(paleoData.styles),
-                pick(paleoData.cameras),
-                pick(paleoData.actions),
-                pick(paleoData.environments)
-            ];
+                paleoData.base, pick(paleoData.species), pick(paleoData.styles),
+                pick(paleoData.cameras), pick(paleoData.actions), pick(paleoData.environments)
+            ].filter(Boolean);
             
             const finalPrompt = promptParts.join(", ");
-            
-            const hiddenCb = document.getElementById('hidden-clipboard');
-            hiddenCb.value = finalPrompt;
-            hiddenCb.select();
-            
             navigator.clipboard.writeText(finalPrompt).then(() => {
                 const btn = document.getElementById('btn-paleo-ui');
                 const orig = btn.innerHTML;
                 btn.innerHTML = "✨ Copied to Clipboard!";
-                btn.style.backgroundColor = "#10b981"; // Success green
-                
-                setTimeout(() => {
-                    btn.innerHTML = orig;
-                    btn.style.backgroundColor = ""; // Reset
-                }, 1500);
+                btn.style.backgroundColor = "#10b981";
+                setTimeout(() => { btn.innerHTML = orig; btn.style.backgroundColor = ""; }, 1500);
             });
-        }
+        };
 
-        
     </script>
 </body>
 </html>
