@@ -289,12 +289,10 @@
         </div>
     </header>
 
-    <!-- PROMPT BUILDER VIEW -->
     <div id="builder-view">
         <div id="main-container">Loading Database...</div>
     </div>
 
-    <!-- CHEATSHEET VIEW -->
     <div id="cheatsheet-view">
         <h2 class="macro-title"><span style="color:#6366f1">■</span> Cheatsheet Manager</h2>
         <textarea id="cheatsheet-content" class="cheatsheet-container" placeholder="Write your cheatsheets here..."></textarea>
@@ -321,10 +319,11 @@
         <textarea id="hidden-clipboard"></textarea>
     </div>
 
-    <!-- FIREBASE MODULE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getDatabase, ref, set, get, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+        // ADDED FIREBASE AUTH IMPORTS
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBxKv-xXahSO2TEtwVwXTfU1eJ1ZsaaMAc",
@@ -338,6 +337,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const auth = getAuth(app); // INITIALIZE AUTH
 
         // State Variables
         let groupedData = {};
@@ -442,31 +442,43 @@
             environments: ["dense ancient redwood forest", "tropical prehistoric jungle", "Wigry Lake shoreline"]
         };
 
-        // Initialize Data
-        get(ref(db, 'promptBuilder/groupedData')).then((snapshot) => {
-            if (!snapshot.exists()) {
-                console.log("Initializing database with defaults...");
-                set(ref(db, 'promptBuilder/groupedData'), defaultGroupedData);
-                set(ref(db, 'promptBuilder/heroineData'), defaultHeroineData);
-                set(ref(db, 'promptBuilder/paleoData'), defaultPaleoData);
-                set(ref(db, 'cheatsheets/content'), "Your cheatsheets live here. Safe and synced.");
-            }
-        });
+        // ==========================================
+        // AUTHENTICATION AND DATA LOADING
+        // ==========================================
+        
+        signInAnonymously(auth).then(() => {
+            console.log("Signed in anonymously!");
 
-        // Listen for real-time updates
-        onValue(ref(db, 'promptBuilder/groupedData'), (snapshot) => {
-            groupedData = snapshot.val() || {};
-            // Ensure default safety net category exists
-            if (!groupedData['Uncategorized / Rescued']) {
-                groupedData['Uncategorized / Rescued'] = { color: "#9ca3af", categories: { "Orphaned Tags": [] } };
-            }
-            renderBuilder();
-        });
+            // Initialize Data if empty
+            get(ref(db, 'promptBuilder/groupedData')).then((snapshot) => {
+                if (!snapshot.exists()) {
+                    console.log("Initializing database with defaults...");
+                    set(ref(db, 'promptBuilder/groupedData'), defaultGroupedData);
+                    set(ref(db, 'promptBuilder/heroineData'), defaultHeroineData);
+                    set(ref(db, 'promptBuilder/paleoData'), defaultPaleoData);
+                    set(ref(db, 'cheatsheets/content'), "Your cheatsheets live here. Safe and synced.");
+                }
+            }).catch((error) => console.error("Initialization Error:", error));
 
-        onValue(ref(db, 'promptBuilder/heroineData'), (snapshot) => { heroineData = snapshot.val() || defaultHeroineData; });
-        onValue(ref(db, 'promptBuilder/paleoData'), (snapshot) => { paleoData = snapshot.val() || defaultPaleoData; });
-        onValue(ref(db, 'cheatsheets/content'), (snapshot) => {
-            document.getElementById('cheatsheet-content').value = snapshot.val() || "";
+            // Listen for real-time updates
+            onValue(ref(db, 'promptBuilder/groupedData'), (snapshot) => {
+                groupedData = snapshot.val() || {};
+                // Ensure default safety net category exists
+                if (!groupedData['Uncategorized / Rescued']) {
+                    groupedData['Uncategorized / Rescued'] = { color: "#9ca3af", categories: { "Orphaned Tags": [] } };
+                }
+                renderBuilder();
+            });
+
+            onValue(ref(db, 'promptBuilder/heroineData'), (snapshot) => { heroineData = snapshot.val() || defaultHeroineData; });
+            onValue(ref(db, 'promptBuilder/paleoData'), (snapshot) => { paleoData = snapshot.val() || defaultPaleoData; });
+            onValue(ref(db, 'cheatsheets/content'), (snapshot) => {
+                document.getElementById('cheatsheet-content').value = snapshot.val() || "";
+            });
+            
+        }).catch((error) => {
+            console.error("Anonymous login failed:", error);
+            mainContainer.innerHTML = `<h3 style="color: #ef4444;">Login Error: ${error.message}</h3><p>Check console for details.</p>`;
         });
 
         // ==========================================
