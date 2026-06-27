@@ -610,13 +610,14 @@
 
         // --- Database Modifiers ---
         
-        window.addMasterGroup = () => {
+window.addMasterGroup = () => {
             const name = prompt("Enter new Master Category name:");
             if(name && name.trim()) {
                 const safeName = name.trim();
                 if(!groupedData[safeName]) {
                     const randomColor = "#" + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
-                    groupedData[safeName] = { color: randomColor, categories: { "New Category": [] } };
+                    // FIX: Added a placeholder phrase so Firebase doesn't delete the empty array
+                    groupedData[safeName] = { color: randomColor, categories: { "New Category": ["Placeholder Phrase"] } };
                     set(ref(db, 'promptBuilder/groupedData'), groupedData);
                 }
             }
@@ -667,11 +668,12 @@
             set(ref(db, 'promptBuilder/groupedData'), groupedData);
         };
 
-        window.addCategory = (group) => {
+window.addCategory = (group) => {
             const name = prompt("Enter new category name:");
             if(name && name.trim()) {
                 if(!groupedData[group].categories) groupedData[group].categories = {};
-                groupedData[group].categories[name.trim()] = [];
+                // FIX: Added a placeholder phrase here as well
+                groupedData[group].categories[name.trim()] = ["Placeholder Phrase"];
                 set(ref(db, 'promptBuilder/groupedData'), groupedData);
             }
         };
