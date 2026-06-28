@@ -121,10 +121,11 @@
             gap: 8px;
         }
 
+        /* MASONRY LAYOUT UPDATES */
         .builder-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 10px;
+            column-count: 4; /* Default to 4 columns on very wide screens */
+            column-gap: 15px;
+            width: 100%;
         }
 
         .category-card {
@@ -133,6 +134,13 @@
             border: 1px solid var(--border-color);
             padding: 10px;
             position: relative;
+            
+            /* Masonry Fixes */
+            break-inside: avoid; /* Prevents card from splitting across columns */
+            margin-bottom: 15px;
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .category-header {
@@ -285,6 +293,17 @@
         .active-tag .remove-btn:hover { color: #fff; }
 
         #hidden-clipboard { position: absolute; left: -9999px; }
+
+        /* MASONRY RESPONSIVENESS */
+        @media (max-width: 1400px) {
+            .builder-container { column-count: 3; }
+        }
+        @media (max-width: 1000px) {
+            .builder-container { column-count: 2; }
+        }
+        @media (max-width: 650px) {
+            .builder-container { column-count: 1; }
+        }
     </style>
 </head>
 <body>
@@ -610,7 +629,7 @@
 
         // --- Database Modifiers ---
         
-window.addMasterGroup = () => {
+        window.addMasterGroup = () => {
             const name = prompt("Enter new Master Category name:");
             if(name && name.trim()) {
                 const safeName = name.trim();
@@ -668,7 +687,7 @@ window.addMasterGroup = () => {
             set(ref(db, 'promptBuilder/groupedData'), groupedData);
         };
 
-window.addCategory = (group) => {
+        window.addCategory = (group) => {
             const name = prompt("Enter new category name:");
             if(name && name.trim()) {
                 if(!groupedData[group].categories) groupedData[group].categories = {};
