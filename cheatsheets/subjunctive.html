@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spanish Subjunctive Cheat Sheet</title>
+<!-- Link to FontAwesome for Scalable Vector Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    :root {
+        --blue: #2980b9;
+        --purple: #8e44ad;
+        --orange: #e67e22;
+        --red: #c0392b;
+        --green: #27ae60;
+        --dark-blue: #1f3a93;
+        --pink: #d81b60;
+        --teal: #16a085;
+        --bg-gray: #f4f6f9;
+    }
+    
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #e2e8f0;
+        margin: 0;
+        padding: 20px;
+        color: #333;
+    }
+
+    .poster-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .main-header {
+        background-color: var(--dark-blue);
+        color: white;
+        text-align: center;
+        padding: 15px;
+        border-radius: 50px;
+        font-size: 36px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        margin-bottom: 5px;
+    }
+
+    .sub-header {
+        text-align: center;
+        color: var(--pink);
+        font-weight: bold;
+        font-size: 18px;
+        margin-bottom: 20px;
+        letter-spacing: 1px;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+
+    .box {
+        border-radius: 8px;
+        overflow: hidden;
+        border: 2px solid #ccc;
+        background: white;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .box-title {
+        color: white;
+        padding: 10px;
+        font-weight: bold;
+        text-align: center;
+        font-size: 16px;
+        letter-spacing: 1px;
+    }
+
+    .content {
+        padding: 15px;
+        font-size: 14px;
+        flex-grow: 1;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 5px;
+    }
+
+    th, td {
+        padding: 10px 6px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+        vertical-align: middle;
+    }
+    
+    th {
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #555;
+        background-color: var(--bg-gray);
+    }
+
+    .icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #555;
+        font-size: 16px;
+        margin-right: 8px;
+        width: 24px;
+        height: 24px;
+        text-align: center;
+    }
+
+    .icon-large {
+        font-size: 28px;
+        margin-bottom: 10px;
+        color: #555;
+    }
+
+    /* Grid Spans */
+    .span-2 { grid-column: span 2; }
+    .span-3 { grid-column: span 3; }
+
+    /* Colors */
+    .border-blue { border-color: var(--blue); }
+    .border-blue .box-title { background-color: var(--blue); }
+    
+    .border-purple { border-color: var(--purple); }
+    .border-purple .box-title { background-color: var(--purple); }
+
+    .border-orange { border-color: var(--orange); }
+    .border-orange .box-title { background-color: var(--orange); }
+
+    .border-red { border-color: var(--red); }
+    .border-red .box-title { background-color: var(--red); }
+
+    .border-green { border-color: var(--green); }
+    .border-green .box-title { background-color: var(--green); }
+
+    .border-dark-blue { border-color: var(--dark-blue); }
+    .border-dark-blue .box-title { background-color: var(--dark-blue); }
+
+    .border-pink { border-color: var(--pink); }
+    .border-pink .box-title { background-color: var(--pink); }
+
+    .border-teal { border-color: var(--teal); }
+    .border-teal .box-title { background-color: var(--teal); }
+
+    /* Layout Helpers */
+    .flex-row { display: flex; gap: 15px; justify-content: space-between; }
+    .flex-col { flex: 1; }
+    .text-center { text-align: center; }
+    .highlight-box { background: var(--bg-gray); padding: 10px; border-radius: 6px; margin-top: 10px; }
+    
+    .footer {
+        margin-top: 15px;
+        text-align: center;
+        font-size: 14px;
+        font-weight: bold;
+        color: #333;
+        padding: 12px;
+        background: #fdf2e9;
+        border-radius: 8px;
+        border: 1px solid var(--orange);
+    }
+    
+    .list-small {
+        font-size: 12px;
+        padding-left: 0;
+        list-style-type: none;
+        margin-top: 5px;
+    }
+    .list-small li { margin-bottom: 3px; }
+</style>
+</head>
+<body>
+
+<div class="poster-container">
+    <div class="main-header">SPANISH SUBJUNCTIVE CHEAT SHEET</div>
+    <div class="sub-header">★ QUICK GUIDE TO THE MOOD OF SUBJECTIVITY, DOUBT & EMOTION ★</div>
+
+    <div class="grid">
+        
+        <!-- Box 1: Concept -->
+        <div class="box border-blue">
+            <div class="box-title">1 WHAT IS THE SUBJUNCTIVE?</div>
+            <div class="content">
+                <p>The subjunctive is <strong>not a tense</strong>; it is a <strong>mood</strong>. It reflects how the speaker <em>feels</em> about an action rather than stating a hard fact.</p>
+                <table>
+                    <tr>
+                        <th style="color: var(--dark-blue);">Indicative Mood</th>
+                        <th style="color: var(--blue);">Subjunctive Mood</th>
+                    </tr>
+                    <tr>
+                        <td>Facts, certainty, reality, objective truth.</td>
+                        <td>Doubt, emotion, desires, subjectivity.</td>
+                    </tr>
+                </table>
+                <div class="highlight-box text-center" style="border: 1px solid var(--blue);">
+                    <strong>Formula:</strong> Subject 1 + Trigger + <strong>QUE</strong> + Subject 2 + <strong>Subjunctive</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Box 2: Subject Change -->
+        <div class="box border-pink span-2">
+            <div class="box-title">2 THE SUBJECT CHANGE RULE (1 VS. 2 SUBJECTS)</div>
+            <div class="content">
+                <p>A core rule of the subjunctive: it is most commonly triggered when there are two verbs in a sentence, and <strong>each verb refers to a different person</strong>.</p>
+                <table>
+                    <tr>
+                        <th style="color: var(--pink);">Indicative / Infinitive (Same Person)</th>
+                        <th style="color: var(--pink);">Subjunctive (Different People)</th>
+                    </tr>
+                    <tr>
+                        <td><strong>No me gusta aparcar</strong> el coche aquí.<br><em>I don't like parking the car here.</em></td>
+                        <td><strong>No me gusta que aparques</strong> el coche aquí.<br><em>I don't like that YOU park the car here.</em></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Quiero reducir</strong> la velocidad, voy demasiado rápido.<br><em>I want to reduce speed, I'm going too fast.</em></td>
+                        <td><strong>Quiero que reduzcas</strong> la velocidad.<br><em>I want YOU to reduce speed.</em></td>
+                    </tr>
+                    <tr>
+                        <td>Cuando estamos en la autovía, <strong>me encanta acelerar.</strong><br><em>When on the highway, I love to accelerate.</em></td>
+                        <td>Cuando estamos en la autovía, <strong>me encanta que acelere.</strong><br><em>When on the highway, I love that HE accelerates.</em></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Box 3: Conjugation -->
+        <div class="box border-purple span-3">
+            <div class="box-title">3 HOW TO CONJUGATE (PRESENT SUBJUNCTIVE)</div>
+            <div class="content flex-row">
+                <div class="flex-col">
+                    <p style="text-align: center;"><strong>The "Swap" Rule:</strong><br>1. Go to the "Yo" form of the present indicative.<br>2. Drop the "-o".<br>3. Add the "opposite" endings.</p>
+                </div>
+                <div class="flex-col">
+                    <table>
+                        <tr>
+                            <th colspan="2" style="text-align: center; color: var(--purple);">For -AR Verbs (Use -ER/-IR endings)</th>
+                        </tr>
+                        <tr><td>yo</td><td><strong>-e</strong> (hable)</td></tr>
+                        <tr><td>tú</td><td><strong>-es</strong> (hables)</td></tr>
+                        <tr><td>él/ella/usted</td><td><strong>-e</strong> (hable)</td></tr>
+                        <tr><td>nosotros</td><td><strong>-emos</strong> (hablemos)</td></tr>
+                        <tr><td>ellos/ellas/ustedes</td><td><strong>-en</strong> (hablen)</td></tr>
+                    </table>
+                </div>
+                <div class="flex-col">
+                    <table>
+                        <tr>
+                            <th colspan="2" style="text-align: center; color: var(--purple);">For -ER/-IR Verbs (Use -AR endings)</th>
+                        </tr>
+                        <tr><td>yo</td><td><strong>-a</strong> (coma / viva)</td></tr>
+                        <tr><td>tú</td><td><strong>-as</strong> (comas / vivas)</td></tr>
+                        <tr><td>él/ella/usted</td><td><strong>-a</strong> (coma / viva)</td></tr>
+                        <tr><td>nosotros</td><td><strong>-amos</strong> (comamos / vivamos)</td></tr>
+                        <tr><td>ellos/ellas/ustedes</td><td><strong>-an</strong> (coman / vivan)</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Box 4: WEIRDO Triggers -->
+        <div class="box border-red span-3">
+            <div class="box-title">4 THE "WEIRDO" TRIGGERS (WHEN TO USE IT)</div>
+            <div class="content flex-row text-center">
+                <div class="flex-col">
+                    <i class="icon-large fa-solid fa-wand-magic-sparkles" style="color: var(--red);"></i><br>
+                    <strong style="font-size: 18px;">W</strong><br><small>Wishes / Desires</small><br>
+                    <ul class="list-small">
+                        <li><em>Quiero que...</em> (I want)</li>
+                        <li><em>Deseo que...</em> (I desire)</li>
+                        <li><em>Espero que...</em> (I hope)</li>
+                    </ul>
+                </div>
+                <div class="flex-col">
+                    <i class="icon-large fa-solid fa-heart" style="color: var(--red);"></i><br>
+                    <strong style="font-size: 18px;">E</strong><br><small>Emotions</small><br>
+                    <ul class="list-small">
+                        <li><em>Me alegro de que...</em></li>
+                        <li><em>Siento que...</em></li>
+                        <li><em>Me molesta que...</em></li>
+                    </ul>
+                </div>
+                <div class="flex-col">
+                    <i class="icon-large fa-solid fa-bullhorn" style="color: var(--red);"></i><br>
+                    <strong style="font-size: 18px;">I</strong><br><small>Impersonal Expressions</small><br>
+                    <ul class="list-small" style="text-align: left; padding-left: 20px;">
+                        <li><em>Es importante que...</em></li>
+                        <li><em>Es posible que...</em></li>
+                        <li><em>Es esencial que...</em></li>
+                        <li><em>Es urgente que...</em></li>
+                        <li><em>Es suficiente que...</em></li>
+                        <li><em>Es bueno que...</em></li>
+                        <li><em>Es natural que...</em></li>
+                    </ul>
+                </div>
+                <div class="flex-col">
+                    <i class="icon-large fa-solid fa-handshake-angle" style="color: var(--red);"></i><br>
+                    <strong style="font-size: 18px;">R</strong><br><small>Recommendations</small><br>
+                    <ul class="list-small">
+                        <li><em>Recomiendo que...</em></li>
+                        <li><em>Sugiero que...</em></li>
+                        <li><em>Aconsejo que...</em></li>
+                    </ul>
+                </div>
+                <div class="flex-col">
+                    <i class="icon-large fa-solid fa-circle-question" style="color: var(--red);"></i><br>
+                    <strong style="font-size: 18px;">D</strong><br><small>Doubt / Denial</small><br>
+                    <ul class="list-small">
+                        <li><em>Dudo que...</em></li>
+                        <li><em>No creo que...</em></li>
+                        <li><em>Es dudoso que...</em></li>
+                        <li><em>Es imposible que...</em></li>
+                    </ul>
+                </div>
+                <div class="flex-col">
+                    <i class="icon-large fa-solid fa-hands-praying" style="color: var(--red);"></i><br>
+                    <strong style="font-size: 18px;">O</strong><br><small>Ojalá</small><br>
+                    <ul class="list-small">
+                        <li><em>Ojalá (que)...</em> (God willing / I strongly hope)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Box 5: Hypotheticals -->
+        <div class="box border-green span-2">
+            <div class="box-title">5 THE UNKNOWN VS. THE KNOWN (HYPOTHETICALS)</div>
+            <div class="content flex-row">
+                <div class="flex-col">
+                    <p style="margin-top: 0;">Use the subjunctive to express hypothetical statements, or when referring to someone/something you are not sure actually exists.</p>
+                    <div class="highlight-box">
+                        <strong style="color: var(--green);"><i class="fa-solid fa-magnifying-glass"></i> Subjunctive (Unknown/Hypothetical):</strong><br>
+                        <em>Busco a un hombre que <strong>sea</strong> sincero.</em><br>
+                        (I am looking for a man who is honest. — We aren't sure he exists; no specific person in mind.)<br><br>
+                        <em>Busco a una chica que <strong>tenga</strong> una actitud positiva.</em><br>
+                        (I'm looking for a girl who has a positive attitude.)
+                    </div>
+                </div>
+                <div class="flex-col">
+                    <p style="margin-top: 0;">If you are completely certain that a person or thing exists and are looking for them specifically, switch back to the indicative.</p>
+                    <div class="highlight-box" style="border: 1px solid #ccc; background: white;">
+                        <strong style="color: #555;"><i class="fa-solid fa-user-check"></i> Indicative (Specific/Known):</strong><br>
+                        <em>Busco a una niña que <strong>tiene</strong> flequillo y un lunar en la cara.</em><br>
+                        (I am looking for a girl who has bangs and a mole on her face. — Like a parent looking for their specific lost child.)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Box 6: Cuando & Para Que -->
+        <div class="box border-orange">
+            <div class="box-title">6 CUANDO & PARA QUE</div>
+            <div class="content">
+                <strong style="color: var(--orange);"><i class="fa-solid fa-clock"></i> CUANDO + FUTURE = SUBJUNCTIVE</strong>
+                <p style="margin-top: 5px; font-size: 13px;">When the word <em>cuando</em> refers to an event that hasn't happened yet (the future), it triggers the subjunctive.</p>
+                <p><em>Cuando <strong>estés</strong> en casa, avísame.</em><br><small>(When you are home, let me know.)</small></p>
+                <hr style="border: 0; border-top: 1px solid #eee;">
+                
+                <strong style="color: var(--orange);"><i class="fa-solid fa-bullseye"></i> PARA QUE = ALWAYS SUBJUNCTIVE</strong>
+                <p style="margin-top: 5px; font-size: 13px;">Whenever you use <em>para que</em> (so that / in order to), the following verb must be subjunctive.</p>
+                <ul class="list-small">
+                    <li><em>Te lo digo para que lo <strong>entiendas</strong>.</em></li>
+                    <li><em>Cierra la ventana, para que no <strong>haga</strong> frío.</em></li>
+                    <li><em>Aprende portugués para que no <strong>tengas</strong> un choque cultural al llegar.</em></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Box 7: Irregulars -->
+        <div class="box border-teal">
+            <div class="box-title">7 IRREGULAR VERBS (D.I.S.H.E.S.)</div>
+            <div class="content">
+                <p>These verbs do not follow the normal conjugation rules. You simply must memorize them.</p>
+                <table>
+                    <tr><td style="color: var(--teal); font-weight:bold;">D - Dar</td><td>dé, des, dé, demos, den</td></tr>
+                    <tr><td style="color: var(--teal); font-weight:bold;">I - Ir</td><td>vaya, vayas, vaya, vayamos, vayan</td></tr>
+                    <tr><td style="color: var(--teal); font-weight:bold;">S - Ser</td><td>sea, seas, sea, seamos, sean</td></tr>
+                    <tr><td style="color: var(--teal); font-weight:bold;">H - Haber</td><td>haya, hayas, haya, hayamos, hayan</td></tr>
+                    <tr><td style="color: var(--teal); font-weight:bold;">E - Estar</td><td>esté, estés, esté, estemos, estén</td></tr>
+                    <tr><td style="color: var(--teal); font-weight:bold;">S - Saber</td><td>sepa, sepas, sepa, sepamos, sepan</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Box 8: Indicative vs Subjunctive Contrast -->
+        <div class="box border-blue span-2">
+            <div class="box-title">8 THE "BELIEF" RULE</div>
+            <div class="content flex-row">
+                <div class="flex-col">
+                    <h4 style="color: var(--dark-blue); margin-top: 0; text-align: center;">INDICATIVE (Certainty / Declaring)</h4>
+                    <ul style="padding-left: 20px; font-size: 13px;">
+                        <li><strong>Creo que</strong> es verdad. (I believe that...)</li>
+                        <li><strong>Pienso que</strong> ella viene. (I think that...)</li>
+                        <li><strong>Es cierto que</strong> está aquí. (It's certain that...)</li>
+                        <li><strong>Es obvio que</strong> llueve. (It's obvious that...)</li>
+                        <li><strong>No dudo que</strong> lo sabes. (I don't doubt that...)</li>
+                    </ul>
+                </div>
+                <div class="flex-col">
+                    <h4 style="color: var(--blue); margin-top: 0; text-align: center;">SUBJUNCTIVE (Doubt / Denying)</h4>
+                    <ul style="padding-left: 20px; font-size: 13px;">
+                        <li><strong>No creo que</strong> sea verdad. (I don't believe that...)</li>
+                        <li><strong>No pienso que</strong> ella venga. (I don't think that...)</li>
+                        <li><strong>No es cierto que</strong> esté aquí. (It's not certain that...)</li>
+                        <li><strong>Dudo que</strong> llueva. (I doubt that...)</li>
+                        <li><strong>Puede ser que</strong> lo sepas. (It may be that...)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Box 9: ESCAPA -->
+        <div class="box border-dark-blue span-2">
+            <div class="box-title">9 ESCAPA CONJUNCTIONS (ALWAYS SUBJUNCTIVE)</div>
+            <div class="content flex-row">
+                <div class="flex-col">
+                    <p>When you see these connective phrases, the verb that follows them <strong>must always</strong> be in the subjunctive.</p>
+                </div>
+                <div class="flex-col">
+                    <table style="font-size: 13px;">
+                        <tr><td style="color: var(--dark-blue); font-weight:bold;">E - En caso de que</td><td>In case that</td></tr>
+                        <tr><td style="color: var(--dark-blue); font-weight:bold;">S - Sin que</td><td>Without</td></tr>
+                        <tr><td style="color: var(--dark-blue); font-weight:bold;">C - Con tal de que</td><td>Provided that</td></tr>
+                    </table>
+                </div>
+                <div class="flex-col">
+                    <table style="font-size: 13px;">
+                        <tr><td style="color: var(--dark-blue); font-weight:bold;">A - A menos que</td><td>Unless</td></tr>
+                        <tr><td style="color: var(--dark-blue); font-weight:bold;">P - Para que</td><td>So that / In order to</td></tr>
+                        <tr><td style="color: var(--dark-blue); font-weight:bold;">A - Antes de que</td><td>Before</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Box 10: Spelling Changes -->
+        <div class="box border-purple">
+            <div class="box-title">10 CAR / GAR / ZAR</div>
+            <div class="content">
+                <p>To preserve the original pronunciation of the verb, words ending in -car, -gar, and -zar undergo a spelling change.</p>
+                <table>
+                    <tr>
+                        <td><strong>-CAR <i class="fa-solid fa-arrow-right"></i> -QUE</strong></td>
+                        <td>Tocar <i class="fa-solid fa-arrow-right"></i> <strong>toque</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>-GAR <i class="fa-solid fa-arrow-right"></i> -GUE</strong></td>
+                        <td>Jugar <i class="fa-solid fa-arrow-right"></i> <strong>juegue</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>-ZAR <i class="fa-solid fa-arrow-right"></i> -CE</strong></td>
+                        <td>Almorzar <i class="fa-solid fa-arrow-right"></i> <strong>almuerce</strong></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        <i class="icon fa-solid fa-lightbulb" style="color: var(--orange); font-size: 18px;"></i> TIP: Don't let it overwhelm you. Remember that after "quiero que" (I want you to), the subjunctive always follows! Mastering the subjunctive is a simple path to success in mastering Spanish.<br>
+        <span style="color: var(--red);">♥ FOCUS ON THE TRIGGERS AND THE REST WILL FOLLOW</span>
+    </div>
+</div>
+
+</body>
+</html>
