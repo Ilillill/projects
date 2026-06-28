@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud Flashcards</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -205,6 +206,12 @@
             color: var(--text-muted);
         }
 
+        /* Review Again State Styling */
+        .set-card.review {
+            border: 2px solid var(--success);
+            background-color: var(--success-bg);
+        }
+
         .set-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         
         .set-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
@@ -236,7 +243,24 @@
             margin-top: 5px;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 5px;
+        }
+
+        /* Card Mini Progress Bar */
+        .card-progress-bg {
+            width: 100%;
+            height: 6px;
+            background-color: var(--border);
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .card-progress-fill {
+            height: 100%;
+            background-color: var(--success);
+            border-radius: 3px;
+            transition: width 0.3s;
         }
 
         .set-category-select {
@@ -342,6 +366,49 @@
         .results-card { background: var(--surface); border-radius: 16px; padding: 40px; text-align: center; border: 1px solid var(--border); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
         .score-circle { width: 120px; height: 120px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; margin: 0 auto 20px; }
 
+        /* --- Stats Screen --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.85rem;
+        }
+
+        .chart-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
         /* --- Modals --- */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -360,6 +427,7 @@
         <div class="navbar">
             <h1 class="nav-title"><i class="fa-solid fa-layer-group"></i> My Flashcards</h1>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn btn-outline" onclick="openStats()"><i class="fa-solid fa-chart-simple"></i> Statistics</button>
                 <button class="btn btn-success" onclick="openCsvModal()"><i class="fa-solid fa-file-csv"></i> New Set from CSV</button>
                 <button class="btn" onclick="promptCreateSet()"><i class="fa-solid fa-plus"></i> New Set</button>
             </div>
@@ -381,6 +449,35 @@
         </div>
         
         <input type="file" id="dashboard-csv-upload" accept=".csv" style="display: none;">
+    </div>
+
+    <div id="stats-screen" class="screen">
+        <div class="navbar">
+            <button class="btn btn-outline" onclick="goHome()"><i class="fa-solid fa-arrow-left"></i> Back</button>
+            <h1 class="nav-title"><i class="fa-solid fa-chart-line"></i> Performance Statistics</h1>
+            <div style="width: 80px;"></div>
+        </div>
+        <div class="manage-container">
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-number" id="stat-total-sets">0</div>
+                    <div class="stat-label">Total Sets</div>
+                </div>
+                <div class="stat-box" style="border-bottom: 4px solid var(--success);">
+                    <div class="stat-number" style="color: var(--success);" id="stat-finished-sets">0</div>
+                    <div class="stat-label">Finished Sets</div>
+                </div>
+                <div class="stat-box" style="border-bottom: 4px solid var(--warning);">
+                    <div class="stat-number" style="color: var(--warning);" id="stat-review-sets">0</div>
+                    <div class="stat-label">Needs Review</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3 style="margin-top: 0; color: var(--text-main); text-align: center;">Recent Set Scores (First Attempt Accuracy)</h3>
+                <canvas id="scoresChart"></canvas>
+            </div>
+        </div>
     </div>
 
     <div id="manage-screen" class="screen">
@@ -452,7 +549,7 @@
                 <div class="score-circle" id="end-score">100%</div>
                 <h2 style="font-size: 2rem; margin-bottom: 10px;">Great Job!</h2>
                 <p style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px;">
-                    You answered <strong id="end-correct" style="color: var(--success);">0</strong> correctly out of <strong id="end-total">0</strong>.
+                    First attempt accuracy: <strong id="end-correct" style="color: var(--success);">0</strong> correctly out of <strong id="end-total">0</strong>.
                 </p>
                 
                 <div id="end-errors-section" style="display: none; background: var(--danger-bg); padding: 20px; border-radius: 12px; margin-bottom: 30px;">
@@ -503,12 +600,13 @@
         // --- Application State ---
         let sets = [];
         let categories = [];
-        let activeCategoryId = 'all'; // 'all', 'uncategorized', 'finished', 'review', or specific ID
+        let activeCategoryId = 'all'; 
         let currentManageSetId = null;
         let manageWordsUnsubscribe = null;
         let currentWords = [];
         let editingWordId = null;
         window.pendingNewSetName = ""; 
+        let chartInstance = null; // Holds the Chart.js instance
 
         // Gameplay State
         let deck = [];
@@ -525,16 +623,14 @@
 
         // --- Authentication & Initialization ---
         signInAnonymously(auth).then(() => {
-            // Listen for Categories (Sorted Alphabetically via JS mapping)
             const catQ = query(collection(db, "flashcard_categories"));
             onSnapshot(catQ, (snapshot) => {
                 categories = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
                     .sort((a, b) => a.name.localeCompare(b.name));
                 renderSidebar();
-                renderDashboard(); // Re-render to update selects
+                renderDashboard();
             });
 
-            // Listen for Sets
             const setsQ = query(collection(db, "flashcard_sets"));
             onSnapshot(setsQ, (snapshot) => {
                 sets = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -553,6 +649,69 @@
             switchScreen('dashboard-screen');
             currentManageSetId = null;
             renderDashboard(); 
+        }
+
+        // --- Stats Screen Implementation ---
+        window.openStats = function() {
+            switchScreen('stats-screen');
+            
+            // Calculate basic metrics
+            let finishedCount = 0;
+            let reviewCount = 0;
+            let setsWithData = [];
+
+            sets.forEach(s => {
+                if(s.isFinished) finishedCount++;
+                if(s.needsReview) reviewCount++;
+                if(s.lastScore !== undefined && !s.isFinished) {
+                    setsWithData.push(s);
+                }
+            });
+
+            document.getElementById('stat-total-sets').innerText = sets.length;
+            document.getElementById('stat-finished-sets').innerText = finishedCount;
+            document.getElementById('stat-review-sets').innerText = reviewCount;
+
+            // Sort by most recently reviewed for the chart
+            setsWithData.sort((a, b) => (b.lastReviewed || 0) - (a.lastReviewed || 0));
+            const topSets = setsWithData.slice(0, 8).reverse(); // Get up to 8 recent active sets
+
+            const labels = topSets.map(s => {
+                // Truncate long names for chart aesthetic
+                return s.name.length > 15 ? s.name.substring(0, 15) + '...' : s.name;
+            });
+            const dataScores = topSets.map(s => s.lastScore);
+
+            const ctx = document.getElementById('scoresChart').getContext('2d');
+            
+            // Destroy previous chart if it exists to prevent hover glitches
+            if(chartInstance) { chartInstance.destroy(); }
+            
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Accuracy %',
+                        data: dataScores,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: { display: true, text: 'Score (%)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
         }
 
         // --- Categories CRUD ---
@@ -731,7 +890,6 @@
             const container = document.getElementById('sets-container');
             container.innerHTML = '';
             
-            // Filter by active category
             let displaySets = sets;
             if (activeCategoryId === 'finished') {
                 displaySets = sets.filter(s => s.isFinished);
@@ -748,7 +906,6 @@
                 return;
             }
 
-            // Sorting: Priority to Starred, then Alphabetical
             displaySets.sort((a, b) => {
                 if (a.isStarred && !b.isStarred) return -1;
                 if (!a.isStarred && b.isStarred) return 1;
@@ -756,22 +913,19 @@
             });
 
             displaySets.forEach(set => {
-                let topBadges = '';
-                
-                // Build category dropdown options
                 let catOptions = `<option value="none" ${!set.categoryId ? 'selected' : ''}>Uncategorized</option>`;
                 categories.forEach(cat => {
                     catOptions += `<option value="${cat.id}" ${set.categoryId === cat.id ? 'selected' : ''}>${cat.name}</option>`;
                 });
 
-                // Format Last Reviewed Date
                 const dateStr = set.lastReviewed ? new Date(set.lastReviewed).toLocaleDateString() : 'Never';
+                const scoreDisplay = set.lastScore !== undefined ? `${set.lastScore}%` : '-';
+                const scoreColor = set.lastScore > 80 ? 'var(--success)' : (set.lastScore > 50 ? 'var(--warning)' : 'var(--danger)');
 
                 const card = document.createElement('div');
-                card.className = `set-card ${set.isStarred ? 'starred' : ''} ${set.isFinished ? 'finished' : ''}`;
+                card.className = `set-card ${set.isStarred ? 'starred' : ''} ${set.isFinished ? 'finished' : ''} ${set.needsReview ? 'review' : ''}`;
                 
                 card.innerHTML = `
-                    ${topBadges}
                     <div class="set-card-top">
                         <div class="set-card-header">
                             <button class="btn-icon star-btn ${set.isStarred ? 'active' : ''}" onclick="toggleStar('${set.id}', ${set.isStarred})" title="Star Set">
@@ -792,7 +946,12 @@
                     </select>
 
                     <div class="last-reviewed">
-                        <i class="fa-solid fa-clock-rotate-left"></i> Last Attempt: ${dateStr}
+                        <span><i class="fa-solid fa-clock-rotate-left"></i> Last: ${dateStr}</span>
+                        <span style="font-weight:bold; color: ${scoreColor}">${scoreDisplay}</span>
+                    </div>
+                    
+                    <div class="card-progress-bg">
+                        <div class="card-progress-fill" style="width: ${set.lastScore || 0}%; background-color: ${scoreColor}"></div>
                     </div>
 
                     <div class="set-card-actions" style="margin-top: 5px; justify-content: flex-start; gap: 10px;">
@@ -1058,7 +1217,6 @@
 
         function updateProgress() {
             document.getElementById('play-current-idx').innerText = currentCardIdx + 1;
-            // update total dynamically incase cards are re-added
             document.getElementById('play-total').innerText = deck.length; 
             const percent = ((currentCardIdx) / deck.length) * 100;
             document.getElementById('play-progress').style.width = `${percent}%`;
@@ -1074,7 +1232,6 @@
             updateProgress();
             const card = deck[currentCardIdx];
 
-            // Reset Play Screen
             document.getElementById('play-screen').className = 'screen active';
             document.getElementById('play-user-input').style.display = 'none';
             
@@ -1143,7 +1300,6 @@
                 document.getElementById('play-screen').className = 'screen active bg-red';
                 document.getElementById('play-qnote').innerText = 'Original Question:';
                 
-                // Show both Question and Correct Answer
                 document.getElementById('play-q').innerHTML = `
                     <div style="font-size: 1.4rem; font-weight: normal; margin-bottom: 10px; opacity: 0.9;">${card.q}</div>
                     <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; color: #fca5a5;">Correct Answer</div>
@@ -1154,11 +1310,9 @@
                 userInputDisplay.innerHTML = `You typed: <span style="text-decoration: line-through;">${userInput || '[nothing]'}</span>`;
                 userInputDisplay.style.display = 'block';
                 
-                // Spaced Repetition: Push to the end of the deck so it is asked again in this session
                 deck.push(card);
                 document.getElementById('play-total').innerText = deck.length;
 
-                // Also keep track of uniques for the summary screen errors list
                 if (!wrongDeck.some(w => w.id === card.id)) {
                     wrongDeck.push(card);
                 }
@@ -1180,23 +1334,20 @@
         function endSession() {
             document.getElementById('play-progress').style.width = `100%`;
             
-            // Update "Last Attempt" timestamp in the database
+            const finalCount = deck.length;
+            const originalDeckSize = finalCount - wrongDeck.length; 
+            const firstTryCorrect = originalDeckSize - wrongDeck.length;
+            const pct = Math.max(0, Math.round((firstTryCorrect / originalDeckSize) * 100));
+
+            // Save the stats to Firebase
             if (playingSetId) {
-                updateDoc(doc(db, "flashcard_sets", playingSetId), { lastReviewed: Date.now() }).catch(err => console.error("Could not update last review date: ", err));
+                updateDoc(doc(db, "flashcard_sets", playingSetId), { 
+                    lastReviewed: Date.now(),
+                    lastScore: pct
+                }).catch(err => console.error("Could not update stats: ", err));
             }
 
             switchScreen('end-screen');
-            
-            // The user had to answer all cards in the deck correctly to reach this screen due to the re-queue logic.
-            // The original deck length is calculated by taking the final deck length minus the retries (wrongDeck count).
-            const finalCount = deck.length;
-            const originalDeckSize = finalCount - wrongDeck.length; 
-            
-            const totalScore = originalDeckSize;
-            // The "Correct" out of "Total" should be how many they got right the *first* time
-            const firstTryCorrect = originalDeckSize - wrongDeck.length;
-            // Prevent negative percentages if heavily re-queued
-            const pct = Math.max(0, Math.round((firstTryCorrect / originalDeckSize) * 100));
 
             document.getElementById('end-score').innerText = `${pct}%`;
             document.getElementById('end-correct').innerText = firstTryCorrect;
@@ -1212,7 +1363,6 @@
         }
 
         window.retryFullDeck = function() {
-            // Need to get original deck back (remove the duplicates added to the end)
             const uniqueDeck = [];
             const seen = new Set();
             for (const w of deck) {
