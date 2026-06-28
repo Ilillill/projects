@@ -65,8 +65,14 @@
         
         .btn-icon { padding: 8px; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer; border: none; transition: 0.2s; }
         .btn-icon:hover { background: #f1f5f9; color: var(--text-main); }
+        
+        /* Toggle Icon States */
         .btn-icon.star-btn:hover { color: var(--warning); }
         .btn-icon.star-btn.active { color: var(--warning); }
+        .btn-icon.check-btn:hover { color: var(--success); }
+        .btn-icon.check-btn.active { color: var(--success); }
+        .btn-icon.review-btn:hover { color: var(--primary); }
+        .btn-icon.review-btn.active { color: var(--primary); }
 
         .input-field, .select-field {
             width: 100%;
@@ -181,16 +187,29 @@
             gap: 12px;
             transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s, background-color 0.2s;
         }
+        
         .set-card.starred {
             border: 2px solid var(--warning);
             background-color: var(--warning-bg);
+        }
+        
+        /* Finished State Styling */
+        .set-card.finished {
+            opacity: 0.65;
+            background-color: #f1f5f9;
+            border-color: #cbd5e1;
+            filter: grayscale(0.5);
+        }
+        .set-card.finished .set-title {
+            text-decoration: line-through;
+            color: var(--text-muted);
         }
 
         .set-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         
         .set-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
-        .set-card-header { display: flex; align-items: center; gap: 8px; flex: 1; }
-        .set-title { font-size: 1.2rem; font-weight: 700; margin: 0; color: var(--text-main); word-break: break-word; }
+        .set-card-header { display: flex; align-items: center; gap: 4px; flex: 1; }
+        .set-title { font-size: 1.2rem; font-weight: 700; margin: 0 0 0 4px; color: var(--text-main); word-break: break-word; }
         
         .set-card-actions { display: flex; gap: 2px; flex-wrap: wrap; justify-content: flex-end; }
         
@@ -209,6 +228,15 @@
             align-self: flex-start;
             border: 1px solid #fde047;
             margin-bottom: 5px;
+        }
+        
+        .last-reviewed {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .set-category-select {
@@ -475,7 +503,7 @@
         // --- Application State ---
         let sets = [];
         let categories = [];
-        let activeCategoryId = 'all'; // 'all', 'uncategorized', or specific ID
+        let activeCategoryId = 'all'; // 'all', 'uncategorized', 'finished', 'review', or specific ID
         let currentManageSetId = null;
         let manageWordsUnsubscribe = null;
         let currentWords = [];
@@ -488,6 +516,7 @@
         let currentCardIdx = 0;
         let isAnswerState = false;
         let playingSetName = "";
+        let playingSetId = null;
 
         // --- DOM Elements ---
         const inputField = document.getElementById('answer-input');
@@ -496,16 +525,17 @@
 
         // --- Authentication & Initialization ---
         signInAnonymously(auth).then(() => {
-            // Listen for Categories
-            const catQ = query(collection(db, "flashcard_categories"), orderBy("createdAt", "asc"));
+            // Listen for Categories (Sorted Alphabetically via JS mapping)
+            const catQ = query(collection(db, "flashcard_categories"));
             onSnapshot(catQ, (snapshot) => {
-                categories = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                categories = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+                    .sort((a, b) => a.name.localeCompare(b.name));
                 renderSidebar();
                 renderDashboard(); // Re-render to update selects
             });
 
             // Listen for Sets
-            const setsQ = query(collection(db, "flashcard_sets"), orderBy("createdAt", "desc"));
+            const setsQ = query(collection(db, "flashcard_sets"));
             onSnapshot(setsQ, (snapshot) => {
                 sets = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderDashboard();
@@ -550,7 +580,6 @@
         window.deleteCategory = async function(id, name) {
             event.stopPropagation();
             if (confirm(`Delete category "${name}"? Sets inside will become Uncategorized.`)) {
-                // Remove category ID from all sets inside it
                 const setsToUpdate = sets.filter(s => s.categoryId === id);
                 if (setsToUpdate.length > 0) {
                     const batch = writeBatch(db);
@@ -559,7 +588,6 @@
                     });
                     await batch.commit();
                 }
-                // Delete the category itself
                 await deleteDoc(doc(db, "flashcard_categories", id));
                 if (activeCategoryId === id) setActiveCategory('all');
             }
@@ -573,6 +601,12 @@
                 </div>
                 <div class="cat-item ${activeCategoryId === 'uncategorized' ? 'active' : ''}" onclick="setActiveCategory('uncategorized')">
                     <span><i class="fa-solid fa-box-open"></i> Uncategorized</span>
+                </div>
+                <div class="cat-item ${activeCategoryId === 'finished' ? 'active' : ''}" onclick="setActiveCategory('finished')">
+                    <span><i class="fa-solid fa-check-double"></i> Finished Sets</span>
+                </div>
+                <div class="cat-item ${activeCategoryId === 'review' ? 'active' : ''}" onclick="setActiveCategory('review')">
+                    <span><i class="fa-solid fa-rotate-right"></i> Review Again</span>
                 </div>
                 <div style="height: 1px; background: var(--border); margin: 5px 0;"></div>
             `;
@@ -597,11 +631,13 @@
         window.promptCreateSet = async function() {
             const name = prompt("Enter a name for the new Flashcard Set:");
             if (name && name.trim()) {
-                const categoryId = (activeCategoryId !== 'all' && activeCategoryId !== 'uncategorized') ? activeCategoryId : null;
+                const categoryId = (activeCategoryId !== 'all' && activeCategoryId !== 'uncategorized' && activeCategoryId !== 'finished' && activeCategoryId !== 'review') ? activeCategoryId : null;
                 await addDoc(collection(db, "flashcard_sets"), { 
                     name: name.trim(), 
                     categoryId: categoryId,
                     isStarred: false,
+                    isFinished: false,
+                    needsReview: false,
                     createdAt: Date.now() 
                 });
             }
@@ -624,6 +660,14 @@
 
         window.toggleStar = async function(id, currentStatus) {
             await updateDoc(doc(db, "flashcard_sets", id), { isStarred: !currentStatus });
+        }
+        
+        window.toggleFinished = async function(id, currentStatus) {
+            await updateDoc(doc(db, "flashcard_sets", id), { isFinished: !currentStatus });
+        }
+        
+        window.toggleReview = async function(id, currentStatus) {
+            await updateDoc(doc(db, "flashcard_sets", id), { needsReview: !currentStatus });
         }
 
         window.changeSetCategory = async function(setId, selectElement) {
@@ -650,7 +694,6 @@
             }
         }
 
-        // CSV Export for a specific Set
         window.exportSet = async function(setId, setName) {
             const snap = await getDocs(query(collection(db, "flashcard_words"), where("setId", "==", setId)));
             const words = snap.docs.map(d => d.data());
@@ -662,7 +705,6 @@
 
             let csvContent = "Question,Answer1,Answer2,Question Note,Answer Note\n";
             words.forEach(w => {
-                // Properly escape fields that might contain commas or quotes
                 const q = (w.q || '').replace(/"/g, '""');
                 const a1 = (w.a1 || '').replace(/"/g, '""');
                 const a2 = (w.a2 || '').replace(/"/g, '""');
@@ -691,10 +733,14 @@
             
             // Filter by active category
             let displaySets = sets;
-            if (activeCategoryId !== 'all' && activeCategoryId !== 'uncategorized') {
-                displaySets = sets.filter(s => s.categoryId === activeCategoryId);
+            if (activeCategoryId === 'finished') {
+                displaySets = sets.filter(s => s.isFinished);
+            } else if (activeCategoryId === 'review') {
+                displaySets = sets.filter(s => s.needsReview);
             } else if (activeCategoryId === 'uncategorized') {
                 displaySets = sets.filter(s => !s.categoryId);
+            } else if (activeCategoryId !== 'all') {
+                displaySets = sets.filter(s => s.categoryId === activeCategoryId);
             }
 
             if(displaySets.length === 0) {
@@ -702,21 +748,15 @@
                 return;
             }
 
-            const lastOpenedId = localStorage.getItem('lastOpenedFlashcardSetId');
-            
-            // Priority: Starred > Last Opened > Newest
+            // Sorting: Priority to Starred, then Alphabetical
             displaySets.sort((a, b) => {
                 if (a.isStarred && !b.isStarred) return -1;
                 if (!a.isStarred && b.isStarred) return 1;
-                if (a.id === lastOpenedId) return -1;
-                if (b.id === lastOpenedId) return 1;
-                return b.createdAt - a.createdAt;
+                return (a.name || "").localeCompare(b.name || "");
             });
 
             displaySets.forEach(set => {
-                const isLastOpened = set.id === lastOpenedId;
                 let topBadges = '';
-                if (isLastOpened) topBadges += `<div class="badge-recent"><i class="fa-solid fa-clock-rotate-left"></i> Last Opened</div>`;
                 
                 // Build category dropdown options
                 let catOptions = `<option value="none" ${!set.categoryId ? 'selected' : ''}>Uncategorized</option>`;
@@ -724,15 +764,24 @@
                     catOptions += `<option value="${cat.id}" ${set.categoryId === cat.id ? 'selected' : ''}>${cat.name}</option>`;
                 });
 
+                // Format Last Reviewed Date
+                const dateStr = set.lastReviewed ? new Date(set.lastReviewed).toLocaleDateString() : 'Never';
+
                 const card = document.createElement('div');
-                card.className = `set-card ${set.isStarred ? 'starred' : ''}`;
+                card.className = `set-card ${set.isStarred ? 'starred' : ''} ${set.isFinished ? 'finished' : ''}`;
                 
                 card.innerHTML = `
                     ${topBadges}
                     <div class="set-card-top">
                         <div class="set-card-header">
-                            <button class="btn-icon star-btn ${set.isStarred ? 'active' : ''}" onclick="toggleStar('${set.id}', ${set.isStarred})">
+                            <button class="btn-icon star-btn ${set.isStarred ? 'active' : ''}" onclick="toggleStar('${set.id}', ${set.isStarred})" title="Star Set">
                                 <i class="fa-solid fa-star"></i>
+                            </button>
+                            <button class="btn-icon check-btn ${set.isFinished ? 'active' : ''}" onclick="toggleFinished('${set.id}', ${set.isFinished})" title="Mark Finished">
+                                <i class="fa-solid fa-check-circle"></i>
+                            </button>
+                            <button class="btn-icon review-btn ${set.needsReview ? 'active' : ''}" onclick="toggleReview('${set.id}', ${set.needsReview})" title="Review Again">
+                                <i class="fa-solid fa-rotate-right"></i>
                             </button>
                             <h3 class="set-title">${set.name}</h3>
                         </div>
@@ -741,6 +790,10 @@
                     <select class="set-category-select" onchange="changeSetCategory('${set.id}', this)" title="Move to Category">
                         ${catOptions}
                     </select>
+
+                    <div class="last-reviewed">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Last Attempt: ${dateStr}
+                    </div>
 
                     <div class="set-card-actions" style="margin-top: 5px; justify-content: flex-start; gap: 10px;">
                         <button class="btn-icon" onclick="renameSet('${set.id}', '${set.name.replace(/'/g, "\\'")}')" title="Rename Set"><i class="fa-solid fa-pen"></i></button>
@@ -885,7 +938,6 @@
             closeCsvModal();
         }
 
-        // CSV Parser Logic for both buttons
         async function processAndImportCSV(fileText, setId, setNameStr) {
             const lines = fileText.split(/\r?\n/);
             const wordsToAdd = [];
@@ -893,7 +945,6 @@
             
             for(let i = 1; i < lines.length; i++) {
                 if(lines[i].trim() === '') continue;
-                // Basic CSV split, ignoring commas inside quotes could be complex, assuming standard format as provided
                 const parts = lines[i].split(',');
                 if(parts.length >= 5) {
                     wordsToAdd.push({
@@ -930,7 +981,6 @@
             return false;
         }
 
-        // Inside Manage Screen Upload
         document.getElementById('csv-upload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file || !currentManageSetId) return;
@@ -942,7 +992,6 @@
             reader.readAsText(file);
         });
 
-        // Dashboard Upload
         document.getElementById('dashboard-csv-upload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file || !window.pendingNewSetName) return;
@@ -950,16 +999,18 @@
             const reader = new FileReader();
             reader.onload = async function(event) {
                 try {
-                    const categoryId = (activeCategoryId !== 'all' && activeCategoryId !== 'uncategorized') ? activeCategoryId : null;
+                    const categoryId = (activeCategoryId !== 'all' && activeCategoryId !== 'uncategorized' && activeCategoryId !== 'finished' && activeCategoryId !== 'review') ? activeCategoryId : null;
                     const newSetRef = await addDoc(collection(db, "flashcard_sets"), { 
                         name: window.pendingNewSetName, 
                         categoryId: categoryId,
                         isStarred: false,
+                        isFinished: false,
+                        needsReview: false,
                         createdAt: Date.now() 
                     });
                     const success = await processAndImportCSV(event.target.result, newSetRef.id, window.pendingNewSetName);
                     if(!success) {
-                        await deleteDoc(newSetRef); // rollback empty set creation
+                        await deleteDoc(newSetRef); 
                     }
                 } catch (error) {
                     console.error("Error creating set from CSV: ", error);
@@ -974,6 +1025,7 @@
         // --- GAMEPLAY ENGINE ---
         window.initPlay = async function(setId, setName) {
             localStorage.setItem('lastOpenedFlashcardSetId', setId);
+            playingSetId = setId;
             playingSetName = setName;
             
             const snap = await getDocs(query(collection(db, "flashcard_words"), where("setId", "==", setId)));
@@ -1006,6 +1058,8 @@
 
         function updateProgress() {
             document.getElementById('play-current-idx').innerText = currentCardIdx + 1;
+            // update total dynamically incase cards are re-added
+            document.getElementById('play-total').innerText = deck.length; 
             const percent = ((currentCardIdx) / deck.length) * 100;
             document.getElementById('play-progress').style.width = `${percent}%`;
         }
@@ -1087,14 +1141,28 @@
                 mainActionBtn.innerText = "Next Card";
             } else {
                 document.getElementById('play-screen').className = 'screen active bg-red';
-                document.getElementById('play-qnote').innerText = card.aNote || 'Correct Answer:';
-                document.getElementById('play-q').innerText = transText;
+                document.getElementById('play-qnote').innerText = 'Original Question:';
+                
+                // Show both Question and Correct Answer
+                document.getElementById('play-q').innerHTML = `
+                    <div style="font-size: 1.4rem; font-weight: normal; margin-bottom: 10px; opacity: 0.9;">${card.q}</div>
+                    <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; color: #fca5a5;">Correct Answer</div>
+                    ${transText}
+                `;
                 
                 const userInputDisplay = document.getElementById('play-user-input');
                 userInputDisplay.innerHTML = `You typed: <span style="text-decoration: line-through;">${userInput || '[nothing]'}</span>`;
                 userInputDisplay.style.display = 'block';
                 
-                wrongDeck.push(card);
+                // Spaced Repetition: Push to the end of the deck so it is asked again in this session
+                deck.push(card);
+                document.getElementById('play-total').innerText = deck.length;
+
+                // Also keep track of uniques for the summary screen errors list
+                if (!wrongDeck.some(w => w.id === card.id)) {
+                    wrongDeck.push(card);
+                }
+
                 mainActionBtn.innerText = "Continue";
             }
             
@@ -1111,15 +1179,28 @@
         // --- END SESSION ---
         function endSession() {
             document.getElementById('play-progress').style.width = `100%`;
+            
+            // Update "Last Attempt" timestamp in the database
+            if (playingSetId) {
+                updateDoc(doc(db, "flashcard_sets", playingSetId), { lastReviewed: Date.now() }).catch(err => console.error("Could not update last review date: ", err));
+            }
+
             switchScreen('end-screen');
             
-            const total = deck.length;
-            const correct = total - wrongDeck.length;
-            const pct = Math.round((correct / total) * 100);
+            // The user had to answer all cards in the deck correctly to reach this screen due to the re-queue logic.
+            // The original deck length is calculated by taking the final deck length minus the retries (wrongDeck count).
+            const finalCount = deck.length;
+            const originalDeckSize = finalCount - wrongDeck.length; 
+            
+            const totalScore = originalDeckSize;
+            // The "Correct" out of "Total" should be how many they got right the *first* time
+            const firstTryCorrect = originalDeckSize - wrongDeck.length;
+            // Prevent negative percentages if heavily re-queued
+            const pct = Math.max(0, Math.round((firstTryCorrect / originalDeckSize) * 100));
 
             document.getElementById('end-score').innerText = `${pct}%`;
-            document.getElementById('end-correct').innerText = correct;
-            document.getElementById('end-total').innerText = total;
+            document.getElementById('end-correct').innerText = firstTryCorrect;
+            document.getElementById('end-total').innerText = originalDeckSize;
 
             const errSect = document.getElementById('end-errors-section');
             if (wrongDeck.length > 0) {
@@ -1131,27 +1212,25 @@
         }
 
         window.retryFullDeck = function() {
-            startSession(deck);
+            // Need to get original deck back (remove the duplicates added to the end)
+            const uniqueDeck = [];
+            const seen = new Set();
+            for (const w of deck) {
+                if(!seen.has(w.id)) {
+                    seen.add(w.id);
+                    uniqueDeck.push(w);
+                }
+            }
+            startSession(uniqueDeck);
         }
 
         window.repeatDifficult = function() {
-            const uniqueWrong = [];
-            const seen = new Set();
-            for(const w of wrongDeck) {
-                if(!seen.has(w.id)) {
-                    seen.add(w.id);
-                    uniqueWrong.push(w);
-                }
-            }
-            startSession(uniqueWrong);
+            startSession(wrongDeck);
         }
 
         window.exportWrong = function() {
             let csvContent = "Question,Answer1,Answer2,Question Note,Answer Note\n";
-            const uniqueSet = new Map();
-            wrongDeck.forEach(item => uniqueSet.set(item.id, item));
-
-            uniqueSet.forEach(item => {
+            wrongDeck.forEach(item => {
                 const row = [item.q, item.a1, item.a2, item.qNote, item.aNote].map(v => {
                     let text = v || '';
                     if (text.includes(',') || text.includes('"')) {
