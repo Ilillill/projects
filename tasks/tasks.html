@@ -275,7 +275,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-        // Added the missing Auth import
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         const firebaseConfig = {
@@ -290,9 +289,8 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const auth = getAuth(app); // Initialized auth
+        const auth = getAuth(app);
 
-        // Default tasks for the initial setup
         const defaultTasks = [
             {id: 'v1', title: 'Vocabulary', img: 'vocabulary.png', group: 'sd', boxes: 7, url: 'https://ilillill.github.io/flashcards/flashcards.html'},
             {id: 'c1', title: 'Course', img: 'Etutor.png', group: 'sd', boxes: 7, url: 'https://www.etutor.pl/profil'},
@@ -321,10 +319,7 @@
         const dbRef = ref(db, 'trackerData');
         let trackerDataCache = {};
 
-        // Wrapped all database reading inside the silent login promise
         signInAnonymously(auth).then(() => {
-            
-            // 1. Get the Task Structure
             onValue(tasksRef, (snapshot) => {
                 if (snapshot.exists()) {
                     tasks = snapshot.val().filter(t => t !== null);
@@ -333,10 +328,9 @@
                     set(tasksRef, tasks);
                 }
                 renderTasks();
-                syncCheckmarks(); // Force sync of checkmarks after render
+                syncCheckmarks();
             });
 
-            // 2. Get the Checkbox and Bank Data
             onValue(dbRef, (snapshot) => {
                 trackerDataCache = snapshot.val() || {};
                 syncCheckmarks();
@@ -351,13 +345,12 @@
 
         function renderTasks() {
             const container = document.getElementById('task-list');
-            container.innerHTML = ''; // Clear board for fresh render
+            container.innerHTML = ''; 
             let currentGroup = '';
 
             tasks.forEach(task => {
                 if(currentGroup && currentGroup !== task.group) {
                     const spacer = document.createElement('div');
-                    // Apply larger space between Weekly and Monthly boundaries
                     if (task.group === 'w' || task.group === 'm') {
                         spacer.className = 'spacer-large';
                     } else {
@@ -376,8 +369,39 @@
                 img.alt = task.title;
 
                 const titleWrap = document.createElement('div');
-                
-                if (task.url) {
+                titleWrap.style.display = 'flex';
+                titleWrap.style.alignItems = 'center';
+                titleWrap.style.flexWrap = 'wrap';
+                titleWrap.style.gap = '6px';
+
+                // MULTIPLE OPTIONS LOGIC
+                if (task.options && task.options.length > 0) {
+                    task.options.forEach((opt, index) => {
+                        if (opt.url) {
+                            const link = document.createElement('a');
+                            link.href = opt.url;
+                            link.target = '_blank';
+                            link.className = 'task-link';
+                            link.innerText = opt.title;
+                            titleWrap.appendChild(link);
+                        } else {
+                            const plainText = document.createElement('span');
+                            plainText.className = 'task-text'; 
+                            plainText.innerText = opt.title;
+                            titleWrap.appendChild(plainText);
+                        }
+
+                        if (index < task.options.length - 1) {
+                            const separator = document.createElement('span');
+                            separator.innerText = '•';
+                            separator.style.color = '#CBD5E0';
+                            separator.style.fontSize = '12px';
+                            titleWrap.appendChild(separator);
+                        }
+                    });
+                } 
+                // FALLBACK FOR OLD SINGLE TASKS
+                else if (task.url) {
                     const link = document.createElement('a');
                     link.href = task.url;
                     link.target = '_blank';
@@ -389,7 +413,6 @@
                     plainText.className = 'task-text'; 
                     plainText.style.fontWeight = '500';
                     plainText.style.fontSize = '13px';
-                    plainText.style.color = 'var(--text)'; 
                     plainText.innerText = task.title;
                     titleWrap.appendChild(plainText);
                 }
@@ -397,7 +420,6 @@
                 row.appendChild(img);
                 row.appendChild(titleWrap);
 
-                // Add Checkboxes
                 for(let i=0; i<7; i++) {
                     if(i < task.boxes) {
                         const cb = document.createElement('input');
@@ -414,11 +436,9 @@
                     }
                 }
 
-                // Add Empty Spacer Column
                 const bankSpacer = document.createElement('div');
                 row.appendChild(bankSpacer);
 
-                // Add Bank Buttons ONLY for daily tasks
                 if (task.group === 'sd' || task.group === 'd') {
                     const minusBtn = document.createElement('button');
                     minusBtn.className = 'bank-btn minus';
@@ -438,7 +458,6 @@
                     plusBtn.onclick = () => window.updateBank(task.id, 1);
                     row.appendChild(plusBtn);
                 } else {
-                    // Append 3 empty divs to keep grid aligned without the buttons
                     row.appendChild(document.createElement('div'));
                     row.appendChild(document.createElement('div'));
                     row.appendChild(document.createElement('div'));
@@ -476,7 +495,6 @@
             updateProgress();
         }
 
-        // Save checkmarks to Firebase
         document.addEventListener('change', (e) => {
             if(e.target.classList.contains('check-box')) {
                 set(ref(db, 'trackerData/' + e.target.id), e.target.checked);
