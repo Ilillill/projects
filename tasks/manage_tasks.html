@@ -78,12 +78,23 @@
             border: 1px solid var(--border);
         }
 
-        .form-grid {
+        .main-inputs {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 15px;
             margin-top: 15px;
-            align-items: end;
+            margin-bottom: 20px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 12px;
+            margin-bottom: 15px;
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px dashed #CBD5E0;
         }
 
         .input-group {
@@ -114,6 +125,8 @@
         .form-actions {
             display: flex;
             gap: 10px;
+            justify-content: flex-end;
+            margin-top: 15px;
         }
 
         /* Task List */
@@ -194,6 +207,13 @@
             border-bottom: 1px solid var(--border);
             padding-bottom: 5px;
         }
+        
+        .section-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
@@ -206,18 +226,11 @@
 
         <div class="form-section">
             <h3 id="form-title">Add New Task</h3>
-            <div class="form-grid">
-                <div class="input-group">
-                    <label>Title</label>
-                    <input type="text" id="task-title" class="form-input" placeholder="e.g., Vocabulary">
-                </div>
+            
+            <div class="main-inputs">
                 <div class="input-group">
                     <label>Image URL</label>
                     <input type="text" id="task-img" class="form-input" placeholder="e.g., vocabulary.png">
-                </div>
-                <div class="input-group">
-                    <label>Link URL (Optional)</label>
-                    <input type="text" id="task-url" class="form-input" placeholder="https://...">
                 </div>
                 <div class="input-group">
                     <label>Category</label>
@@ -228,15 +241,31 @@
                         <option value="m">Monthly</option>
                     </select>
                 </div>
-                <div class="form-actions" style="grid-column: span 4; justify-content: flex-end; margin-top: 5px;">
-                    <button class="btn btn-outline" id="btn-cancel" onclick="cancelEdit()" style="display: none;">Cancel</button>
-                    <button class="btn btn-primary" id="btn-save" onclick="saveTask()">Add Task</button>
-                </div>
+            </div>
+
+            <div class="section-label">Task Options (Provide at least Option 1)</div>
+            
+            <div class="options-grid">
+                <div class="input-group"><label>Option 1 Title</label><input type="text" id="opt1-title" class="form-input" placeholder="e.g. eTutor"></div>
+                <div class="input-group"><label>Option 1 URL</label><input type="text" id="opt1-url" class="form-input" placeholder="https://..."></div>
+                
+                <div class="input-group"><label>Option 2 Title</label><input type="text" id="opt2-title" class="form-input" placeholder="(Optional)"></div>
+                <div class="input-group"><label>Option 2 URL</label><input type="text" id="opt2-url" class="form-input" placeholder="(Optional)"></div>
+
+                <div class="input-group"><label>Option 3 Title</label><input type="text" id="opt3-title" class="form-input" placeholder="(Optional)"></div>
+                <div class="input-group"><label>Option 3 URL</label><input type="text" id="opt3-url" class="form-input" placeholder="(Optional)"></div>
+
+                <div class="input-group"><label>Option 4 Title</label><input type="text" id="opt4-title" class="form-input" placeholder="(Optional)"></div>
+                <div class="input-group"><label>Option 4 URL</label><input type="text" id="opt4-url" class="form-input" placeholder="(Optional)"></div>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-outline" id="btn-cancel" onclick="cancelEdit()" style="display: none;">Cancel</button>
+                <button class="btn btn-primary" id="btn-save" onclick="saveTask()">Add Task</button>
             </div>
         </div>
 
-        <div id="manage-list-container" class="manage-list">
-            </div>
+        <div id="manage-list-container" class="manage-list"></div>
     </div>
 
     <script type="module">
@@ -256,7 +285,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const auth = getAuth(app); // Initialize Auth
+        const auth = getAuth(app); 
         
         let tasks = [];
         let editingIndex = -1;
@@ -265,7 +294,6 @@
         const orderMap = { 'sd': 1, 'd': 2, 'w': 3, 'm': 4 };
         const nameMap = { 'sd': 'Spanish Daily', 'd': 'Daily', 'w': 'Weekly', 'm': 'Monthly' };
         
-        // Wrap the initial data load in the anonymous login
         signInAnonymously(auth).then(() => {
             onValue(tasksRef, (snapshot) => {
                 if (snapshot.exists()) {
@@ -279,28 +307,38 @@
         });
 
         window.saveTask = function() {
-            const title = document.getElementById('task-title').value.trim();
             const img = document.getElementById('task-img').value.trim();
-            const url = document.getElementById('task-url').value.trim();
             const group = document.getElementById('task-group').value;
 
-            if(!title || !img) {
-                alert("Please provide both a Title and an Image URL.");
+            // Extract multiple options
+            let options = [];
+            for(let i = 1; i <= 4; i++) {
+                let t = document.getElementById(`opt${i}-title`).value.trim();
+                let u = document.getElementById(`opt${i}-url`).value.trim();
+                if(t) {
+                    options.push({title: t, url: u});
+                }
+            }
+
+            if(options.length === 0 || !img) {
+                alert("Please provide an Image URL and at least Option 1 Title.");
                 return;
             }
 
             const boxes = (group === 'sd' || group === 'd') ? 7 : 1;
+            
+            // Set root title to first option's title for legacy/sorting fallbacks
+            const rootTitle = options[0].title;
 
             if (editingIndex > -1) {
-                // Update
-                tasks[editingIndex] = { ...tasks[editingIndex], title, img, url, group, boxes };
+                tasks[editingIndex] = { ...tasks[editingIndex], title: rootTitle, img, group, boxes, options };
+                // Wipe root 'url' if converting an old task to options format
+                delete tasks[editingIndex].url; 
             } else {
-                // Add
-                const id = 't_' + Date.now(); // Unique ID for trackers
-                tasks.push({ id, title, img, url, group, boxes });
+                const id = 't_' + Date.now(); 
+                tasks.push({ id, title: rootTitle, img, group, boxes, options });
             }
 
-            // Keep array correctly sorted so the main board renders neatly
             tasks.sort((a, b) => orderMap[a.group] - orderMap[b.group]);
 
             set(tasksRef, tasks);
@@ -309,10 +347,27 @@
 
         window.editTask = function(index) {
             const task = tasks[index];
-            document.getElementById('task-title').value = task.title;
             document.getElementById('task-img').value = task.img;
-            document.getElementById('task-url').value = task.url || '';
             document.getElementById('task-group').value = task.group;
+
+            // Clear inputs first
+            for(let i = 1; i <= 4; i++) {
+                document.getElementById(`opt${i}-title`).value = '';
+                document.getElementById(`opt${i}-url`).value = '';
+            }
+
+            // Populate options if new format, fallback to legacy title/url if old format
+            if (task.options && task.options.length > 0) {
+                task.options.forEach((opt, idx) => {
+                    if (idx < 4) {
+                        document.getElementById(`opt${idx+1}-title`).value = opt.title;
+                        document.getElementById(`opt${idx+1}-url`).value = opt.url || '';
+                    }
+                });
+            } else {
+                document.getElementById('opt1-title').value = task.title || '';
+                document.getElementById('opt1-url').value = task.url || '';
+            }
 
             editingIndex = index;
             document.getElementById('form-title').innerText = 'Edit Task';
@@ -322,17 +377,20 @@
         };
 
         window.deleteTask = function(index) {
-            if(confirm(`Are you sure you want to delete "${tasks[index].title}"?`)) {
+            const taskName = tasks[index].options ? tasks[index].options[0].title : tasks[index].title;
+            if(confirm(`Are you sure you want to delete "${taskName}"?`)) {
                 tasks.splice(index, 1);
                 set(tasksRef, tasks);
             }
         };
 
         window.cancelEdit = function() {
-            document.getElementById('task-title').value = '';
             document.getElementById('task-img').value = '';
-            document.getElementById('task-url').value = '';
             document.getElementById('task-group').value = 'sd';
+            for(let i = 1; i <= 4; i++) {
+                document.getElementById(`opt${i}-title`).value = '';
+                document.getElementById(`opt${i}-url`).value = '';
+            }
             
             editingIndex = -1;
             document.getElementById('form-title').innerText = 'Add New Task';
@@ -347,7 +405,6 @@
             let currentGroup = '';
 
             tasks.forEach((task, index) => {
-                // Add group headers
                 if (currentGroup !== task.group) {
                     const header = document.createElement('div');
                     header.className = 'group-header';
@@ -356,13 +413,21 @@
                     currentGroup = task.group;
                 }
 
+                // Gather multiple titles for display in the management list
+                let titleDisplay = '';
+                if (task.options && task.options.length > 0) {
+                    titleDisplay = task.options.map(o => o.title).join(' • ');
+                } else {
+                    titleDisplay = task.title;
+                }
+
                 const item = document.createElement('div');
                 item.className = 'manage-item';
                 item.innerHTML = `
                     <img src="${task.img}" class="item-icon" alt="icon">
                     <div class="item-details">
-                        <span class="item-title">${task.title}</span>
-                        ${task.url ? `<span class="item-category">${task.url}</span>` : ''}
+                        <span class="item-title">${titleDisplay}</span>
+                        <span class="item-category">${task.options ? task.options.length + ' Option(s)' : 'Legacy Link'}</span>
                     </div>
                     <button class="action-btn" onclick="editTask(${index})">⚙️ Update</button>
                     <button class="action-btn delete" onclick="deleteTask(${index})">❌ Delete</button>
