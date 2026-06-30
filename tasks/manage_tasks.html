@@ -384,6 +384,26 @@
             }
         };
 
+        window.moveUp = function(index) {
+            // Only move if not the first item AND the item above is in the same category
+            if (index > 0 && tasks[index].group === tasks[index - 1].group) {
+                let temp = tasks[index];
+                tasks[index] = tasks[index - 1];
+                tasks[index - 1] = temp;
+                set(tasksRef, tasks); // Save the new order to Firebase
+            }
+        };
+
+        window.moveDown = function(index) {
+            // Only move if not the last item AND the item below is in the same category
+            if (index < tasks.length - 1 && tasks[index].group === tasks[index + 1].group) {
+                let temp = tasks[index];
+                tasks[index] = tasks[index + 1];
+                tasks[index + 1] = temp;
+                set(tasksRef, tasks); // Save the new order to Firebase
+            }
+        };
+
         window.cancelEdit = function() {
             document.getElementById('task-img').value = '';
             document.getElementById('task-group').value = 'sd';
@@ -420,6 +440,10 @@
                 } else {
                     titleDisplay = task.title;
                 }
+                
+                // Determine if Up/Down buttons should be disabled (grayed out) 
+                const disableUp = (index === 0 || tasks[index].group !== tasks[index - 1].group) ? 'opacity: 0.3; cursor: default;' : '';
+                const disableDown = (index === tasks.length - 1 || tasks[index].group !== tasks[index + 1].group) ? 'opacity: 0.3; cursor: default;' : '';
 
                 const item = document.createElement('div');
                 item.className = 'manage-item';
@@ -429,6 +453,8 @@
                         <span class="item-title">${titleDisplay}</span>
                         <span class="item-category">${task.options ? task.options.length + ' Option(s)' : 'Legacy Link'}</span>
                     </div>
+                    <button class="action-btn" onclick="if(!'${disableUp}') moveUp(${index})" style="${disableUp}">⬆️</button>
+                    <button class="action-btn" onclick="if(!'${disableDown}') moveDown(${index})" style="${disableDown}">⬇️</button>
                     <button class="action-btn" onclick="editTask(${index})">⚙️ Update</button>
                     <button class="action-btn delete" onclick="deleteTask(${index})">❌ Delete</button>
                 `;
