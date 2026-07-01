@@ -170,7 +170,28 @@
             .sidebar-categories { width: 100%; border-right: none; border-bottom: 1px solid var(--border); max-height: 200px; }
         }
 
-        /* --- Set Cards --- */
+        /* --- Set Cards & Categories --- */
+        .category-section {
+            margin-bottom: 40px;
+        }
+
+        .category-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
         .sets-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -444,7 +465,7 @@
             </aside>
             
             <main class="dashboard-main">
-                <div class="sets-grid" id="sets-container"></div>
+                <div id="sets-container"></div>
             </main>
         </div>
         
@@ -606,7 +627,7 @@
         let currentWords = [];
         let editingWordId = null;
         window.pendingNewSetName = ""; 
-        let chartInstance = null; // Holds the Chart.js instance
+        let chartInstance = null; 
 
         // Gameplay State
         let deck = [];
@@ -615,6 +636,9 @@
         let isAnswerState = false;
         let playingSetName = "";
         let playingSetId = null;
+        
+        let originalDeckSize = 0;
+        let firstTryCorrectCount = 0;
 
         // --- DOM Elements ---
         const inputField = document.getElementById('answer-input');
@@ -655,7 +679,6 @@
         window.openStats = function() {
             switchScreen('stats-screen');
             
-            // Calculate basic metrics
             let finishedCount = 0;
             let reviewCount = 0;
             let setsWithData = [];
@@ -672,19 +695,15 @@
             document.getElementById('stat-finished-sets').innerText = finishedCount;
             document.getElementById('stat-review-sets').innerText = reviewCount;
 
-            // Sort by most recently reviewed for the chart
             setsWithData.sort((a, b) => (b.lastReviewed || 0) - (a.lastReviewed || 0));
-            const topSets = setsWithData.slice(0, 8).reverse(); // Get up to 8 recent active sets
+            const topSets = setsWithData.slice(0, 8).reverse(); 
 
             const labels = topSets.map(s => {
-                // Truncate long names for chart aesthetic
                 return s.name.length > 15 ? s.name.substring(0, 15) + '...' : s.name;
             });
             const dataScores = topSets.map(s => s.lastScore);
 
             const ctx = document.getElementById('scoresChart').getContext('2d');
-            
-            // Destroy previous chart if it exists to prevent hover glitches
             if(chartInstance) { chartInstance.destroy(); }
             
             chartInstance = new Chart(ctx, {
@@ -886,6 +905,83 @@
             document.body.removeChild(link);
         }
 
+        function createSetCardElement(set) {
+            let catOptions = `<option value="none" ${!set.categoryId ? 'selected' : ''}>Uncategorized</option>`;
+            categories.forEach(cat => {
+                catOptions += `<option value="${cat.id}" ${set.categoryId === cat.id ? 'selected' : ''}>${cat.name}</option>`;
+            });
+
+            const dateStr = set.lastReviewed ? new Date(set.lastReviewed).toLocaleDateString() : 'Never';
+            const scoreDisplay = set.lastScore !== undefined ? `${set.lastScore}%` : '-';
+            const scoreColor = set.lastScore > 80 ? 'var(--success)' : (set.lastScore > 50 ? 'var(--warning)' : 'var(--danger)');
+            const playCountDisplay = set.playCount || 0;
+
+            const card = document.createElement('div');
+            card.className = `set-card ${set.isStarred ? 'starred' : ''} ${set.isFinished ? 'finished' : ''} ${set.needsReview ? 'review' : ''}`;
+            
+            card.innerHTML = `
+                <div class="set-card-top">
+                    <div class="set-card-header">
+                        <button class="btn-icon star-btn ${set.isStarred ? 'active' : ''}" onclick="toggleStar('${set.id}', ${set.isStarred})" title="Star Set">
+                            <i class="fa-solid fa-star"></i>
+                        </button>
+                        <button class="btn-icon check-btn ${set.isFinished ? 'active' : ''}" onclick="toggleFinished('${set.id}', ${set.isFinished})" title="Mark Finished">
+                            <i class="fa-solid fa-check-circle"></i>
+                        </button>
+                        <button class="btn-icon review-btn ${set.needsReview ? 'active' : ''}" onclick="toggleReview('${set.id}', ${set.needsReview})" title="Review Again">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                        <h3 class="set-title">${set.name}</h3>
+                    </div>
+                </div>
+                
+                <select class="set-category-select" onchange="changeSetCategory('${set.id}', this)" title="Move to Category">
+                    ${catOptions}
+                </select>
+
+                <div class="last-reviewed">
+                    <span><i class="fa-solid fa-clock-rotate-left"></i> Last: ${dateStr}</span>
+                    <span><i class="fa-solid fa-play"></i> Attempts: ${playCountDisplay}</span>
+                </div>
+                <div class="last-reviewed" style="margin-top: 0;">
+                    <span style="font-weight:bold; color: ${scoreColor}">Accuracy: ${scoreDisplay}</span>
+                </div>
+                
+                <div class="card-progress-bg">
+                    <div class="card-progress-fill" style="width: ${set.lastScore || 0}%; background-color: ${scoreColor}"></div>
+                </div>
+
+                <div class="set-card-actions" style="margin-top: 5px; justify-content: flex-start; gap: 10px;">
+                    <button class="btn-icon" onclick="renameSet('${set.id}', '${set.name.replace(/'/g, "\\'")}')" title="Rename Set"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn-icon" onclick="exportSet('${set.id}', '${set.name.replace(/'/g, "\\'")}')" title="Export to CSV"><i class="fa-solid fa-download"></i></button>
+                    <button class="btn-icon" onclick="deleteSet('${set.id}', '${set.name.replace(/'/g, "\\'")}')" title="Delete Set" style="color: var(--danger);"><i class="fa-solid fa-trash"></i></button>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top: auto;">
+                    <button class="btn btn-outline" style="flex: 1;" onclick="openManage('${set.id}', '${set.name.replace(/'/g, "\\'")}')"><i class="fa-solid fa-list"></i> Edit</button>
+                    <button class="btn" style="flex: 1;" onclick="initPlay('${set.id}', '${set.name.replace(/'/g, "\\'")}')"><i class="fa-solid fa-play"></i> Play</button>
+                </div>
+            `;
+            return card;
+        }
+
+        function renderCategorySection(title, setsArray, container) {
+            const section = document.createElement('div');
+            section.className = 'category-section';
+
+            const titleEl = document.createElement('h2');
+            titleEl.className = 'category-title';
+            titleEl.innerText = title;
+            section.appendChild(titleEl);
+
+            const grid = document.createElement('div');
+            grid.className = 'sets-grid';
+            setsArray.forEach(set => grid.appendChild(createSetCardElement(set)));
+
+            section.appendChild(grid);
+            container.appendChild(section);
+        }
+
         function renderDashboard() {
             const container = document.getElementById('sets-container');
             container.innerHTML = '';
@@ -902,7 +998,7 @@
             }
 
             if(displaySets.length === 0) {
-                container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px; color: var(--text-muted);">No sets found in this category.</div>`;
+                container.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-muted);">No sets found in this category.</div>`;
                 return;
             }
 
@@ -912,61 +1008,33 @@
                 return (a.name || "").localeCompare(b.name || "");
             });
 
-            displaySets.forEach(set => {
-                let catOptions = `<option value="none" ${!set.categoryId ? 'selected' : ''}>Uncategorized</option>`;
-                categories.forEach(cat => {
-                    catOptions += `<option value="${cat.id}" ${set.categoryId === cat.id ? 'selected' : ''}>${cat.name}</option>`;
+            if (activeCategoryId === 'all') {
+                const grouped = { uncategorized: [] };
+                categories.forEach(c => grouped[c.id] = []);
+
+                displaySets.forEach(set => {
+                    if (set.categoryId && grouped[set.categoryId]) {
+                        grouped[set.categoryId].push(set);
+                    } else {
+                        grouped.uncategorized.push(set);
+                    }
                 });
 
-                const dateStr = set.lastReviewed ? new Date(set.lastReviewed).toLocaleDateString() : 'Never';
-                const scoreDisplay = set.lastScore !== undefined ? `${set.lastScore}%` : '-';
-                const scoreColor = set.lastScore > 80 ? 'var(--success)' : (set.lastScore > 50 ? 'var(--warning)' : 'var(--danger)');
-
-                const card = document.createElement('div');
-                card.className = `set-card ${set.isStarred ? 'starred' : ''} ${set.isFinished ? 'finished' : ''} ${set.needsReview ? 'review' : ''}`;
+                categories.forEach(cat => {
+                    if (grouped[cat.id].length > 0) {
+                        renderCategorySection(cat.name, grouped[cat.id], container);
+                    }
+                });
                 
-                card.innerHTML = `
-                    <div class="set-card-top">
-                        <div class="set-card-header">
-                            <button class="btn-icon star-btn ${set.isStarred ? 'active' : ''}" onclick="toggleStar('${set.id}', ${set.isStarred})" title="Star Set">
-                                <i class="fa-solid fa-star"></i>
-                            </button>
-                            <button class="btn-icon check-btn ${set.isFinished ? 'active' : ''}" onclick="toggleFinished('${set.id}', ${set.isFinished})" title="Mark Finished">
-                                <i class="fa-solid fa-check-circle"></i>
-                            </button>
-                            <button class="btn-icon review-btn ${set.needsReview ? 'active' : ''}" onclick="toggleReview('${set.id}', ${set.needsReview})" title="Review Again">
-                                <i class="fa-solid fa-rotate-right"></i>
-                            </button>
-                            <h3 class="set-title">${set.name}</h3>
-                        </div>
-                    </div>
-                    
-                    <select class="set-category-select" onchange="changeSetCategory('${set.id}', this)" title="Move to Category">
-                        ${catOptions}
-                    </select>
-
-                    <div class="last-reviewed">
-                        <span><i class="fa-solid fa-clock-rotate-left"></i> Last: ${dateStr}</span>
-                        <span style="font-weight:bold; color: ${scoreColor}">${scoreDisplay}</span>
-                    </div>
-                    
-                    <div class="card-progress-bg">
-                        <div class="card-progress-fill" style="width: ${set.lastScore || 0}%; background-color: ${scoreColor}"></div>
-                    </div>
-
-                    <div class="set-card-actions" style="margin-top: 5px; justify-content: flex-start; gap: 10px;">
-                        <button class="btn-icon" onclick="renameSet('${set.id}', '${set.name.replace(/'/g, "\\'")}')" title="Rename Set"><i class="fa-solid fa-pen"></i></button>
-                        <button class="btn-icon" onclick="exportSet('${set.id}', '${set.name.replace(/'/g, "\\'")}')" title="Export to CSV"><i class="fa-solid fa-download"></i></button>
-                        <button class="btn-icon" onclick="deleteSet('${set.id}', '${set.name.replace(/'/g, "\\'")}')" title="Delete Set" style="color: var(--danger);"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-
-                    <div style="display:flex; gap:10px; margin-top: auto;">
-                        <button class="btn btn-outline" style="flex: 1;" onclick="openManage('${set.id}', '${set.name.replace(/'/g, "\\'")}')"><i class="fa-solid fa-list"></i> Edit</button>
-                        <button class="btn" style="flex: 1;" onclick="initPlay('${set.id}', '${set.name.replace(/'/g, "\\'")}')"><i class="fa-solid fa-play"></i> Play</button>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
+                if (grouped.uncategorized.length > 0) {
+                    renderCategorySection("Uncategorized", grouped.uncategorized, container);
+                }
+            } else {
+                const grid = document.createElement('div');
+                grid.className = 'sets-grid';
+                displaySets.forEach(set => grid.appendChild(createSetCardElement(set)));
+                container.appendChild(grid);
+            }
         }
 
         // --- Manage Set Screen (Words CRUD) ---
@@ -1202,10 +1270,13 @@
             deck = [...cardsArray].sort(() => Math.random() - 0.5);
             wrongDeck = [];
             currentCardIdx = 0;
+            originalDeckSize = deck.length;
+            firstTryCorrectCount = 0;
             
             document.getElementById('play-screen').className = 'screen active';
             document.getElementById('play-set-title').innerText = playingSetName;
             document.getElementById('play-total').innerText = deck.length;
+            document.getElementById('play-progress').style.width = '0%';
             
             switchScreen('play-screen');
             drawCard();
@@ -1218,7 +1289,9 @@
         function updateProgress() {
             document.getElementById('play-current-idx').innerText = currentCardIdx + 1;
             document.getElementById('play-total').innerText = deck.length; 
-            const percent = ((currentCardIdx) / deck.length) * 100;
+            
+            // Progress represents the accuracy ceiling and correctly answered first-try cards
+            const percent = (firstTryCorrectCount / originalDeckSize) * 100;
             document.getElementById('play-progress').style.width = `${percent}%`;
         }
 
@@ -1295,6 +1368,16 @@
                 document.getElementById('play-screen').className = 'screen active bg-green';
                 document.getElementById('play-qnote').innerText = card.aNote || 'Correct!';
                 document.getElementById('play-q').innerText = transText;
+                
+                // Track correct answers only if it hasn't been placed in wrongDeck previously
+                if (!wrongDeck.some(w => w.id === card.id)) {
+                    firstTryCorrectCount++;
+                }
+
+                // Update visual bar immediately
+                const percent = (firstTryCorrectCount / originalDeckSize) * 100;
+                document.getElementById('play-progress').style.width = `${percent}%`;
+
                 mainActionBtn.innerText = "Next Card";
             } else {
                 document.getElementById('play-screen').className = 'screen active bg-red';
@@ -1332,25 +1415,24 @@
 
         // --- END SESSION ---
         function endSession() {
-            document.getElementById('play-progress').style.width = `100%`;
-            
-            const finalCount = deck.length;
-            const originalDeckSize = finalCount - wrongDeck.length; 
-            const firstTryCorrect = originalDeckSize - wrongDeck.length;
-            const pct = Math.max(0, Math.round((firstTryCorrect / originalDeckSize) * 100));
+            const pct = Math.max(0, Math.round((firstTryCorrectCount / originalDeckSize) * 100));
 
-            // Save the stats to Firebase
+            // Save the stats and attempts to Firebase
             if (playingSetId) {
+                const setToUpdate = sets.find(s => s.id === playingSetId);
+                const newPlayCount = (setToUpdate.playCount || 0) + 1;
+
                 updateDoc(doc(db, "flashcard_sets", playingSetId), { 
                     lastReviewed: Date.now(),
-                    lastScore: pct
+                    lastScore: pct,
+                    playCount: newPlayCount
                 }).catch(err => console.error("Could not update stats: ", err));
             }
 
             switchScreen('end-screen');
 
             document.getElementById('end-score').innerText = `${pct}%`;
-            document.getElementById('end-correct').innerText = firstTryCorrect;
+            document.getElementById('end-correct').innerText = firstTryCorrectCount;
             document.getElementById('end-total').innerText = originalDeckSize;
 
             const errSect = document.getElementById('end-errors-section');
