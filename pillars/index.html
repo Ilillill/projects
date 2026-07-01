@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Matrix Pro</title>
+    <title>Matrix</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -26,12 +26,66 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
-            padding: 10px; /* Reduced padding */
+            padding: 10px; 
             display: flex;
             flex-direction: column;
             height: 100vh;
             box-sizing: border-box;
-            gap: 10px; /* Reduced gap */
+            gap: 10px; 
+        }
+
+        /* --- Horizontal Project Tabs --- */
+        #projects-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        /* Hide scrollbar for cleaner look */
+        #projects-row::-webkit-scrollbar { height: 4px; }
+        #projects-row::-webkit-scrollbar-track { background: transparent; }
+        #projects-row::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .tab-btn {
+            background: var(--surface);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            background: var(--surface-hover);
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        .tab-btn.add {
+            background: transparent;
+            border: 1px dashed var(--border);
+            padding: 8px 12px;
+        }
+
+        .tab-btn.add:hover {
+            border-color: #4ade80;
+            color: #4ade80;
+        }
+
+        #project-tabs {
+            display: flex;
+            gap: 8px;
         }
 
         /* --- Top Navigation & Input --- */
@@ -40,34 +94,11 @@
             gap: 10px;
             align-items: center;
             background: var(--surface);
-            padding: 10px 15px; /* Tighter padding */
+            padding: 10px 15px; 
             border-radius: 8px;
             box-shadow: var(--shadow);
             border: 1px solid var(--border);
-            flex-wrap: wrap;
         }
-
-        .project-controls {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-right: 1px solid var(--border);
-            padding-right: 10px;
-        }
-
-        #project-select {
-            background: var(--bg-color);
-            color: var(--text-main);
-            border: 1px solid var(--border);
-            padding: 6px 10px;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            outline: none;
-            min-width: 140px;
-        }
-
-        #project-select:focus { border-color: var(--accent); }
 
         #custom-entry-form {
             display: flex;
@@ -129,22 +160,13 @@
         .inbox-container {
             background: var(--surface);
             border-radius: 8px;
-            padding: 10px 15px; /* Tighter padding */
+            padding: 10px 15px; 
             box-shadow: var(--shadow);
             border: 1px solid var(--border);
-            min-height: 50px;
+            min-height: 40px; /* Kept tight as title is removed */
             display: flex;
             flex-direction: column;
-            gap: 8px;
             transition: all 0.2s ease;
-        }
-
-        .inbox-title {
-            margin: 0;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
         /* --- 4-Box Grid --- */
@@ -152,7 +174,7 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
-            gap: 10px; /* Tighter grid gaps */
+            gap: 10px; 
             flex: 1;
             min-height: 0; 
         }
@@ -160,7 +182,7 @@
         .matrix-box {
             background: var(--surface);
             border-radius: 8px;
-            padding: 10px 15px; /* Tighter padding */
+            padding: 10px 15px; 
             box-shadow: var(--shadow);
             border: 1px solid var(--border);
             display: flex;
@@ -168,19 +190,56 @@
             gap: 10px;
             overflow-y: auto;
             transition: all 0.2s ease;
+            
+            /* Background Image Properties */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+
+        /* Overlay to keep text readable over backgrounds */
+        .matrix-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.75); 
+            border-radius: 8px;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0; 
+            transition: opacity 0.2s ease;
+        }
+
+        .matrix-box.has-bg::before {
+            opacity: 1; 
+        }
+
+        .matrix-box.has-bg {
+            background-color: transparent; 
         }
 
         .matrix-box.drag-over, .inbox-container.drag-over {
             border-color: var(--accent);
-            background: var(--surface-hover);
+            background-color: var(--surface-hover);
+        }
+        
+        .matrix-box.drag-over::before {
+            background: rgba(51, 65, 85, 0.85); /* Slightly lighter overlay when hovering */
+        }
+
+        /* Ensure content stays above the overlay */
+        .box-header, .items-container {
+            position: relative;
+            z-index: 1;
         }
 
         .box-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 6px; /* Reduced padding */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Lighter border for contrast */
+            padding-bottom: 6px; 
             margin-bottom: 2px;
         }
 
@@ -189,18 +248,25 @@
             font-size: 1rem;
             font-weight: 600;
             letter-spacing: 0.5px;
+            color: var(--text-main);
         }
 
-        .edit-title-btn {
+        .edit-controls {
+            display: flex;
+            gap: 4px;
+        }
+
+        .header-btn {
             background: none;
             border: none;
             color: var(--text-muted);
             padding: 4px;
             cursor: pointer;
             border-radius: 4px;
+            font-size: 0.9rem;
         }
 
-        .edit-title-btn:hover {
+        .header-btn:hover {
             color: var(--accent);
             background: rgba(255,255,255,0.05);
         }
@@ -208,10 +274,10 @@
         /* --- Task Items (Wrap Layout) --- */
         .items-container {
             display: flex;
-            flex-direction: row; /* Horizontal layout */
-            flex-wrap: wrap;     /* Allow wrapping to next line */
-            align-content: flex-start; /* Pack rows to the top */
-            gap: 8px;            /* Small gap between wrapped items */
+            flex-direction: row; 
+            flex-wrap: wrap;     
+            align-content: flex-start; 
+            gap: 8px;            
             min-height: 30px; 
             flex: 1;
         }
@@ -219,14 +285,14 @@
         .task-item {
             background: var(--bg-color);
             border: 1px solid var(--border);
-            padding: 6px 12px; /* Small padding tightly wrapping text */
-            border-radius: 6px; /* Square/slightly rounded look */
+            padding: 6px 12px; 
+            border-radius: 6px; 
             display: inline-flex;
             align-items: center;
             gap: 8px;
             cursor: grab;
             transition: all 0.2s ease;
-            max-width: 100%; /* Prevent massive words from breaking the box */
+            max-width: 100%; 
         }
 
         .task-item:active { cursor: grabbing; }
@@ -240,7 +306,7 @@
         .task-text {
             font-size: 0.9rem;
             pointer-events: none;
-            word-break: break-word; /* Wrap text only if it's extremely long */
+            word-break: break-word; 
         }
 
         /* --- Manage Mode Controls --- */
@@ -264,19 +330,19 @@
         .icon-btn:hover { background: rgba(255,255,255,0.05); }
         .icon-btn.edit:hover { color: var(--accent); }
         .icon-btn.delete:hover { color: var(--danger); }
-        .icon-btn.add:hover { color: #4ade80; }
 
     </style>
 </head>
 <body>
 
+    <div id="projects-row">
+        <button id="add-project-btn" class="tab-btn add" title="New Project"><i class="fa-solid fa-plus"></i></button>
+        <div id="project-tabs"></div>
+        <button id="rename-project-btn" class="icon-btn edit manage-only" title="Rename Active Project"><i class="fa-solid fa-pencil"></i></button>
+        <button id="delete-project-btn" class="icon-btn delete manage-only" title="Delete Active Project"><i class="fa-solid fa-trash"></i></button>
+    </div>
+
     <div id="top-bar">
-        <div class="project-controls">
-            <select id="project-select"></select>
-            <button id="add-project-btn" class="icon-btn add" title="New Project"><i class="fa-solid fa-folder-plus"></i></button>
-            <button id="rename-project-btn" class="icon-btn edit manage-only" title="Rename Project"><i class="fa-solid fa-pencil"></i></button>
-            <button id="delete-project-btn" class="icon-btn delete manage-only" title="Delete Project"><i class="fa-solid fa-trash"></i></button>
-        </div>
         <form id="custom-entry-form">
             <input type="text" id="custom-input" placeholder="Type new item..." autocomplete="off" required>
             <button type="submit" class="submit-btn">Add</button>
@@ -284,9 +350,8 @@
         <button id="toggle-manage-btn" class="manage-toggle-btn"><i class="fa-solid fa-pen-to-square"></i> Manage</button>
     </div>
 
-    <!-- Inbox Area -->
+    <!-- Inbox Area (Title Removed) -->
     <div id="box-inbox" class="inbox-container droppable" data-box-id="inbox">
-        <h3 class="inbox-title">📥 Inbox</h3>
         <div class="items-container" id="container-inbox"></div>
     </div>
 
@@ -295,7 +360,10 @@
         <div class="matrix-box droppable" data-box-id="box1">
             <div class="box-header">
                 <h2 class="box-title" id="title-box1">Title 1</h2>
-                <button class="edit-title-btn" onclick="editTitle('box1')"><i class="fa-solid fa-pencil"></i></button>
+                <div class="edit-controls">
+                    <button class="header-btn" onclick="editBackground('box1')" title="Edit Background"><i class="fa-regular fa-image"></i></button>
+                    <button class="header-btn" onclick="editTitle('box1')" title="Edit Title"><i class="fa-solid fa-pencil"></i></button>
+                </div>
             </div>
             <div class="items-container" id="container-box1"></div>
         </div>
@@ -303,7 +371,10 @@
         <div class="matrix-box droppable" data-box-id="box2">
             <div class="box-header">
                 <h2 class="box-title" id="title-box2">Title 2</h2>
-                <button class="edit-title-btn" onclick="editTitle('box2')"><i class="fa-solid fa-pencil"></i></button>
+                <div class="edit-controls">
+                    <button class="header-btn" onclick="editBackground('box2')" title="Edit Background"><i class="fa-regular fa-image"></i></button>
+                    <button class="header-btn" onclick="editTitle('box2')" title="Edit Title"><i class="fa-solid fa-pencil"></i></button>
+                </div>
             </div>
             <div class="items-container" id="container-box2"></div>
         </div>
@@ -311,7 +382,10 @@
         <div class="matrix-box droppable" data-box-id="box3">
             <div class="box-header">
                 <h2 class="box-title" id="title-box3">Title 3</h2>
-                <button class="edit-title-btn" onclick="editTitle('box3')"><i class="fa-solid fa-pencil"></i></button>
+                <div class="edit-controls">
+                    <button class="header-btn" onclick="editBackground('box3')" title="Edit Background"><i class="fa-regular fa-image"></i></button>
+                    <button class="header-btn" onclick="editTitle('box3')" title="Edit Title"><i class="fa-solid fa-pencil"></i></button>
+                </div>
             </div>
             <div class="items-container" id="container-box3"></div>
         </div>
@@ -319,7 +393,10 @@
         <div class="matrix-box droppable" data-box-id="box4">
             <div class="box-header">
                 <h2 class="box-title" id="title-box4">Title 4</h2>
-                <button class="edit-title-btn" onclick="editTitle('box4')"><i class="fa-solid fa-pencil"></i></button>
+                <div class="edit-controls">
+                    <button class="header-btn" onclick="editBackground('box4')" title="Edit Background"><i class="fa-regular fa-image"></i></button>
+                    <button class="header-btn" onclick="editTitle('box4')" title="Edit Title"><i class="fa-solid fa-pencil"></i></button>
+                </div>
             </div>
             <div class="items-container" id="container-box4"></div>
         </div>
@@ -327,7 +404,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, updateDoc, addDoc, deleteDoc, writeBatch, getDocs, query, where } 
+        import { getFirestore, collection, onSnapshot, doc, updateDoc, addDoc, deleteDoc, writeBatch, query, where } 
         from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
@@ -352,6 +429,7 @@
             projects: [],
             activeProjectId: null,
             titles: {},
+            backgrounds: {},
             items: [],
             isManageMode: false
         };
@@ -366,50 +444,56 @@
                 if (state.projects.length === 0) {
                     const defaultDoc = await addDoc(projectsRef, {
                         name: "Default Project",
-                        titles: { box1: "Quadrant 1", box2: "Quadrant 2", box3: "Quadrant 3", box4: "Quadrant 4" }
+                        titles: { box1: "Quadrant 1", box2: "Quadrant 2", box3: "Quadrant 3", box4: "Quadrant 4" },
+                        backgrounds: { box1: "", box2: "", box3: "", box4: "" }
                     });
-                    state.projects.push({id: defaultDoc.id, name: "Default Project", titles: { box1: "Quadrant 1", box2: "Quadrant 2", box3: "Quadrant 3", box4: "Quadrant 4" }});
+                    state.projects.push({
+                        id: defaultDoc.id, 
+                        name: "Default Project", 
+                        titles: { box1: "Quadrant 1", box2: "Quadrant 2", box3: "Quadrant 3", box4: "Quadrant 4" },
+                        backgrounds: { box1: "", box2: "", box3: "", box4: "" }
+                    });
                 }
 
-                renderProjectDropdown();
+                renderProjectTabs();
 
                 if (!state.activeProjectId || !state.projects.find(p => p.id === state.activeProjectId)) {
                     switchProject(state.projects[0].id);
                 } else {
                     const currentProj = state.projects.find(p => p.id === state.activeProjectId);
-                    state.titles = currentProj.titles;
-                    updateTitlesUI();
+                    state.titles = currentProj.titles || {};
+                    state.backgrounds = currentProj.backgrounds || {};
+                    updateQuadrantUI();
                 }
             });
         }).catch((error) => console.error("Login failed:", error));
 
 
         // --- 2. PROJECT MANAGEMENT ---
-        function renderProjectDropdown() {
-            const select = document.getElementById('project-select');
-            select.innerHTML = '';
+        function renderProjectTabs() {
+            const container = document.getElementById('project-tabs');
+            container.innerHTML = '';
             
             const sortedProjects = [...state.projects].sort((a, b) => a.name.localeCompare(b.name));
             
             sortedProjects.forEach(proj => {
-                const opt = document.createElement('option');
-                opt.value = proj.id;
-                opt.textContent = proj.name;
-                select.appendChild(opt);
+                const btn = document.createElement('button');
+                btn.className = `tab-btn ${proj.id === state.activeProjectId ? 'active' : ''}`;
+                btn.textContent = proj.name;
+                btn.onclick = () => switchProject(proj.id);
+                container.appendChild(btn);
             });
-
-            if(state.activeProjectId) {
-                select.value = state.activeProjectId;
-            }
         }
 
         function switchProject(projectId) {
             state.activeProjectId = projectId;
-            document.getElementById('project-select').value = projectId;
             
             const proj = state.projects.find(p => p.id === projectId);
             state.titles = proj.titles || {box1: "Title 1", box2: "Title 2", box3: "Title 3", box4: "Title 4"};
-            updateTitlesUI();
+            state.backgrounds = proj.backgrounds || {box1: "", box2: "", box3: "", box4: ""};
+            
+            renderProjectTabs(); // Re-render to update 'active' class
+            updateQuadrantUI();
 
             if (unsubscribeItems) unsubscribeItems();
 
@@ -420,16 +504,13 @@
             });
         }
 
-        document.getElementById('project-select').addEventListener('change', (e) => {
-            switchProject(e.target.value);
-        });
-
         document.getElementById('add-project-btn').addEventListener('click', async () => {
             const name = prompt("Enter a name for the new project:");
             if (name && name.trim() !== "") {
                 const docRef = await addDoc(projectsRef, {
                     name: name.trim(),
-                    titles: { box1: "Quadrant 1", box2: "Quadrant 2", box3: "Quadrant 3", box4: "Quadrant 4" }
+                    titles: { box1: "Quadrant 1", box2: "Quadrant 2", box3: "Quadrant 3", box4: "Quadrant 4" },
+                    backgrounds: { box1: "", box2: "", box3: "", box4: "" }
                 });
                 switchProject(docRef.id);
             }
@@ -458,11 +539,21 @@
         });
 
         // --- 3. UI RENDERING ---
-        function updateTitlesUI() {
-            document.getElementById('title-box1').textContent = state.titles.box1 || "Quadrant 1";
-            document.getElementById('title-box2').textContent = state.titles.box2 || "Quadrant 2";
-            document.getElementById('title-box3').textContent = state.titles.box3 || "Quadrant 3";
-            document.getElementById('title-box4').textContent = state.titles.box4 || "Quadrant 4";
+        function updateQuadrantUI() {
+            ['box1', 'box2', 'box3', 'box4'].forEach(boxId => {
+                // Titles
+                document.getElementById(`title-${boxId}`).textContent = state.titles[boxId] || `Quadrant ${boxId.replace('box','')}`;
+                
+                // Backgrounds
+                const boxElement = document.querySelector(`[data-box-id="${boxId}"]`);
+                if (state.backgrounds[boxId]) {
+                    boxElement.style.backgroundImage = `url('${state.backgrounds[boxId]}')`;
+                    boxElement.classList.add('has-bg');
+                } else {
+                    boxElement.style.backgroundImage = 'none';
+                    boxElement.classList.remove('has-bg');
+                }
+            });
         }
 
         window.editTitle = async function(boxId) {
@@ -473,6 +564,17 @@
                 const updatedTitles = { ...state.titles };
                 updatedTitles[boxId] = newTitle.trim();
                 await updateDoc(doc(db, "matrix_projects", state.activeProjectId), { titles: updatedTitles });
+            }
+        };
+
+        window.editBackground = async function(boxId) {
+            const currentBg = state.backgrounds[boxId] || "";
+            const newBg = prompt("Enter image URL for background (leave blank to remove):", currentBg);
+            
+            if (newBg !== null && newBg.trim() !== currentBg) {
+                const updatedBgs = { ...state.backgrounds };
+                updatedBgs[boxId] = newBg.trim();
+                await updateDoc(doc(db, "matrix_projects", state.activeProjectId), { backgrounds: updatedBgs });
             }
         };
 
