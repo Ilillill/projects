@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pillars</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface: #1e293b;
+            --surface-hover: #334155;
+            --border: #475569;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --danger: #ef4444;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+            gap: 20px;
+        }
+
+        /* --- Top Navigation & Input --- */
+        #top-bar {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: var(--surface);
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        #custom-entry-form {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+        }
+
+        #custom-input {
+            flex: 1;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-color);
+            color: var(--text-main);
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        #custom-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        button {
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .submit-btn {
+            background: var(--accent);
+            color: #fff;
+            padding: 10px 20px;
+        }
+
+        .submit-btn:hover { background: var(--accent-hover); }
+
+        .manage-toggle-btn {
+            background: transparent;
+            color: var(--text-muted);
+            padding: 10px 20px;
+            border: 1px solid var(--border);
+        }
+
+        .manage-toggle-btn:hover {
+            background: var(--surface-hover);
+            color: var(--text-main);
+        }
+
+        .manage-toggle-btn.active {
+            background: var(--text-main);
+            color: var(--bg-color);
+        }
+
+        /* --- Inbox Area --- */
+        .inbox-container {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 15px 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .inbox-title {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- 4-Box Grid --- */
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+            flex: 1;
+            min-height: 0; 
+        }
+
+        .matrix-box {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 15px 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            transition: all 0.2s ease;
+        }
+
+        .matrix-box.drag-over, .inbox-container.drag-over {
+            border-color: var(--accent);
+            background: var(--surface-hover);
+        }
+
+        .box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            margin-bottom: 5px;
+        }
+
+        .box-title {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .edit-title-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .edit-title-btn:hover {
+            color: var(--accent);
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* --- Task Items --- */
+        .items-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 40px; 
+            flex: 1;
+        }
+
+        .task-item {
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            padding: 12px 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: grab;
+            transition: all 0.2s ease;
+        }
+
+        .task-item:active {
+            cursor: grabbing;
+        }
+
+        .task-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+            border-color: #5a6b82;
+        }
+
+        .task-text {
+            font-size: 0.95rem;
+            pointer-events: none; /* Prevents dragging issues */
+        }
+
+        /* --- Manage Mode Controls --- */
+        .task-controls {
+            display: none;
+            gap: 8px;
+        }
+
+        .manage-mode .task-controls {
+            display: flex;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+
+        .icon-btn.edit:hover { color: var(--accent); }
+        .icon-btn.delete:hover { color: var(--danger); }
+
+    </style>
+</head>
+<body>
+
+    <div id="top-bar">
+        <form id="custom-entry-form">
+            <input type="text" id="custom-input" placeholder="Type new item..." autocomplete="off" required>
+            <button type="submit" class="submit-btn">Add</button>
+        </form>
+        <button id="toggle-manage-btn" class="manage-toggle-btn"><i class="fa-solid fa-pen-to-square"></i> Manage</button>
+    </div>
+
+    <!-- Inbox Area -->
+    <div id="box-inbox" class="inbox-container droppable" data-box-id="inbox">
+        <h3 class="inbox-title">📥 Inbox (Ready to sort)</h3>
+        <div class="items-container" id="container-inbox"></div>
+    </div>
+
+    <!-- 4-Box Grid -->
+    <div class="matrix-grid">
+        <div class="matrix-box droppable" data-box-id="box1">
+            <div class="box-header">
+                <h2 class="box-title" id="title-box1">Title 1</h2>
+                <button class="edit-title-btn" onclick="editTitle('box1')"><i class="fa-solid fa-pencil"></i></button>
+            </div>
+            <div class="items-container" id="container-box1"></div>
+        </div>
+
+        <div class="matrix-box droppable" data-box-id="box2">
+            <div class="box-header">
+                <h2 class="box-title" id="title-box2">Title 2</h2>
+                <button class="edit-title-btn" onclick="editTitle('box2')"><i class="fa-solid fa-pencil"></i></button>
+            </div>
+            <div class="items-container" id="container-box2"></div>
+        </div>
+
+        <div class="matrix-box droppable" data-box-id="box3">
+            <div class="box-header">
+                <h2 class="box-title" id="title-box3">Title 3</h2>
+                <button class="edit-title-btn" onclick="editTitle('box3')"><i class="fa-solid fa-pencil"></i></button>
+            </div>
+            <div class="items-container" id="container-box3"></div>
+        </div>
+
+        <div class="matrix-box droppable" data-box-id="box4">
+            <div class="box-header">
+                <h2 class="box-title" id="title-box4">Title 4</h2>
+                <button class="edit-title-btn" onclick="editTitle('box4')"><i class="fa-solid fa-pencil"></i></button>
+            </div>
+            <div class="items-container" id="container-box4"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, updateDoc, addDoc, deleteDoc, setDoc, writeBatch, getDocs } 
+        from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        // Your existing Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBxKv-xXahSO2TEtwVwXTfU1eJ1ZsaaMAc",
+            authDomain: "tasks-de4d9.firebaseapp.com",
+            databaseURL: "https://tasks-de4d9-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "tasks-de4d9",
+            storageBucket: "tasks-de4d9.firebasestorage.app",
+            messagingSenderId: "908733856196",
+            appId: "1:908733856196:web:b8d268a692a0e079be4c91"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        // New collections for this specific app
+        const configRef = doc(db, "matrix_config", "titles");
+        const itemsRef = collection(db, "matrix_items");
+
+        let state = {
+            titles: {
+                box1: "Important & Urgent",
+                box2: "Important & Not Urgent",
+                box3: "Not Important & Urgent",
+                box4: "Not Important & Not Urgent"
+            },
+            items: [],
+            isManageMode: false
+        };
+
+        // --- 1. SEED DATA ---
+        const defaultItems = [
+            { name: "Do 5 new Spanish sentences", boxId: "inbox" },
+            { name: "Play the piano", boxId: "box2" },
+            { name: "Clean terrariums", boxId: "box1" },
+            { name: "Archery practice", boxId: "box2" }
+        ];
+
+        async function seedDatabase() {
+            const configSnap = await getDocs(collection(db, "matrix_config"));
+            if (configSnap.empty) {
+                await setDoc(configRef, state.titles);
+            }
+
+            const itemsSnap = await getDocs(itemsRef);
+            if (itemsSnap.empty) {
+                const batch = writeBatch(db);
+                defaultItems.forEach(item => {
+                    const newDocRef = doc(itemsRef);
+                    batch.set(newDocRef, item);
+                });
+                await batch.commit();
+            }
+        }
+
+        // --- 2. AUTHENTICATION & LISTENERS ---
+        signInAnonymously(auth).then(() => {
+            seedDatabase();
+
+            onSnapshot(configRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    state.titles = docSnap.data();
+                    updateTitlesUI();
+                }
+            });
+
+            onSnapshot(itemsRef, (snapshot) => {
+                state.items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderItems();
+            });
+        }).catch((error) => {
+            console.error("Silent login failed:", error);
+        });
+
+        // --- 3. UI RENDERING ---
+        function updateTitlesUI() {
+            document.getElementById('title-box1').textContent = state.titles.box1 || "Title 1";
+            document.getElementById('title-box2').textContent = state.titles.box2 || "Title 2";
+            document.getElementById('title-box3').textContent = state.titles.box3 || "Title 3";
+            document.getElementById('title-box4').textContent = state.titles.box4 || "Title 4";
+        }
+
+        function renderItems() {
+            // Clear all containers
+            ['inbox', 'box1', 'box2', 'box3', 'box4'].forEach(boxId => {
+                document.getElementById(`container-${boxId}`).innerHTML = '';
+            });
+
+            // Sort alphabetically for neatness
+            const sortedItems = [...state.items].sort((a, b) => a.name.localeCompare(b.name));
+
+            sortedItems.forEach(item => {
+                const container = document.getElementById(`container-${item.boxId}`);
+                if (!container) return; // Failsafe
+
+                const div = document.createElement('div');
+                div.className = 'task-item';
+                div.draggable = true;
+                
+                // Drag start event
+                div.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', item.id);
+                    e.dataTransfer.effectAllowed = "move";
+                });
+
+                div.innerHTML = `
+                    <span class="task-text">${item.name}</span>
+                    <div class="task-controls">
+                        <button class="icon-btn edit" data-id="${item.id}" data-name="${item.name}"><i class="fa-solid fa-pencil"></i></button>
+                        <button class="icon-btn delete" data-id="${item.id}"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+
+                container.appendChild(div);
+            });
+
+            attachManageEventListeners();
+        }
+
+        // --- 4. INTERACTIONS & EVENTS ---
+
+        // Edit Title Function (Exposed to global window for inline onclick)
+        window.editTitle = async function(boxId) {
+            const currentTitle = state.titles[boxId] || "";
+            const newTitle = prompt("Enter new title for this quadrant:", currentTitle);
+            
+            if (newTitle !== null && newTitle.trim() !== "" && newTitle !== currentTitle) {
+                const updatedTitles = { ...state.titles };
+                updatedTitles[boxId] = newTitle.trim();
+                await setDoc(configRef, updatedTitles, { merge: true });
+            }
+        };
+
+        // Add New Item
+        document.getElementById('custom-entry-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('custom-input');
+            const itemName = input.value.trim();
+            if (itemName === '') return;
+
+            input.value = '';
+            input.focus();
+
+            // Always add to Inbox initially
+            await addDoc(itemsRef, {
+                name: itemName,
+                boxId: "inbox"
+            });
+        });
+
+        // Toggle Manage Mode
+        document.getElementById('toggle-manage-btn').addEventListener('click', () => {
+            state.isManageMode = !state.isManageMode;
+            const btn = document.getElementById('toggle-manage-btn');
+            
+            if (state.isManageMode) {
+                document.body.classList.add('manage-mode');
+                btn.classList.add('active');
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Done';
+            } else {
+                document.body.classList.remove('manage-mode');
+                btn.classList.remove('active');
+                btn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Manage';
+            }
+        });
+
+        // Edit and Delete handlers within Manage Mode
+        function attachManageEventListeners() {
+            document.querySelectorAll('.icon-btn.edit').forEach(btn => {
+                btn.onclick = async (e) => {
+                    const id = btn.getAttribute('data-id');
+                    const currentName = btn.getAttribute('data-name');
+                    const newName = prompt("Edit item name:", currentName);
+                    
+                    if (newName !== null && newName.trim() !== "" && newName !== currentName) {
+                        await updateDoc(doc(db, "matrix_items", id), { name: newName.trim() });
+                    }
+                };
+            });
+
+            document.querySelectorAll('.icon-btn.delete').forEach(btn => {
+                btn.onclick = async (e) => {
+                    const id = btn.getAttribute('data-id');
+                    if (confirm("Delete this item?")) {
+                        await deleteDoc(doc(db, "matrix_items", id));
+                    }
+                };
+            });
+        }
+
+        // --- 5. DRAG AND DROP LOGIC ---
+        const dropZones = document.querySelectorAll('.droppable');
+
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault(); // Necessary to allow dropping
+                zone.classList.add('drag-over');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('drag-over');
+            });
+
+            zone.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+                
+                const itemId = e.dataTransfer.getData('text/plain');
+                const newBoxId = zone.getAttribute('data-box-id');
+                
+                if (itemId && newBoxId) {
+                    await updateDoc(doc(db, "matrix_items", itemId), { boxId: newBoxId });
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
