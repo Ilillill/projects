@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pillars</title>
+    <title>Task Matrix Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -43,7 +43,30 @@
             border-radius: 12px;
             box-shadow: var(--shadow);
             border: 1px solid var(--border);
+            flex-wrap: wrap;
         }
+
+        .project-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-right: 1px solid var(--border);
+            padding-right: 15px;
+        }
+
+        #project-select {
+            background: var(--bg-color);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            outline: none;
+            min-width: 150px;
+        }
+
+        #project-select:focus { border-color: var(--accent); }
 
         #custom-entry-form {
             display: flex;
@@ -202,9 +225,7 @@
             transition: all 0.2s ease;
         }
 
-        .task-item:active {
-            cursor: grabbing;
-        }
+        .task-item:active { cursor: grabbing; }
 
         .task-item:hover {
             transform: translateY(-2px);
@@ -214,37 +235,43 @@
 
         .task-text {
             font-size: 0.95rem;
-            pointer-events: none; /* Prevents dragging issues */
+            pointer-events: none;
         }
 
         /* --- Manage Mode Controls --- */
-        .task-controls {
-            display: none;
-            gap: 8px;
-        }
+        .task-controls { display: none; gap: 8px; }
+        .manage-only { display: none; }
 
-        .manage-mode .task-controls {
-            display: flex;
-        }
+        .manage-mode .task-controls { display: flex; }
+        .manage-mode .manage-only { display: inline-flex; }
 
         .icon-btn {
             background: none;
             border: none;
             color: var(--text-muted);
             cursor: pointer;
-            padding: 4px;
+            padding: 6px;
             font-size: 1rem;
             transition: color 0.2s;
+            border-radius: 4px;
         }
 
+        .icon-btn:hover { background: rgba(255,255,255,0.05); }
         .icon-btn.edit:hover { color: var(--accent); }
         .icon-btn.delete:hover { color: var(--danger); }
+        .icon-btn.add:hover { color: #4ade80; }
 
     </style>
 </head>
 <body>
 
     <div id="top-bar">
+        <div class="project-controls">
+            <select id="project-select"></select>
+            <button id="add-project-btn" class="icon-btn add" title="New Project"><i class="fa-solid fa-folder-plus"></i></button>
+            <button id="rename-project-btn" class="icon-btn edit manage-only" title="Rename Project"><i class="fa-solid fa-pencil"></i></button>
+            <button id="delete-project-btn" class="icon-btn delete manage-only" title="Delete Project"><i class="fa-solid fa-trash"></i></button>
+        </div>
         <form id="custom-entry-form">
             <input type="text" id="custom-input" placeholder="Type new item..." autocomplete="off" required>
             <button type="submit" class="submit-btn">Add</button>
@@ -254,7 +281,7 @@
 
     <!-- Inbox Area -->
     <div id="box-inbox" class="inbox-container droppable" data-box-id="inbox">
-        <h3 class="inbox-title">📥 Inbox (Ready to sort)</h3>
+        <h3 class="inbox-title">📥 Inbox</h3>
         <div class="items-container" id="container-inbox"></div>
     </div>
 
@@ -295,11 +322,10 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, updateDoc, addDoc, deleteDoc, setDoc, writeBatch, getDocs } 
+        import { getFirestore, collection, onSnapshot, doc, updateDoc, addDoc, deleteDoc, writeBatch, getDocs, query, where } 
         from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // Your existing Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBxKv-xXahSO2TEtwVwXTfU1eJ1ZsaaMAc",
             authDomain: "tasks-de4d9.firebaseapp.com",
@@ -314,91 +340,160 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         
-        // New collections for this specific app
-        const configRef = doc(db, "matrix_config", "titles");
+        const projectsRef = collection(db, "matrix_projects");
         const itemsRef = collection(db, "matrix_items");
 
         let state = {
-            titles: {
-                box1: "Important & Urgent",
-                box2: "Important & Not Urgent",
-                box3: "Not Important & Urgent",
-                box4: "Not Important & Not Urgent"
-            },
+            projects: [],
+            activeProjectId: null,
+            titles: {},
             items: [],
             isManageMode: false
         };
 
-        // --- 1. SEED DATA ---
-        const defaultItems = [
-            { name: "Do 5 new Spanish sentences", boxId: "inbox" },
-            { name: "Play the piano", boxId: "box2" },
-            { name: "Clean terrariums", boxId: "box1" },
-            { name: "Archery practice", boxId: "box2" }
-        ];
+        let unsubscribeItems = null;
 
-        async function seedDatabase() {
-            const configSnap = await getDocs(collection(db, "matrix_config"));
-            if (configSnap.empty) {
-                await setDoc(configRef, state.titles);
-            }
-
-            const itemsSnap = await getDocs(itemsRef);
-            if (itemsSnap.empty) {
-                const batch = writeBatch(db);
-                defaultItems.forEach(item => {
-                    const newDocRef = doc(itemsRef);
-                    batch.set(newDocRef, item);
-                });
-                await batch.commit();
-            }
-        }
-
-        // --- 2. AUTHENTICATION & LISTENERS ---
+        // --- 1. INITIALIZATION & LISTENERS ---
         signInAnonymously(auth).then(() => {
-            seedDatabase();
+            onSnapshot(projectsRef, async (snap) => {
+                state.projects = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                
+                // Auto-create a default project if DB is completely empty
+                if (state.projects.length === 0) {
+                    const defaultDoc = await addDoc(projectsRef, {
+                        name: "Default Project",
+                        titles: { box1: "Quadrant 1", box2: "Quadrant 2", box3: "Quadrant 3", box4: "Quadrant 4" }
+                    });
+                    state.projects.push({id: defaultDoc.id, name: "Default Project", titles: { box1: "Quadrant 1", box2: "Quadrant 2", box3: "Quadrant 3", box4: "Quadrant 4" }});
+                }
 
-            onSnapshot(configRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    state.titles = docSnap.data();
+                renderProjectDropdown();
+
+                // If no active project, or active project was deleted, switch to the first one
+                if (!state.activeProjectId || !state.projects.find(p => p.id === state.activeProjectId)) {
+                    switchProject(state.projects[0].id);
+                } else {
+                    // Update titles UI in case they were modified remotely
+                    const currentProj = state.projects.find(p => p.id === state.activeProjectId);
+                    state.titles = currentProj.titles;
                     updateTitlesUI();
                 }
             });
+        }).catch((error) => console.error("Login failed:", error));
 
-            onSnapshot(itemsRef, (snapshot) => {
-                state.items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderItems();
+
+        // --- 2. PROJECT MANAGEMENT ---
+        function renderProjectDropdown() {
+            const select = document.getElementById('project-select');
+            select.innerHTML = '';
+            
+            // Sort projects alphabetically
+            const sortedProjects = [...state.projects].sort((a, b) => a.name.localeCompare(b.name));
+            
+            sortedProjects.forEach(proj => {
+                const opt = document.createElement('option');
+                opt.value = proj.id;
+                opt.textContent = proj.name;
+                select.appendChild(opt);
             });
-        }).catch((error) => {
-            console.error("Silent login failed:", error);
-        });
 
-        // --- 3. UI RENDERING ---
-        function updateTitlesUI() {
-            document.getElementById('title-box1').textContent = state.titles.box1 || "Title 1";
-            document.getElementById('title-box2').textContent = state.titles.box2 || "Title 2";
-            document.getElementById('title-box3').textContent = state.titles.box3 || "Title 3";
-            document.getElementById('title-box4').textContent = state.titles.box4 || "Title 4";
+            if(state.activeProjectId) {
+                select.value = state.activeProjectId;
+            }
         }
 
+        function switchProject(projectId) {
+            state.activeProjectId = projectId;
+            document.getElementById('project-select').value = projectId;
+            
+            const proj = state.projects.find(p => p.id === projectId);
+            state.titles = proj.titles || {box1: "Title 1", box2: "Title 2", box3: "Title 3", box4: "Title 4"};
+            updateTitlesUI();
+
+            // Clear old items listener
+            if (unsubscribeItems) unsubscribeItems();
+
+            // Listen only to items for THIS project
+            const q = query(itemsRef, where("projectId", "==", projectId));
+            unsubscribeItems = onSnapshot(q, (snap) => {
+                state.items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderItems();
+            });
+        }
+
+        document.getElementById('project-select').addEventListener('change', (e) => {
+            switchProject(e.target.value);
+        });
+
+        document.getElementById('add-project-btn').addEventListener('click', async () => {
+            const name = prompt("Enter a name for the new project:");
+            if (name && name.trim() !== "") {
+                const docRef = await addDoc(projectsRef, {
+                    name: name.trim(),
+                    titles: { box1: "Quadrant 1", box2: "Quadrant 2", box3: "Quadrant 3", box4: "Quadrant 4" }
+                });
+                switchProject(docRef.id);
+            }
+        });
+
+        document.getElementById('rename-project-btn').addEventListener('click', async () => {
+            const currentProj = state.projects.find(p => p.id === state.activeProjectId);
+            const newName = prompt("Rename project:", currentProj.name);
+            if (newName && newName.trim() !== "" && newName !== currentProj.name) {
+                await updateDoc(doc(db, "matrix_projects", state.activeProjectId), { name: newName.trim() });
+            }
+        });
+
+        document.getElementById('delete-project-btn').addEventListener('click', async () => {
+            const currentProj = state.projects.find(p => p.id === state.activeProjectId);
+            if (confirm(`Are you sure you want to delete the project "${currentProj.name}" and ALL of its items?`)) {
+                
+                // 1. Delete all items belonging to this project (batch delete)
+                const batch = writeBatch(db);
+                state.items.forEach(item => {
+                    batch.delete(doc(db, "matrix_items", item.id));
+                });
+                await batch.commit();
+
+                // 2. Delete the project document itself
+                await deleteDoc(doc(db, "matrix_projects", state.activeProjectId));
+            }
+        });
+
+        // --- 3. UI RENDERING (Titles & Items) ---
+        function updateTitlesUI() {
+            document.getElementById('title-box1').textContent = state.titles.box1 || "Quadrant 1";
+            document.getElementById('title-box2').textContent = state.titles.box2 || "Quadrant 2";
+            document.getElementById('title-box3').textContent = state.titles.box3 || "Quadrant 3";
+            document.getElementById('title-box4').textContent = state.titles.box4 || "Quadrant 4";
+        }
+
+        window.editTitle = async function(boxId) {
+            const currentTitle = state.titles[boxId] || "";
+            const newTitle = prompt("Enter new title for this quadrant:", currentTitle);
+            
+            if (newTitle !== null && newTitle.trim() !== "" && newTitle !== currentTitle) {
+                const updatedTitles = { ...state.titles };
+                updatedTitles[boxId] = newTitle.trim();
+                await updateDoc(doc(db, "matrix_projects", state.activeProjectId), { titles: updatedTitles });
+            }
+        };
+
         function renderItems() {
-            // Clear all containers
             ['inbox', 'box1', 'box2', 'box3', 'box4'].forEach(boxId => {
                 document.getElementById(`container-${boxId}`).innerHTML = '';
             });
 
-            // Sort alphabetically for neatness
             const sortedItems = [...state.items].sort((a, b) => a.name.localeCompare(b.name));
 
             sortedItems.forEach(item => {
                 const container = document.getElementById(`container-${item.boxId}`);
-                if (!container) return; // Failsafe
+                if (!container) return;
 
                 const div = document.createElement('div');
                 div.className = 'task-item';
                 div.draggable = true;
                 
-                // Drag start event
                 div.addEventListener('dragstart', (e) => {
                     e.dataTransfer.setData('text/plain', item.id);
                     e.dataTransfer.effectAllowed = "move";
@@ -411,45 +506,30 @@
                         <button class="icon-btn delete" data-id="${item.id}"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 `;
-
                 container.appendChild(div);
             });
 
             attachManageEventListeners();
         }
 
-        // --- 4. INTERACTIONS & EVENTS ---
-
-        // Edit Title Function (Exposed to global window for inline onclick)
-        window.editTitle = async function(boxId) {
-            const currentTitle = state.titles[boxId] || "";
-            const newTitle = prompt("Enter new title for this quadrant:", currentTitle);
-            
-            if (newTitle !== null && newTitle.trim() !== "" && newTitle !== currentTitle) {
-                const updatedTitles = { ...state.titles };
-                updatedTitles[boxId] = newTitle.trim();
-                await setDoc(configRef, updatedTitles, { merge: true });
-            }
-        };
-
-        // Add New Item
+        // --- 4. ITEM INTERACTIONS ---
         document.getElementById('custom-entry-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const input = document.getElementById('custom-input');
             const itemName = input.value.trim();
-            if (itemName === '') return;
+            if (itemName === '' || !state.activeProjectId) return;
 
             input.value = '';
             input.focus();
 
-            // Always add to Inbox initially
+            // Note: Saving the projectId alongside the item!
             await addDoc(itemsRef, {
                 name: itemName,
-                boxId: "inbox"
+                boxId: "inbox",
+                projectId: state.activeProjectId
             });
         });
 
-        // Toggle Manage Mode
         document.getElementById('toggle-manage-btn').addEventListener('click', () => {
             state.isManageMode = !state.isManageMode;
             const btn = document.getElementById('toggle-manage-btn');
@@ -465,22 +545,20 @@
             }
         });
 
-        // Edit and Delete handlers within Manage Mode
         function attachManageEventListeners() {
-            document.querySelectorAll('.icon-btn.edit').forEach(btn => {
-                btn.onclick = async (e) => {
+            document.querySelectorAll('.icon-btn.edit:not(#rename-project-btn)').forEach(btn => {
+                btn.onclick = async () => {
                     const id = btn.getAttribute('data-id');
                     const currentName = btn.getAttribute('data-name');
                     const newName = prompt("Edit item name:", currentName);
-                    
                     if (newName !== null && newName.trim() !== "" && newName !== currentName) {
                         await updateDoc(doc(db, "matrix_items", id), { name: newName.trim() });
                     }
                 };
             });
 
-            document.querySelectorAll('.icon-btn.delete').forEach(btn => {
-                btn.onclick = async (e) => {
+            document.querySelectorAll('.icon-btn.delete:not(#delete-project-btn)').forEach(btn => {
+                btn.onclick = async () => {
                     const id = btn.getAttribute('data-id');
                     if (confirm("Delete this item?")) {
                         await deleteDoc(doc(db, "matrix_items", id));
@@ -489,12 +567,12 @@
             });
         }
 
-        // --- 5. DRAG AND DROP LOGIC ---
+        // --- 5. DRAG AND DROP ---
         const dropZones = document.querySelectorAll('.droppable');
 
         dropZones.forEach(zone => {
             zone.addEventListener('dragover', (e) => {
-                e.preventDefault(); // Necessary to allow dropping
+                e.preventDefault(); 
                 zone.classList.add('drag-over');
             });
 
