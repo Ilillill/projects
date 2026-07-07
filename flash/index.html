@@ -837,7 +837,7 @@
             const list = document.getElementById('categories-list');
             list.innerHTML = `
                 <div class="cat-item ${activeCategoryId === 'starred' ? 'active' : ''}" onclick="setActiveCategory('starred')">
-                    <span><i class="fa-solid fa-star" style="color: ${activeCategoryId === 'starred' ? 'white' : 'var(--warning)'};"></i> ⭐ Selected Items</span>
+                    <span><i class="fa-solid fa-star" style="color: ${activeCategoryId === 'starred' ? 'white' : 'var(--warning)'};"></i> Selected Items</span>
                 </div>
                 <div class="cat-item ${activeCategoryId === 'all' ? 'active' : ''}" onclick="setActiveCategory('all')">
                     <span><i class="fa-solid fa-border-all"></i> All Sets</span>
