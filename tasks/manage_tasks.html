@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Tasks</title>
+    <!-- Include SortableJS for Drag and Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -29,10 +31,10 @@
 
         .container {
             width: 100%;
-            max-width: 820px;
+            max-width: 900px;
             background: var(--card-bg);
             border-radius: 12px;
-            padding: 25px;
+            padding: 30px;
             box-shadow: 0 12px 40px rgba(0,0,0,0.08);
         }
 
@@ -45,27 +47,33 @@
             padding-bottom: 15px;
         }
 
-        h1, h3 {
+        h1, h2, h3 {
             margin: 0;
             color: var(--primary);
         }
 
+        /* Buttons */
         .btn {
             padding: 8px 16px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
             font-size: 13px;
             transition: all 0.2s ease;
             font-family: 'Inter', sans-serif;
             text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: #1A252F; transform: translateY(-1px); }
-        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
-        .btn-outline:hover { background: var(--primary); color: white; }
+        .btn-primary { background: linear-gradient(135deg, #2C3E50 0%, #1A252F 100%); color: white; }
+        .btn-primary:hover { box-shadow: 0 4px 12px rgba(44, 62, 80, 0.25); transform: translateY(-1px); }
+        
+        .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--primary); }
+        .btn-outline:hover { background: #F8FAFC; border-color: var(--primary); }
+        
         .btn-danger { background: #E53E3E; color: white; }
         .btn-danger:hover { background: #C53030; }
 
@@ -102,6 +110,13 @@
             flex-direction: column;
             gap: 5px;
         }
+        
+        .input-group.checkbox-group {
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+        }
 
         .input-group label {
             font-size: 12px;
@@ -116,11 +131,7 @@
             font-family: 'Inter', sans-serif;
             font-size: 13px;
         }
-
-        .form-input:focus {
-            outline: none;
-            border-color: var(--link);
-        }
+        .form-input:focus { outline: none; border-color: var(--link); }
 
         .form-actions {
             display: flex;
@@ -129,11 +140,47 @@
             margin-top: 15px;
         }
 
-        /* Task List */
+        /* Lists */
         .manage-list {
             display: flex;
             flex-direction: column;
             gap: 12px;
+        }
+
+        /* Categories Display */
+        .category-box {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 25px;
+            background: #FDFDFD;
+            overflow: hidden;
+        }
+
+        .category-header {
+            background: #EDF2F7;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 14px;
+        }
+        
+        .category-actions button {
+            background: none; border: none; cursor: pointer; color: #4A5568; font-size: 13px; font-weight: 600;
+            transition: 0.2s; padding: 4px 8px; border-radius: 4px;
+        }
+        .category-actions button:hover { background: #E2E8F0; }
+        .category-actions button.delete:hover { background: #FED7D7; color: #C53030; }
+
+        .sortable-list {
+            min-height: 50px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .manage-item {
@@ -143,12 +190,15 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             background: white;
-            transition: 0.2s;
+            cursor: grab;
+            transition: box-shadow 0.2s;
         }
+        
+        .manage-item:active { cursor: grabbing; }
 
         .manage-item:hover {
             border-color: #A0AEC0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
         .item-icon {
@@ -166,53 +216,24 @@
             flex-direction: column;
         }
 
-        .item-title {
-            font-weight: 600;
-            color: var(--link);
-            font-size: 14px;
-        }
-
-        .item-category {
-            font-size: 11px;
-            color: #A0AEC0;
-            font-weight: 500;
-            margin-top: 2px;
-        }
+        .item-title { font-weight: 600; color: var(--link); font-size: 14px; }
+        .item-category { font-size: 11px; color: #A0AEC0; font-weight: 500; margin-top: 2px; }
 
         .action-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 13px;
-            color: #718096;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 12px;
-            border-radius: 4px;
-            transition: 0.2s;
+            background: none; border: none; cursor: pointer; font-weight: 600; font-size: 13px;
+            color: #718096; display: flex; align-items: center; gap: 6px; padding: 8px 12px;
+            border-radius: 4px; transition: 0.2s;
         }
-
         .action-btn:hover { background: #EDF2F7; color: var(--primary); }
         .action-btn.delete:hover { background: #FED7D7; color: #C53030; }
-
-        .group-header {
-            margin-top: 25px;
-            margin-bottom: 10px;
-            font-size: 14px;
-            color: #718096;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 5px;
-        }
         
-        .section-label {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 5px;
+        .section-label { font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 5px; }
+
+        .drag-handle {
+            color: #CBD5E0;
+            margin-right: 15px;
+            cursor: grab;
+            font-size: 18px;
         }
     </style>
 </head>
@@ -221,9 +242,33 @@
     <div class="container">
         <div class="top-bar">
             <h1>Task Management</h1>
-            <a href="tasks.html" class="btn btn-outline">Back to Main Page</a>
+            <a href="index.html" class="btn btn-outline">Back to Tracker</a>
         </div>
 
+        <!-- CATEGORY MANAGEMENT -->
+        <div class="form-section">
+            <h3 id="cat-form-title">Add/Edit Category</h3>
+            <div class="main-inputs">
+                <div class="input-group">
+                    <label>Category Name</label>
+                    <input type="text" id="cat-name" class="form-input" placeholder="e.g. Health">
+                </div>
+                <div class="input-group">
+                    <label>Number of Checkboxes</label>
+                    <input type="number" id="cat-boxes" class="form-input" value="7" min="1" max="7">
+                </div>
+                <div class="input-group checkbox-group">
+                    <input type="checkbox" id="cat-bank" checked>
+                    <label for="cat-bank">Enable Bonus Bank (+/- buttons)</label>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-outline" id="btn-cat-cancel" onclick="cancelCatEdit()" style="display: none;">Cancel</button>
+                <button class="btn btn-primary" id="btn-cat-save" onclick="saveCategory()">Save Category</button>
+            </div>
+        </div>
+
+        <!-- TASK MANAGEMENT -->
         <div class="form-section">
             <h3 id="form-title">Add New Task</h3>
             
@@ -234,12 +279,7 @@
                 </div>
                 <div class="input-group">
                     <label>Category</label>
-                    <select id="task-group" class="form-input">
-                        <option value="sd">Spanish Daily</option>
-                        <option value="d">Daily</option>
-                        <option value="w">Weekly</option>
-                        <option value="m">Monthly</option>
-                    </select>
+                    <select id="task-group" class="form-input"></select>
                 </div>
             </div>
 
@@ -260,11 +300,12 @@
             </div>
 
             <div class="form-actions">
-                <button class="btn btn-outline" id="btn-cancel" onclick="cancelEdit()" style="display: none;">Cancel</button>
+                <button class="btn btn-outline" id="btn-cancel" onclick="cancelTaskEdit()" style="display: none;">Cancel</button>
                 <button class="btn btn-primary" id="btn-save" onclick="saveTask()">Add Task</button>
             </div>
         </div>
 
+        <!-- TASK LISTS (Grouped by Category, Drag & Drop Enabled) -->
         <div id="manage-list-container" class="manage-list"></div>
     </div>
 
@@ -288,75 +329,159 @@
         const auth = getAuth(app); 
         
         let tasks = [];
-        let editingIndex = -1;
-        const tasksRef = ref(db, 'tasksList');
+        let categories = [];
+        let editingTaskIndex = -1;
+        let editingCatId = null;
         
-        const orderMap = { 'sd': 1, 'd': 2, 'w': 3, 'm': 4 };
-        const nameMap = { 'sd': 'Spanish Daily', 'd': 'Daily', 'w': 'Weekly', 'm': 'Monthly' };
+        const tasksRef = ref(db, 'tasksList');
+        const categoriesRef = ref(db, 'categoriesList');
+        let sortables = [];
         
         signInAnonymously(auth).then(() => {
+            onValue(categoriesRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    categories = snapshot.val().filter(c => c !== null);
+                }
+                updateCategorySelect();
+                renderLists();
+            });
+
             onValue(tasksRef, (snapshot) => {
                 if (snapshot.exists()) {
                     tasks = snapshot.val().filter(t => t !== null);
-                    renderList();
                 }
+                renderLists();
             });
-        }).catch((error) => {
-            console.error("Silent login failed:", error);
-            alert("Database connection failed. Check permissions.");
-        });
+        }).catch((error) => console.error(error));
 
+        // ================= CATEGORY MANAGEMENT =================
+        function updateCategorySelect() {
+            const select = document.getElementById('task-group');
+            select.innerHTML = '';
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat.id;
+                opt.innerText = cat.name;
+                select.appendChild(opt);
+            });
+        }
+
+        window.saveCategory = function() {
+            const name = document.getElementById('cat-name').value.trim();
+            const boxes = parseInt(document.getElementById('cat-boxes').value) || 7;
+            const showBank = document.getElementById('cat-bank').checked;
+
+            if(!name) return alert("Please enter a category name");
+
+            if (editingCatId) {
+                const cat = categories.find(c => c.id === editingCatId);
+                if (cat) {
+                    cat.name = name;
+                    cat.boxes = boxes;
+                    cat.showBank = showBank;
+                }
+            } else {
+                categories.push({
+                    id: 'cat_' + Date.now(),
+                    name: name,
+                    boxes: boxes,
+                    showBank: showBank
+                });
+            }
+
+            set(categoriesRef, categories);
+            window.cancelCatEdit();
+        };
+
+        window.editCategory = function(catId) {
+            const cat = categories.find(c => c.id === catId);
+            if(!cat) return;
+            
+            document.getElementById('cat-name').value = cat.name;
+            document.getElementById('cat-boxes').value = cat.boxes;
+            document.getElementById('cat-bank').checked = cat.showBank;
+            
+            editingCatId = cat.id;
+            document.getElementById('cat-form-title').innerText = 'Edit Category';
+            document.getElementById('btn-cat-save').innerText = 'Save Updates';
+            document.getElementById('btn-cat-cancel').style.display = 'inline-flex';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.deleteCategory = function(catId) {
+            const cat = categories.find(c => c.id === catId);
+            if(confirm(`Delete category "${cat.name}"? Tasks inside it will be hidden until reassigned.`)) {
+                categories = categories.filter(c => c.id !== catId);
+                set(categoriesRef, categories);
+            }
+        };
+
+        window.moveCategory = function(index, dir) {
+            if (dir === 'up' && index > 0) {
+                let temp = categories[index];
+                categories[index] = categories[index - 1];
+                categories[index - 1] = temp;
+            } else if (dir === 'down' && index < categories.length - 1) {
+                let temp = categories[index];
+                categories[index] = categories[index + 1];
+                categories[index + 1] = temp;
+            }
+            set(categoriesRef, categories);
+        };
+
+        window.cancelCatEdit = function() {
+            document.getElementById('cat-name').value = '';
+            document.getElementById('cat-boxes').value = '7';
+            document.getElementById('cat-bank').checked = true;
+            editingCatId = null;
+            document.getElementById('cat-form-title').innerText = 'Add Category';
+            document.getElementById('btn-cat-save').innerText = 'Save Category';
+            document.getElementById('btn-cat-cancel').style.display = 'none';
+        };
+
+        // ================= TASK MANAGEMENT =================
         window.saveTask = function() {
             const img = document.getElementById('task-img').value.trim();
             const group = document.getElementById('task-group').value;
 
-            // Extract multiple options
             let options = [];
             for(let i = 1; i <= 4; i++) {
                 let t = document.getElementById(`opt${i}-title`).value.trim();
                 let u = document.getElementById(`opt${i}-url`).value.trim();
-                if(t) {
-                    options.push({title: t, url: u});
-                }
+                if(t) options.push({title: t, url: u});
             }
 
             if(options.length === 0 || !img) {
-                alert("Please provide an Image URL and at least Option 1 Title.");
-                return;
+                return alert("Please provide an Image URL and at least Option 1 Title.");
             }
 
-            const boxes = (group === 'sd' || group === 'd') ? 7 : 1;
-            
-            // Set root title to first option's title for legacy/sorting fallbacks
             const rootTitle = options[0].title;
 
-            if (editingIndex > -1) {
-                tasks[editingIndex] = { ...tasks[editingIndex], title: rootTitle, img, group, boxes, options };
-                // Wipe root 'url' if converting an old task to options format
-                delete tasks[editingIndex].url; 
+            if (editingTaskIndex > -1) {
+                tasks[editingTaskIndex] = { ...tasks[editingTaskIndex], title: rootTitle, img, group, options };
+                delete tasks[editingTaskIndex].url; 
             } else {
                 const id = 't_' + Date.now(); 
-                tasks.push({ id, title: rootTitle, img, group, boxes, options });
+                tasks.push({ id, title: rootTitle, img, group, options });
             }
 
-            tasks.sort((a, b) => orderMap[a.group] - orderMap[b.group]);
-
             set(tasksRef, tasks);
-            window.cancelEdit();
+            window.cancelTaskEdit();
         };
 
-        window.editTask = function(index) {
+        window.editTask = function(taskId) {
+            const index = tasks.findIndex(t => t.id === taskId);
+            if (index === -1) return;
             const task = tasks[index];
+
             document.getElementById('task-img').value = task.img;
             document.getElementById('task-group').value = task.group;
 
-            // Clear inputs first
             for(let i = 1; i <= 4; i++) {
                 document.getElementById(`opt${i}-title`).value = '';
                 document.getElementById(`opt${i}-url`).value = '';
             }
 
-            // Populate options if new format, fallback to legacy title/url if old format
             if (task.options && task.options.length > 0) {
                 task.options.forEach((opt, idx) => {
                     if (idx < 4) {
@@ -369,14 +494,15 @@
                 document.getElementById('opt1-url').value = task.url || '';
             }
 
-            editingIndex = index;
+            editingTaskIndex = index;
             document.getElementById('form-title').innerText = 'Edit Task';
             document.getElementById('btn-save').innerText = 'Save Updates';
-            document.getElementById('btn-cancel').style.display = 'block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.getElementById('btn-cancel').style.display = 'inline-flex';
+            window.scrollTo({ top: 300, behavior: 'smooth' });
         };
 
-        window.deleteTask = function(index) {
+        window.deleteTask = function(taskId) {
+            const index = tasks.findIndex(t => t.id === taskId);
             const taskName = tasks[index].options ? tasks[index].options[0].title : tasks[index].title;
             if(confirm(`Are you sure you want to delete "${taskName}"?`)) {
                 tasks.splice(index, 1);
@@ -384,82 +510,124 @@
             }
         };
 
-        window.moveUp = function(index) {
-            // Only move if not the first item AND the item above is in the same category
-            if (index > 0 && tasks[index].group === tasks[index - 1].group) {
-                let temp = tasks[index];
-                tasks[index] = tasks[index - 1];
-                tasks[index - 1] = temp;
-                set(tasksRef, tasks); // Save the new order to Firebase
-            }
-        };
-
-        window.moveDown = function(index) {
-            // Only move if not the last item AND the item below is in the same category
-            if (index < tasks.length - 1 && tasks[index].group === tasks[index + 1].group) {
-                let temp = tasks[index];
-                tasks[index] = tasks[index + 1];
-                tasks[index + 1] = temp;
-                set(tasksRef, tasks); // Save the new order to Firebase
-            }
-        };
-
-        window.cancelEdit = function() {
+        window.cancelTaskEdit = function() {
             document.getElementById('task-img').value = '';
-            document.getElementById('task-group').value = 'sd';
+            if(categories.length > 0) document.getElementById('task-group').value = categories[0].id;
             for(let i = 1; i <= 4; i++) {
                 document.getElementById(`opt${i}-title`).value = '';
                 document.getElementById(`opt${i}-url`).value = '';
             }
             
-            editingIndex = -1;
+            editingTaskIndex = -1;
             document.getElementById('form-title').innerText = 'Add New Task';
             document.getElementById('btn-save').innerText = 'Add Task';
             document.getElementById('btn-cancel').style.display = 'none';
         };
 
-        function renderList() {
+        // ================= RENDERING AND DRAG & DROP =================
+        function renderLists() {
+            if(!categories.length) return;
+            
             const container = document.getElementById('manage-list-container');
             container.innerHTML = '';
             
-            let currentGroup = '';
+            // Clean up old sortables
+            sortables.forEach(s => s.destroy());
+            sortables = [];
 
-            tasks.forEach((task, index) => {
-                if (currentGroup !== task.group) {
-                    const header = document.createElement('div');
-                    header.className = 'group-header';
-                    header.innerText = nameMap[task.group];
-                    container.appendChild(header);
-                    currentGroup = task.group;
-                }
-
-                // Gather multiple titles for display in the management list
-                let titleDisplay = '';
-                if (task.options && task.options.length > 0) {
-                    titleDisplay = task.options.map(o => o.title).join(' • ');
-                } else {
-                    titleDisplay = task.title;
-                }
+            categories.forEach((cat, index) => {
+                const box = document.createElement('div');
+                box.className = 'category-box';
                 
-                // Determine if Up/Down buttons should be disabled (grayed out) 
-                const disableUp = (index === 0 || tasks[index].group !== tasks[index - 1].group) ? 'opacity: 0.3; cursor: default;' : '';
-                const disableDown = (index === tasks.length - 1 || tasks[index].group !== tasks[index + 1].group) ? 'opacity: 0.3; cursor: default;' : '';
-
-                const item = document.createElement('div');
-                item.className = 'manage-item';
-                item.innerHTML = `
-                    <img src="${task.img}" class="item-icon" alt="icon">
-                    <div class="item-details">
-                        <span class="item-title">${titleDisplay}</span>
-                        <span class="item-category">${task.options ? task.options.length + ' Option(s)' : 'Legacy Link'}</span>
-                    </div>
-                    <button class="action-btn" onclick="if(!'${disableUp}') moveUp(${index})" style="${disableUp}">⬆️</button>
-                    <button class="action-btn" onclick="if(!'${disableDown}') moveDown(${index})" style="${disableDown}">⬇️</button>
-                    <button class="action-btn" onclick="editTask(${index})">⚙️ Update</button>
-                    <button class="action-btn delete" onclick="deleteTask(${index})">❌ Delete</button>
+                // Category Header
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                
+                const titleSec = document.createElement('div');
+                titleSec.innerText = `${cat.name} (${cat.showBank ? '+ Bank' : 'No Bank'} • ${cat.boxes} Boxes)`;
+                
+                const actSec = document.createElement('div');
+                actSec.className = 'category-actions';
+                actSec.innerHTML = `
+                    <button onclick="moveCategory(${index}, 'up')">⬆️</button>
+                    <button onclick="moveCategory(${index}, 'down')">⬇️</button>
+                    <button onclick="editCategory('${cat.id}')">⚙️ Edit</button>
+                    <button class="delete" onclick="deleteCategory('${cat.id}')">❌</button>
                 `;
-                container.appendChild(item);
+                
+                header.appendChild(titleSec);
+                header.appendChild(actSec);
+                box.appendChild(header);
+
+                // Sortable List
+                const listEl = document.createElement('div');
+                listEl.className = 'sortable-list';
+                listEl.setAttribute('data-group-id', cat.id);
+
+                const catTasks = tasks.filter(t => t.group === cat.id);
+                catTasks.forEach(task => {
+                    const titleDisplay = (task.options && task.options.length > 0) 
+                                        ? task.options.map(o => o.title).join(' • ') 
+                                        : task.title;
+
+                    const item = document.createElement('div');
+                    item.className = 'manage-item';
+                    item.setAttribute('data-task-id', task.id);
+                    item.innerHTML = `
+                        <div class="drag-handle">☰</div>
+                        <img src="${task.img}" class="item-icon" alt="icon">
+                        <div class="item-details">
+                            <span class="item-title">${titleDisplay}</span>
+                            <span class="item-category">${task.options ? task.options.length + ' Option(s)' : 'Legacy Link'}</span>
+                        </div>
+                        <button class="action-btn" onclick="editTask('${task.id}')">⚙️ Update</button>
+                        <button class="action-btn delete" onclick="deleteTask('${task.id}')">❌ Delete</button>
+                    `;
+                    listEl.appendChild(item);
+                });
+
+                box.appendChild(listEl);
+                container.appendChild(box);
+
+                // Initialize SortableJS for this list
+                const sortableInstance = new Sortable(listEl, {
+                    group: 'shared', // Allows dragging between categories
+                    animation: 150,
+                    handle: '.drag-handle', // Restrict drag start to the handle icon
+                    ghostClass: 'sortable-ghost',
+                    onEnd: function (evt) {
+                        rebuildTasksFromDOM();
+                    }
+                });
+                sortables.push(sortableInstance);
             });
+        }
+
+        // Fired after a drag & drop completes to save the new order & groups
+        function rebuildTasksFromDOM() {
+            const newTasks = [];
+            
+            document.querySelectorAll('.sortable-list').forEach(list => {
+                const groupId = list.getAttribute('data-group-id');
+                list.querySelectorAll('.manage-item').forEach(item => {
+                    const taskId = item.getAttribute('data-task-id');
+                    const task = tasks.find(t => t.id === taskId);
+                    if (task) {
+                        task.group = groupId; // Update group in case it moved categories
+                        newTasks.push(task);
+                    }
+                });
+            });
+
+            // Append any tasks that are orphaned (e.g., category was deleted previously)
+            tasks.forEach(t => {
+                if (!newTasks.find(nt => nt.id === t.id)) {
+                    newTasks.push(t);
+                }
+            });
+
+            tasks = newTasks;
+            set(tasksRef, tasks);
         }
     </script>
 </body>
