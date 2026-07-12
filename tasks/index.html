@@ -24,7 +24,7 @@
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 20px 10px;
+            padding: 10px; /* Reduced from 20px */
             display: flex;
             justify-content: center;
         }
@@ -34,17 +34,16 @@
             max-width: 820px;
             background: var(--card-bg);
             border-radius: 16px;
-            padding: 20px 30px;
+            padding: 12px 20px; /* Drastically reduced padding */
             box-shadow: 0 10px 40px rgba(0,0,0,0.06);
             position: relative;
         }
 
         .top-bar {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end; /* Push buttons to right */
             align-items: center;
-            margin-bottom: 20px;
-            min-height: 40px;
+            margin-bottom: 10px; /* Reduced gap */
         }
 
         #export-header {
@@ -59,26 +58,24 @@
 
         .header-actions {
             display: flex;
-            gap: 12px;
-            width: 100%;
+            gap: 8px;
             justify-content: flex-end;
         }
 
-        /* Prettier Buttons */
-        .btn {
-            padding: 8px 16px;
+        /* Smaller Icon Buttons */
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            padding: 0;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
-            font-weight: 600;
-            font-size: 13px;
+            font-size: 16px; /* Size for emojis */
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            font-family: 'Inter', sans-serif;
-            text-decoration: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            letter-spacing: 0.3px;
+            text-decoration: none;
         }
 
         .btn-primary {
@@ -101,14 +98,13 @@
 
         .btn-outline:hover {
             border-color: var(--primary);
-            color: var(--primary);
             background: #F8FAFC;
             transform: translateY(-1px);
         }
 
         /* Progress Bar */
         .progress-wrapper {
-            margin-bottom: 20px;
+            margin-bottom: 10px; /* Reduced gap */
         }
 
         .progress-container {
@@ -132,18 +128,18 @@
             font-size: 12px;
             font-weight: 600;
             color: #718096;
-            margin-top: 6px;
+            margin-top: 4px;
         }
 
-        /* Task Layout */
+        /* Task Layout - Tighter Spacing */
         .task-row {
             display: grid;
-            grid-template-columns: 40px 1fr repeat(7, 28px) 10px 22px 24px 22px;
+            grid-template-columns: 32px 1fr repeat(7, 28px) 10px 22px 24px 22px; /* Adjusted icon column to 32px */
             gap: 8px;
             align-items: center;
-            margin-bottom: 4px;
-            padding: 4px 0;
-            border-radius: 8px;
+            margin-bottom: 1px; /* Tighter gap between tasks */
+            padding: 2px 0; /* Drastically reduced padding */
+            border-radius: 6px;
             transition: background 0.2s;
         }
 
@@ -152,11 +148,11 @@
         }
 
         .task-icon {
-            width: 34px;
-            height: 34px;
+            width: 28px; /* Slightly smaller icon */
+            height: 28px;
             object-fit: cover;
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
             background-color: white;
         }
 
@@ -178,13 +174,13 @@
 
         /* Checkboxes */
         .check-box {
-            width: 24px;
-            height: 24px;
+            width: 22px; /* Slightly smaller to fit layout better if needed, kept at 24 originally but 22 is tighter */
+            height: 22px;
             appearance: none;
             -webkit-appearance: none;
             background: #FFFFFF;
             border: 2px solid var(--border);
-            border-radius: 6px;
+            border-radius: 5px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -201,21 +197,21 @@
         .check-box:checked {
             background-color: var(--accent);
             border-color: var(--accent);
-            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+            box-shadow: 0 2px 6px rgba(39, 174, 96, 0.3);
         }
 
         .check-box:checked::after {
             content: '✔';
             color: white;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
         }
 
         /* Bank UI Styles */
         .bank-btn {
-            width: 24px;
-            height: 24px;
-            border-radius: 6px;
+            width: 22px;
+            height: 22px;
+            border-radius: 5px;
             border: none;
             background: #EDF2F7;
             color: #4A5568;
@@ -241,10 +237,12 @@
             min-width: 24px;
         }
 
-        /* Even Category Spacing */
+        /* Category Separator Line */
         .category-spacer {
-            height: 24px;
+            height: 1px;
             width: 100%;
+            background-color: var(--border);
+            margin: 6px 0; /* Tight spacing around the line */
         }
     </style>
 </head>
@@ -255,9 +253,10 @@
         
         <div class="top-bar">
             <div class="header-actions">
-                <button onclick="exportTracker()" class="btn btn-primary" id="btn-export">Export Week</button>
-                <button onclick="resetTracker()" class="btn btn-outline" id="btn-reset">Reset Board</button>
-                <a href="manage_tasks.html" class="btn btn-outline" id="btn-manage">Manage Tracker</a>
+                <!-- Swapped to small icon buttons with tooltips -->
+                <button onclick="exportTracker()" class="btn-primary btn-icon" id="btn-export" title="Export Week">📥</button>
+                <button onclick="resetTracker()" class="btn-outline btn-icon" id="btn-reset" title="Reset Board">🔄</button>
+                <a href="manage_tasks.html" class="btn-outline btn-icon" id="btn-manage" title="Manage Tracker">⚙️</a>
             </div>
         </div>
 
@@ -297,7 +296,6 @@
         const dbRef = ref(db, 'trackerData');
         let trackerDataCache = {};
 
-        // Default categories to preserve existing tasks gracefully
         const defaultCategories = [
             { id: 'sd', name: 'Spanish Daily', boxes: 7, showBank: true },
             { id: 'd', name: 'Daily', boxes: 7, showBank: true },
@@ -307,7 +305,6 @@
         ];
 
         signInAnonymously(auth).then(() => {
-            // Load Categories
             onValue(categoriesRef, (snapshot) => {
                 if (snapshot.exists()) {
                     categories = snapshot.val().filter(c => c !== null);
@@ -318,7 +315,6 @@
                 renderTasks();
             });
 
-            // Load Tasks
             onValue(tasksRef, (snapshot) => {
                 if (snapshot.exists()) {
                     tasks = snapshot.val().filter(t => t !== null);
@@ -327,7 +323,6 @@
                 syncCheckmarks();
             });
 
-            // Load Progress
             onValue(dbRef, (snapshot) => {
                 trackerDataCache = snapshot.val() || {};
                 syncCheckmarks();
@@ -348,9 +343,8 @@
 
             categories.forEach((category, catIndex) => {
                 const categoryTasks = tasks.filter(t => t.group === category.id);
-                if (categoryTasks.length === 0) return; // Hide empty categories
+                if (categoryTasks.length === 0) return;
                 
-                // Add even spacer if it's not the very first category rendered
                 if (container.children.length > 0) {
                     const spacer = document.createElement('div');
                     spacer.className = 'category-spacer';
@@ -429,7 +423,7 @@
                         }
                     }
 
-                    row.appendChild(document.createElement('div')); // Spacer
+                    row.appendChild(document.createElement('div'));
 
                     if (category.showBank) {
                         const minusBtn = document.createElement('button');
@@ -458,7 +452,7 @@
                     container.appendChild(row);
                 });
             });
-            syncCheckmarks(); // Re-sync after render
+            syncCheckmarks();
         }
 
         function updateProgress() {
