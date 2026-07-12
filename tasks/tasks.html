@@ -7,7 +7,7 @@
     <title>Tasks</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
         :root {
             --primary: #2C3E50;
@@ -24,7 +24,7 @@
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 10px;
+            padding: 20px 10px;
             display: flex;
             justify-content: center;
         }
@@ -33,9 +33,9 @@
             width: 100%;
             max-width: 820px;
             background: var(--card-bg);
-            border-radius: 12px;
-            padding: 15px 25px;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+            border-radius: 16px;
+            padding: 20px 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.06);
             position: relative;
         }
 
@@ -43,13 +43,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 20px;
-            color: var(--primary);
+            margin-bottom: 20px;
+            min-height: 40px;
         }
 
         #export-header {
@@ -58,79 +53,86 @@
             color: var(--primary);
             margin-top: 0;
             margin-bottom: 10px;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 700;
         }
 
         .header-actions {
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            width: 100%;
+            justify-content: flex-end;
         }
 
+        /* Prettier Buttons */
         .btn {
-            padding: 6px 12px;
+            padding: 8px 16px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 12px;
-            transition: all 0.2s ease;
+            font-size: 13px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             font-family: 'Inter', sans-serif;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2);
-        }
-
-        .btn-primary:hover {
-            background: #1A252F;
-            transform: translateY(-1px);
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--primary);
-            color: var(--primary);
             text-decoration: none;
             display: flex;
             align-items: center;
             justify-content: center;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2C3E50 0%, #1A252F 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.25);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 16px rgba(44, 62, 80, 0.35);
+            transform: translateY(-1.5px);
+        }
+
+        .btn-outline {
+            background: white;
+            border: 2px solid var(--border);
+            color: var(--primary);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
         }
 
         .btn-outline:hover {
-            background: var(--primary);
-            color: white;
+            border-color: var(--primary);
+            color: var(--primary);
+            background: #F8FAFC;
+            transform: translateY(-1px);
         }
 
         /* Progress Bar */
         .progress-wrapper {
-            margin-bottom: 12px;
+            margin-bottom: 20px;
         }
 
         .progress-container {
             width: 100%;
             background: #EDF2F7;
-            border-radius: 10px;
-            height: 10px;
+            border-radius: 12px;
+            height: 12px;
             overflow: hidden;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .progress-bar {
             height: 100%;
-            background: var(--accent);
+            background: linear-gradient(90deg, #27AE60 0%, #2ECC71 100%);
             width: 0%;
-            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .progress-text {
             text-align: right;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 600;
             color: #718096;
-            margin-top: 4px;
+            margin-top: 6px;
         }
 
         /* Task Layout */
@@ -139,9 +141,9 @@
             grid-template-columns: 40px 1fr repeat(7, 28px) 10px 22px 24px 22px;
             gap: 8px;
             align-items: center;
-            margin-bottom: 2px;
-            padding: 2px 0;
-            border-radius: 6px;
+            margin-bottom: 4px;
+            padding: 4px 0;
+            border-radius: 8px;
             transition: background 0.2s;
         }
 
@@ -150,11 +152,11 @@
         }
 
         .task-icon {
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             object-fit: cover;
-            border-radius: 6px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
             background-color: white;
         }
 
@@ -182,7 +184,7 @@
             -webkit-appearance: none;
             background: #FFFFFF;
             border: 2px solid var(--border);
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -211,9 +213,9 @@
 
         /* Bank UI Styles */
         .bank-btn {
-            width: 22px;
-            height: 22px;
-            border-radius: 4px;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
             border: none;
             background: #EDF2F7;
             color: #4A5568;
@@ -239,12 +241,10 @@
             min-width: 24px;
         }
 
-        .spacer {
-            height: 8px;
-        }
-
-        .spacer-large {
-            height: 28px;
+        /* Even Category Spacing */
+        .category-spacer {
+            height: 24px;
+            width: 100%;
         }
     </style>
 </head>
@@ -254,11 +254,10 @@
         <h2 id="export-header"></h2>
         
         <div class="top-bar">
-            <h1>Mystery Tracker</h1>
             <div class="header-actions">
                 <button onclick="exportTracker()" class="btn btn-primary" id="btn-export">Export Week</button>
                 <button onclick="resetTracker()" class="btn btn-outline" id="btn-reset">Reset Board</button>
-                <a href="manage_tasks.html" class="btn btn-outline" id="btn-manage">Manage</a>
+                <a href="manage_tasks.html" class="btn btn-outline" id="btn-manage">Manage Tracker</a>
             </div>
         </div>
 
@@ -266,7 +265,7 @@
             <div class="progress-container">
                 <div class="progress-bar" id="progress-fill"></div>
             </div>
-            <div class="progress-text" id="progress-text">0 / 84 Daily Tasks Completed</div>
+            <div class="progress-text" id="progress-text">0 / 0 Tasks Completed</div>
         </div>
 
         <div id="task-list"></div>
@@ -291,46 +290,44 @@
         const db = getDatabase(app);
         const auth = getAuth(app);
 
-        const defaultTasks = [
-            {id: 'v1', title: 'Vocabulary', img: 'vocabulary.png', group: 'sd', boxes: 7, url: 'https://ilillill.github.io/flashcards/flashcards.html'},
-            {id: 'c1', title: 'Course', img: 'Etutor.png', group: 'sd', boxes: 7, url: 'https://www.etutor.pl/profil'},
-            {id: 'c2', title: 'Course', img: 'SpanishDict.png', group: 'sd', boxes: 7, url: 'https://www.spanishdict.com/learn'},
-            {id: 'cj1', title: 'Conjugations', img: 'SpanishDict.png', group: 'sd', boxes: 7, url: 'https://www.spanishdict.com/drill?list=top_100_verbs&tenses=preterite&pronouns=yo%2Ct%C3%BA%2C%C3%A9l%2Cnosotros%2Cellos&categories=regular_ar%2Cregular_er%2Cregular_ir&num_questions=10&include_reflexive_forms=false'},
-            {id: 'v2', title: 'Vocabulary', img: 'SpanishDict.png', group: 'sd', boxes: 7, url: 'https://www.spanishdict.com/vocabulary'},
-            {id: 'w1', title: 'Writing', img: 'writing.png', group: 'sd', boxes: 7, url: 'https://gemini.google.com/app'},
-            {id: 'r1', title: 'Reading', img: 'reading.png', group: 'sd', boxes: 7, url: 'https://gemini.google.com/app'},
-            {id: 's1', title: 'Speaking', img: 'speaking.png', group: 'sd', boxes: 7},
-            {id: 'l1', title: 'Listening', img: 'listening.png', group: 'sd', boxes: 7},
-            {id: 'g1', title: 'Gratefulness', img: 'gratefulness.png', group: 'd', boxes: 7},
-            {id: 'ge1', title: 'Geography', img: 'geography.png', group: 'd', boxes: 7, url: 'https://www.geoguessr.com/quiz/seterra'},
-            {id: 'p1', title: 'Piano', img: 'piano.png', group: 'd', boxes: 7},
-            {id: 'cal1', title: 'Calendars', img: 'calendars.png', group: 'w', boxes: 1, url: 'https://sharedprojects.herokuapp.com/calendar/'},
-            {id: 'med1', title: 'Medication', img: 'medication.png', group: 'w', boxes: 1},
-            {id: 'rent1', title: 'Rent', img: 'rent.png', group: 'w', boxes: 1, url: 'https://docs.google.com/spreadsheets/d/1pOTwHaXLZ61MEUq6j9R4gKMqBomNFPoXKisX778L-ds/edit?gid=1299269320#gid=1299269320'},
-            {id: 'arc1', title: 'Archery', img: 'archery.png', group: 'm', boxes: 1},
-            {id: 'ep1', title: 'Everyday Picture', img: 'everydaypicture.png', group: 'm', boxes: 1},
-            {id: 'gram1', title: 'Grammapedia', img: 'grammapedia.png', group: 'm', boxes: 1, url: 'https://docs.google.com/spreadsheets/d/17440vWaAHU3islpjMOR4JfU6SiIX7BSLv1p7IGSBlak/edit?gid=664520474#gid=664520474'},
-            {id: 'rm1', title: 'Review Maps', img: 'reviewmaps.png', group: 'm', boxes: 1, url: 'https://www.geoguessr.com/quiz/seterra'},
-            {id: 'rv1', title: 'Review Vocabulary', img: 'reviewvocabulary.png', group: 'm', boxes: 1, url: 'https://ilillill.github.io/flashcards/flashcards.html'}
-        ];
-
         let tasks = [];
+        let categories = [];
         const tasksRef = ref(db, 'tasksList');
+        const categoriesRef = ref(db, 'categoriesList');
         const dbRef = ref(db, 'trackerData');
         let trackerDataCache = {};
 
+        // Default categories to preserve existing tasks gracefully
+        const defaultCategories = [
+            { id: 'sd', name: 'Spanish Daily', boxes: 7, showBank: true },
+            { id: 'd', name: 'Daily', boxes: 7, showBank: true },
+            { id: 'w', name: 'Weekly', boxes: 1, showBank: false },
+            { id: 'm', name: 'Monthly', boxes: 1, showBank: false },
+            { id: 'legacy', name: 'Legacy Tasks', boxes: 7, showBank: false }
+        ];
+
         signInAnonymously(auth).then(() => {
+            // Load Categories
+            onValue(categoriesRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    categories = snapshot.val().filter(c => c !== null);
+                } else {
+                    categories = defaultCategories;
+                    set(categoriesRef, categories);
+                }
+                renderTasks();
+            });
+
+            // Load Tasks
             onValue(tasksRef, (snapshot) => {
                 if (snapshot.exists()) {
                     tasks = snapshot.val().filter(t => t !== null);
-                } else {
-                    tasks = defaultTasks;
-                    set(tasksRef, tasks);
                 }
                 renderTasks();
                 syncCheckmarks();
             });
 
+            // Load Progress
             onValue(dbRef, (snapshot) => {
                 trackerDataCache = snapshot.val() || {};
                 syncCheckmarks();
@@ -344,140 +341,137 @@
         });
 
         function renderTasks() {
+            if (!categories.length || !tasks.length) return;
+
             const container = document.getElementById('task-list');
             container.innerHTML = ''; 
-            let currentGroup = '';
 
-            tasks.forEach(task => {
-                if(currentGroup && currentGroup !== task.group) {
+            categories.forEach((category, catIndex) => {
+                const categoryTasks = tasks.filter(t => t.group === category.id);
+                if (categoryTasks.length === 0) return; // Hide empty categories
+                
+                // Add even spacer if it's not the very first category rendered
+                if (container.children.length > 0) {
                     const spacer = document.createElement('div');
-                    if (task.group === 'w' || task.group === 'm') {
-                        spacer.className = 'spacer-large';
-                    } else {
-                        spacer.className = 'spacer';
-                    }
+                    spacer.className = 'category-spacer';
                     container.appendChild(spacer);
                 }
-                currentGroup = task.group;
 
-                const row = document.createElement('div');
-                row.className = 'task-row';
+                categoryTasks.forEach(task => {
+                    const row = document.createElement('div');
+                    row.className = 'task-row';
 
-                const img = document.createElement('img');
-                img.src = task.img; 
-                img.className = 'task-icon';
-                img.alt = task.title;
+                    const img = document.createElement('img');
+                    img.src = task.img; 
+                    img.className = 'task-icon';
+                    img.alt = task.title;
 
-                const titleWrap = document.createElement('div');
-                titleWrap.style.display = 'flex';
-                titleWrap.style.alignItems = 'center';
-                titleWrap.style.flexWrap = 'wrap';
-                titleWrap.style.gap = '6px';
+                    const titleWrap = document.createElement('div');
+                    titleWrap.style.display = 'flex';
+                    titleWrap.style.alignItems = 'center';
+                    titleWrap.style.flexWrap = 'wrap';
+                    titleWrap.style.gap = '6px';
 
-                // MULTIPLE OPTIONS LOGIC
-                if (task.options && task.options.length > 0) {
-                    task.options.forEach((opt, index) => {
-                        if (opt.url) {
-                            const link = document.createElement('a');
-                            link.href = opt.url;
-                            link.target = '_blank';
-                            link.className = 'task-link';
-                            link.innerText = opt.title;
-                            titleWrap.appendChild(link);
-                        } else {
-                            const plainText = document.createElement('span');
-                            plainText.className = 'task-text'; 
-                            plainText.innerText = opt.title;
-                            titleWrap.appendChild(plainText);
-                        }
+                    if (task.options && task.options.length > 0) {
+                        task.options.forEach((opt, index) => {
+                            if (opt.url) {
+                                const link = document.createElement('a');
+                                link.href = opt.url;
+                                link.target = '_blank';
+                                link.className = 'task-link';
+                                link.innerText = opt.title;
+                                titleWrap.appendChild(link);
+                            } else {
+                                const plainText = document.createElement('span');
+                                plainText.className = 'task-text'; 
+                                plainText.innerText = opt.title;
+                                titleWrap.appendChild(plainText);
+                            }
 
-                        if (index < task.options.length - 1) {
-                            const separator = document.createElement('span');
-                            separator.innerText = '•';
-                            separator.style.color = '#CBD5E0';
-                            separator.style.fontSize = '12px';
-                            titleWrap.appendChild(separator);
-                        }
-                    });
-                } 
-                // FALLBACK FOR OLD SINGLE TASKS
-                else if (task.url) {
-                    const link = document.createElement('a');
-                    link.href = task.url;
-                    link.target = '_blank';
-                    link.className = 'task-link';
-                    link.innerText = task.title;
-                    titleWrap.appendChild(link);
-                } else {
-                    const plainText = document.createElement('span');
-                    plainText.className = 'task-text'; 
-                    plainText.style.fontWeight = '500';
-                    plainText.style.fontSize = '13px';
-                    plainText.innerText = task.title;
-                    titleWrap.appendChild(plainText);
-                }
-
-                row.appendChild(img);
-                row.appendChild(titleWrap);
-
-                for(let i=0; i<7; i++) {
-                    if(i < task.boxes) {
-                        const cb = document.createElement('input');
-                        cb.type = 'checkbox';
-                        cb.className = 'check-box';
-                        if(task.group === 'sd' || task.group === 'd') {
-                            cb.classList.add('daily-box');
-                        }
-                        cb.id = `task_${task.id}_box_${i}`;
-                        row.appendChild(cb);
+                            if (index < task.options.length - 1) {
+                                const separator = document.createElement('span');
+                                separator.innerText = '•';
+                                separator.style.color = '#CBD5E0';
+                                separator.style.fontSize = '12px';
+                                titleWrap.appendChild(separator);
+                            }
+                        });
+                    } else if (task.url) {
+                        const link = document.createElement('a');
+                        link.href = task.url;
+                        link.target = '_blank';
+                        link.className = 'task-link';
+                        link.innerText = task.title;
+                        titleWrap.appendChild(link);
                     } else {
-                        const empty = document.createElement('div');
-                        row.appendChild(empty);
+                        const plainText = document.createElement('span');
+                        plainText.className = 'task-text'; 
+                        plainText.style.fontWeight = '500';
+                        plainText.style.fontSize = '13px';
+                        plainText.innerText = task.title;
+                        titleWrap.appendChild(plainText);
                     }
-                }
 
-                const bankSpacer = document.createElement('div');
-                row.appendChild(bankSpacer);
+                    row.appendChild(img);
+                    row.appendChild(titleWrap);
 
-                if (task.group === 'sd' || task.group === 'd') {
-                    const minusBtn = document.createElement('button');
-                    minusBtn.className = 'bank-btn minus';
-                    minusBtn.innerText = '−';
-                    minusBtn.onclick = () => window.updateBank(task.id, -1);
-                    row.appendChild(minusBtn);
+                    const boxCount = category.boxes || 7;
+                    for(let i=0; i<7; i++) {
+                        if(i < boxCount) {
+                            const cb = document.createElement('input');
+                            cb.type = 'checkbox';
+                            cb.className = 'check-box track-box';
+                            cb.id = `task_${task.id}_box_${i}`;
+                            row.appendChild(cb);
+                        } else {
+                            const empty = document.createElement('div');
+                            row.appendChild(empty);
+                        }
+                    }
 
-                    const countDisplay = document.createElement('div');
-                    countDisplay.className = 'bank-count';
-                    countDisplay.id = `bank_count_${task.id}`;
-                    countDisplay.innerText = '0';
-                    row.appendChild(countDisplay);
+                    row.appendChild(document.createElement('div')); // Spacer
 
-                    const plusBtn = document.createElement('button');
-                    plusBtn.className = 'bank-btn plus';
-                    plusBtn.innerText = '+';
-                    plusBtn.onclick = () => window.updateBank(task.id, 1);
-                    row.appendChild(plusBtn);
-                } else {
-                    row.appendChild(document.createElement('div'));
-                    row.appendChild(document.createElement('div'));
-                    row.appendChild(document.createElement('div'));
-                }
+                    if (category.showBank) {
+                        const minusBtn = document.createElement('button');
+                        minusBtn.className = 'bank-btn minus';
+                        minusBtn.innerText = '−';
+                        minusBtn.onclick = () => window.updateBank(task.id, -1);
+                        row.appendChild(minusBtn);
 
-                container.appendChild(row);
+                        const countDisplay = document.createElement('div');
+                        countDisplay.className = 'bank-count';
+                        countDisplay.id = `bank_count_${task.id}`;
+                        countDisplay.innerText = '0';
+                        row.appendChild(countDisplay);
+
+                        const plusBtn = document.createElement('button');
+                        plusBtn.className = 'bank-btn plus';
+                        plusBtn.innerText = '+';
+                        plusBtn.onclick = () => window.updateBank(task.id, 1);
+                        row.appendChild(plusBtn);
+                    } else {
+                        row.appendChild(document.createElement('div'));
+                        row.appendChild(document.createElement('div'));
+                        row.appendChild(document.createElement('div'));
+                    }
+
+                    container.appendChild(row);
+                });
             });
+            syncCheckmarks(); // Re-sync after render
         }
 
         function updateProgress() {
-            const dailyBoxes = document.querySelectorAll('.daily-box');
+            const allBoxes = document.querySelectorAll('.track-box');
             let checked = 0;
-            dailyBoxes.forEach(box => {
+            allBoxes.forEach(box => {
                 if(box.checked) checked++;
             });
-            const total = dailyBoxes.length; 
+            const total = allBoxes.length; 
             const percentage = total === 0 ? 0 : (checked / total) * 100;
             
             document.getElementById('progress-fill').style.width = percentage + '%';
-            document.getElementById('progress-text').innerText = `${checked} / ${total} Daily Tasks Completed`;
+            document.getElementById('progress-text').innerText = `${checked} / ${total} Tasks Completed`;
         }
 
         function syncCheckmarks() {
@@ -539,7 +533,7 @@
             const mm = String(monday.getMonth() + 1).padStart(2, '0');
             const dd = String(monday.getDate()).padStart(2, '0');
             
-            header.innerText = `${yyyy}.${mm}.${dd}`;
+            header.innerText = `Tracker - ${yyyy}.${mm}.${dd}`;
             header.style.display = 'block';
             actions.style.display = 'none';
             
@@ -552,7 +546,7 @@
                 useCORS: true 
             }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `MysteryTracker_${yyyy}_${mm}_${dd}.png`;
+                link.download = `Tracker_${yyyy}_${mm}_${dd}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
                 
