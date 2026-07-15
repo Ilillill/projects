@@ -370,8 +370,9 @@
         }
         #answer-input:focus { border-color: var(--primary); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15); }
         
-        .play-controls { width: 100%; max-width: 400px; display: flex; gap: 10px; margin-top: 20px; }
-        .main-action-btn { flex: 1; padding: 18px; font-size: 1.2rem; }
+        .play-controls { width: 100%; max-width: 400px; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+        .play-controls .btn-outline { flex: 1; }
+        .main-action-btn { flex: 100%; padding: 18px; font-size: 1.2rem; }
 
         /* --- Full Screen Feedback States --- */
         #play-screen.bg-green { background-color: var(--success); }
@@ -393,7 +394,8 @@
         }
 
         #play-screen.bg-green .answer-area, #play-screen.bg-red .answer-area,
-        #play-screen.bg-green #btn-hint, #play-screen.bg-red #btn-hint {
+        #play-screen.bg-green #btn-hint, #play-screen.bg-red #btn-hint,
+        #play-screen.bg-green #btn-reveal, #play-screen.bg-red #btn-reveal {
             display: none !important;
         }
 
@@ -623,6 +625,7 @@
 
                 <div class="play-controls">
                     <button class="btn btn-outline" id="btn-hint" onclick="giveHint()"><i class="fa-solid fa-lightbulb"></i> Hint</button>
+                    <button class="btn btn-outline" id="btn-reveal" onclick="showReveal()"><i class="fa-solid fa-eye"></i> Reveal</button>
                     <button class="btn main-action-btn" id="btn-main-action" onclick="handleMainAction()">Check Answer</button>
                 </div>
             </div>
@@ -684,6 +687,15 @@
                         </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <div id="reveal-modal" class="modal-overlay" onclick="closeReveal()">
+        <div class="modal-content" style="max-width: 300px; text-align: center; padding: 25px;" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeReveal()"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="margin-top: 0; color: var(--primary);">Correct Answer</h3>
+            <p id="reveal-text" style="font-size: 1.5rem; font-weight: bold; margin: 20px 0; color: var(--text-main); word-break: break-word;"></p>
+            <button class="btn" style="width: 100%;" onclick="closeReveal()">Got it</button>
         </div>
     </div>
 
@@ -1595,8 +1607,43 @@
 
         window.giveHint = function() {
             if(isAnswerState) return;
-            inputField.value = deck[currentCardIdx].a1.charAt(0);
-            inputField.dispatchEvent(new Event('input'));
+            
+            const correctAns = deck[currentCardIdx].a1;
+            const currentVal = inputField.value;
+            
+            // Loop through what the user has currently typed
+            for (let i = 0; i < currentVal.length; i++) {
+                const correctChar = correctAns[i];
+                
+                // If they typed a wrong letter or typed too many letters
+                if (!correctChar || currentVal[i].toLowerCase() !== correctChar.toLowerCase()) {
+                    // Replace everything up to the mistake with the correct string
+                    inputField.value = correctAns.substring(0, i + 1);
+                    inputField.dispatchEvent(new Event('input'));
+                    inputField.focus();
+                    return;
+                }
+            }
+            
+            // If everything typed so far is correct, just add the next letter
+            if (currentVal.length < correctAns.length) {
+                inputField.value = correctAns.substring(0, currentVal.length + 1);
+                inputField.dispatchEvent(new Event('input'));
+                inputField.focus();
+            }
+        }
+
+        window.showReveal = function() {
+            if(isAnswerState) return;
+            const card = deck[currentCardIdx];
+            // Show primary and secondary answers if both exist
+            const ans = card.a2 ? `${card.a1} / ${card.a2}` : card.a1;
+            document.getElementById('reveal-text').innerText = ans;
+            document.getElementById('reveal-modal').style.display = 'flex';
+        }
+
+        window.closeReveal = function() {
+            document.getElementById('reveal-modal').style.display = 'none';
             inputField.focus();
         }
 
