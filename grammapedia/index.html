@@ -38,14 +38,25 @@
             z-index: 10;
         }
         
+        .sidebar-header {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
         .menu-item { 
             padding: 10px 12px; 
             margin-bottom: 5px; 
             border-radius: 6px; 
-            cursor: pointer; 
+            cursor: grab; 
             font-size: 14px;
-            transition: all 0.2s;
+            transition: background 0.2s, box-shadow 0.2s;
+            user-select: none;
         }
+        .menu-item:active { cursor: grabbing; }
         .menu-item:hover, .menu-item.active { 
             background: var(--hover-bg); 
             font-weight: bold; 
@@ -87,24 +98,23 @@
         .toolbar { display: flex; gap: 4px; border-right: 1px solid var(--border-light); padding-right: 12px; margin-right: 4px; }
         .toolbar button { font-family: serif; padding: 4px 8px; font-size: 14px; font-weight: bold; }
 
-        /* CSS Table Layout for Perfect Column Alignment & Dragging */
+        /* HTML Table Layout (Enables perfect Colspan) */
         .grid-container { 
-            display: table; 
             font-size: 14px;
-            border-spacing: 12px 4px; 
+            overflow-x: auto;
         }
 
-        .row-wrapper {
-            display: table-row;
-            transition: opacity 0.2s;
+        .study-table {
+            border-spacing: 12px 6px;
+            border-collapse: separate;
+            width: max-content;
         }
-        
-        /* Drag & Drop Visuals */
+
+        .row-wrapper { transition: opacity 0.2s; }
         .row-wrapper.dragging { opacity: 0.4; }
-        .row-wrapper.drag-over { border-top: 2px solid var(--accent-blue); }
+        .row-wrapper.drag-over td { border-top: 2px solid var(--accent-blue); }
 
         .grid-cell { 
-            display: table-cell;
             padding: 3px 6px; 
             outline: none;
             vertical-align: middle;
@@ -150,7 +160,7 @@
         .answer-input.incorrect { background-color: var(--accent-red); color: white; box-shadow: var(--button-shadow); }
 
         /* Row Actions */
-        .action-cell { display: table-cell; vertical-align: middle; white-space: nowrap; }
+        .action-cell { vertical-align: middle; white-space: nowrap; }
         .icon-btn { color: #888; border: none; background: none; padding: 2px 6px; box-shadow: none; font-size: 16px; cursor: pointer; }
         .icon-btn:hover { background: #eee; border-radius: 4px; color: #333; box-shadow: none; transform: none; }
         .icon-btn.delete-btn:hover { color: var(--accent-red); }
@@ -164,7 +174,7 @@
         .modal { background: var(--bg-color); padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 320px; }
         .modal label { display: block; margin-bottom: 4px; font-size: 12px; color: #555; font-weight: bold; }
         .modal input[type="text"], .modal input[type="number"] { width: 100%; padding: 6px; margin-bottom: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+        .modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
         .col-style-container { border: 1px solid #ddd; border-radius: 4px; padding: 10px; margin-bottom: 10px; max-height: 150px; overflow-y: auto; background: #fafafa; }
         .col-style-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; font-size: 12px; }
         .col-style-row select { padding: 2px; font-size: 12px; }
@@ -173,7 +183,11 @@
 </head>
 <body>
     <aside>
-        <div id="menu-list" style="flex-grow: 1;"></div>
+        <div class="sidebar-header">
+            <h3 style="margin:0; font-size: 13px; color: #888; text-transform: uppercase;">My Pages</h3>
+            <button id="sort-az-btn" class="icon-btn" title="Sort Alphabetically" style="font-size: 12px; padding: 4px 6px; font-weight: bold;">A-Z</button>
+        </div>
+        <div id="menu-list" style="flex-grow: 1; overflow-y: auto;"></div>
         <button id="new-page-btn" style="margin-top: 20px;" class="hide">+ New Blank Page</button>
     </aside>
 
@@ -218,9 +232,13 @@
             </div>
             <label>Default Column Styles</label>
             <div id="modal-col-styles" class="col-style-container"></div>
+            
             <div class="modal-actions">
-                <button id="modal-cancel">Cancel</button>
-                <button id="modal-save" style="background: var(--text-color); color: white;">Save</button>
+                <button id="modal-delete-page" style="background: var(--accent-red); color: white;">Delete Page</button>
+                <div style="display: flex; gap: 8px;">
+                    <button id="modal-cancel">Cancel</button>
+                    <button id="modal-save" style="background: var(--text-color); color: white;">Save</button>
+                </div>
             </div>
         </div>
     </div>
@@ -231,7 +249,7 @@
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // Your specific Firebase Configuration
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBxKv-xXahSO2TEtwVwXTfU1eJ1ZsaaMAc",
             authDomain: "tasks-de4d9.firebaseapp.com",
@@ -248,10 +266,10 @@
 
         let pages = [];
         let activePageId = null;
-        let appMode = 'practice'; // Boots into Practice Mode
+        let isCustomOrder = false; // Tracks if the user has manually reordered the menu
+        let appMode = 'practice';
         let answersVisible = false;
 
-        // Initialize App after Silent Login
         signInAnonymously(auth).then(() => {
             loadDataFromFirebase();
         }).catch((error) => {
@@ -267,8 +285,8 @@
                 if (docSnap.exists() && docSnap.data().pages && docSnap.data().pages.length > 0) {
                     pages = docSnap.data().pages;
                     activePageId = pages[0].id;
+                    isCustomOrder = docSnap.data().isCustomOrder || false;
                 } else {
-                    // Default Template if database document does not exist yet
                     pages = [{
                         id: 1, title: "Hablar Template", columns: 2, answerColumnIndex: 1, 
                         columnStyles: [{ bold: true, italic: true, fontSize: '14px' }, { bold: false, italic: false, fontSize: '14px' }],
@@ -279,9 +297,14 @@
                         ]
                     }];
                     activePageId = 1;
+                    isCustomOrder = false;
                 }
 
-                // Show UI buttons once loaded
+                // If not custom ordered by user drag-and-drop, enforce A-Z on load
+                if (!isCustomOrder) {
+                    pages.sort((a, b) => a.title.localeCompare(b.title));
+                }
+
                 document.getElementById('new-page-btn').classList.remove('hide');
                 document.getElementById('mode-toggle-btn').classList.remove('hide');
                 if (appMode === 'practice') document.getElementById('toggle-answers').classList.remove('hide');
@@ -297,7 +320,7 @@
         async function saveData() {
             try {
                 const docRef = doc(db, "spanish_study_app", "pages_data");
-                await setDoc(docRef, { pages: pages });
+                await setDoc(docRef, { pages: pages, isCustomOrder: isCustomOrder });
             } catch (error) {
                 console.error("Error saving data:", error);
                 alert("Failed to save changes to the database.");
@@ -308,7 +331,9 @@
             return pages.find(p => p.id === activePageId);
         }
 
-        // --- Rendering ---
+        // --- Sidebar Menu Render & Drag-and-Drop ---
+        let draggedMenuId = null;
+
         function renderMenu() {
             const menuList = document.getElementById('menu-list');
             menuList.innerHTML = '';
@@ -317,38 +342,85 @@
                 const div = document.createElement('div');
                 div.className = `menu-item ${page.id === activePageId ? 'active' : ''}`;
                 div.innerText = page.title;
+                div.draggable = true;
+                
                 div.onclick = () => {
                     activePageId = page.id;
                     answersVisible = false;
                     document.getElementById('toggle-answers').innerText = "Show All Answers";
                     renderMenu();
-                    renderGrid();
                 };
+
+                // Menu Drag and Drop Events
+                div.addEventListener('dragstart', (e) => {
+                    draggedMenuId = page.id;
+                    e.dataTransfer.effectAllowed = 'move';
+                    setTimeout(() => div.style.opacity = '0.5', 0);
+                });
+
+                div.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    div.style.borderTop = '2px solid var(--accent-blue)';
+                });
+
+                div.addEventListener('dragleave', () => {
+                    div.style.borderTop = '';
+                });
+
+                div.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    div.style.borderTop = '';
+                    const targetId = page.id;
+                    
+                    if (draggedMenuId && draggedMenuId !== targetId) {
+                        const fromIndex = pages.findIndex(p => p.id === draggedMenuId);
+                        const toIndex = pages.findIndex(p => p.id === targetId);
+                        
+                        const [movedPage] = pages.splice(fromIndex, 1);
+                        pages.splice(toIndex, 0, movedPage);
+                        
+                        isCustomOrder = true; // User manually ordered, disable auto-alphabetical
+                        saveData();
+                        renderMenu();
+                    }
+                });
+
+                div.addEventListener('dragend', () => {
+                    div.style.opacity = '1';
+                    draggedMenuId = null;
+                });
+
                 menuList.appendChild(div);
             });
-            renderGrid(); // Ensure grid updates when menu updates
+            renderGrid();
         }
 
+        // --- Grid Render ---
         function renderGrid() {
             const activePage = getActivePage();
-            if (!activePage) return;
+            if (!activePage) {
+                document.getElementById('page-title-display').innerText = "No Pages";
+                document.getElementById('grid-container').innerHTML = '';
+                return;
+            }
 
             document.getElementById('page-title-display').innerText = activePage.title;
             const container = document.getElementById('grid-container');
-            let html = '';
+            
+            let html = '<table class="study-table"><tbody>';
 
             if (!activePage.columnStyles) activePage.columnStyles = [];
 
             activePage.rows.forEach(row => {
                 const isEditable = appMode === 'edit' ? 'contenteditable="true"' : '';
-                html += `<div class="row-wrapper" data-row-id="${row.id}" ${appMode === 'edit' ? 'draggable="true"' : ''}>`;
+                html += `<tr class="row-wrapper" data-row-id="${row.id}" ${appMode === 'edit' ? 'draggable="true"' : ''}>`;
 
                 if (row.type === 'title') {
                     const rowColor = row.color || 'var(--title-bg-default)';
                     html += `
-                        <div class="grid-cell title-cell" ${isEditable} data-row-id="${row.id}" style="background-color: ${rowColor};" colspan="${activePage.columns}">
+                        <td class="grid-cell title-cell" ${isEditable} data-row-id="${row.id}" style="background-color: ${rowColor};" colspan="${activePage.columns}">
                             ${row.text}
-                        </div>
+                        </td>
                     `;
                 } else {
                     for (let colIndex = 0; colIndex < activePage.columns; colIndex++) {
@@ -360,22 +432,21 @@
 
                         if (appMode === 'practice' && colIndex === activePage.answerColumnIndex) {
                             html += `
-                            <div class="grid-cell" style="padding: 0; ${styleStr}">
+                            <td class="grid-cell" style="padding: 0; ${styleStr}">
                                 <input type="text" class="answer-input ${answersVisible ? 'correct' : ''}" 
                                        data-correct-answer="${cellText}" value="${answersVisible ? cellText : ''}" autocomplete="off">
-                            </div>`;
+                            </td>`;
                         } else {
                             html += `
-                            <div class="grid-cell" ${isEditable} data-row-id="${row.id}" data-col="${colIndex}" style="${styleStr}">
+                            <td class="grid-cell" ${isEditable} data-row-id="${row.id}" data-col="${colIndex}" style="${styleStr}">
                                 ${cellText}
-                            </div>`;
+                            </td>`;
                         }
                     }
                 }
                 
-                // Action Cell (Edit Mode Only)
                 if (appMode === 'edit') {
-                    html += `<div class="action-cell">`;
+                    html += `<td class="action-cell">`;
                     if (row.type === 'title') {
                         html += `<input type="color" class="color-picker" value="${row.color || '#f89c12'}" onchange="updateTitleColor(${row.id}, this.value)" title="Title Color">`;
                     }
@@ -383,12 +454,13 @@
                         <button class="icon-btn" onclick="duplicateRow(${row.id})" title="Duplicate Row">&#10697;</button>
                         <button class="icon-btn delete-btn" onclick="deleteRow(${row.id})" title="Delete Row">&times;</button>
                         <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
-                    </div>`;
+                    </td>`;
                 }
 
-                html += `</div>`; 
+                html += `</tr>`; 
             });
 
+            html += '</tbody></table>';
             container.innerHTML = html;
             
             if (appMode === 'practice') {
@@ -446,16 +518,13 @@
         function attachCellEditListeners() {
             const cells = document.querySelectorAll('.grid-cell[contenteditable="true"]');
             cells.forEach(cell => {
-                
-                // 1. Prevent 'Enter' from adding invisible line breaks
                 cell.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter') {
-                        e.preventDefault(); // Stop the line break
-                        this.blur(); // Force the cell to save and deselect
+                        e.preventDefault(); 
+                        this.blur(); 
                     }
                 });
 
-                // 2. Clean the text when clicking away (saving)
                 cell.addEventListener('blur', function() {
                     const rowId = parseFloat(this.getAttribute('data-row-id'));
                     const colIndex = this.getAttribute('data-col');
@@ -463,26 +532,24 @@
                     const row = activePage.rows.find(r => r.id === rowId);
                     
                     if (row) {
-                        // Scrub rogue <br> tags and HTML spaces
                         let cleanedHTML = this.innerHTML.replace(/<br\s*\/?>/gi, '').trim();
                         cleanedHTML = cleanedHTML.replace(/&nbsp;/gi, ' ').trim();
 
                         if (row.type === 'title') { 
                             row.text = cleanedHTML; 
-                            this.innerHTML = cleanedHTML; // Update visually
+                            this.innerHTML = cleanedHTML;
                         } 
                         else if (row.type === 'data' && colIndex !== null) { 
                             row.cells[parseInt(colIndex)] = cleanedHTML; 
-                            this.innerHTML = cleanedHTML; // Update visually
+                            this.innerHTML = cleanedHTML;
                         }
-                        
-                        saveData(); // Save to database on edit
+                        saveData(); 
                     }
                 });
             });
         }
 
-        // --- Drag and Drop Logic ---
+        // --- Drag and Drop Logic (Rows) ---
         function attachDragAndDrop() {
             const rows = document.querySelectorAll('.row-wrapper');
             let draggedRowId = null;
@@ -532,6 +599,15 @@
         }
 
         // --- Button Actions ---
+        
+        // A-Z Sort Button
+        document.getElementById('sort-az-btn').addEventListener('click', () => {
+            isCustomOrder = false; // Reset to alphabetical default
+            pages.sort((a, b) => a.title.localeCompare(b.title));
+            saveData();
+            renderMenu();
+        });
+
         document.getElementById('new-page-btn').addEventListener('click', () => {
             const newId = Date.now();
             pages.push({
@@ -539,6 +615,7 @@
                 columnStyles: [{ bold: false, italic: false, fontSize: '14px' }, { bold: false, italic: false, fontSize: '14px' }],
                 rows: []
             });
+            if (!isCustomOrder) pages.sort((a, b) => a.title.localeCompare(b.title));
             activePageId = newId;
             saveData(); renderMenu();
         });
@@ -550,6 +627,7 @@
             newPage.title = activePage.title + " (Copy)";
             newPage.rows.forEach(r => r.id = Date.now() + Math.random());
             pages.push(newPage);
+            if (!isCustomOrder) pages.sort((a, b) => a.title.localeCompare(b.title));
             activePageId = newPage.id;
             saveData(); renderMenu();
         });
@@ -564,7 +642,6 @@
             saveData(); renderGrid();
         });
 
-        // Expose functions to the window object so they work via HTML onclick inside the module
         window.duplicateRow = function(rowId) {
             const activePage = getActivePage();
             const index = activePage.rows.findIndex(r => r.id === rowId);
@@ -629,12 +706,36 @@
             modal.style.display = 'flex';
         });
 
+        // Delete Page Action
+        document.getElementById('modal-delete-page').addEventListener('click', () => {
+            if (confirm("Are you sure you want to delete this ENTIRE PAGE? This cannot be undone.")) {
+                pages = pages.filter(p => p.id !== activePageId);
+                
+                if (pages.length > 0) {
+                    activePageId = pages[0].id;
+                } else {
+                    // Create a blank template if all pages are deleted
+                    pages.push({
+                        id: Date.now(), title: "New Blank Page", columns: 2, answerColumnIndex: 1,
+                        columnStyles: [{ bold: false, italic: false, fontSize: '14px' }, { bold: false, italic: false, fontSize: '14px' }],
+                        rows: []
+                    });
+                    activePageId = pages[0].id;
+                }
+                
+                modal.style.display = 'none';
+                saveData(); 
+                renderMenu();
+            }
+        });
+
         document.getElementById('modal-cancel').addEventListener('click', () => modal.style.display = 'none');
         document.getElementById('modal-save').addEventListener('click', () => {
             const activePage = getActivePage();
             const newColumns = parseInt(document.getElementById('modal-columns').value);
             activePage.title = document.getElementById('modal-title').value;
             activePage.answerColumnIndex = parseInt(document.getElementById('modal-answer-index').value);
+            
             activePage.columnStyles = [];
             for(let i = 0; i < newColumns; i++) {
                 activePage.columnStyles.push({
@@ -643,6 +744,7 @@
                     fontSize: document.getElementById(`mod-col-s-${i}`).value
                 });
             }
+            
             if (newColumns !== activePage.columns) {
                 activePage.rows.forEach(row => {
                     if (row.type === 'data') {
@@ -652,6 +754,9 @@
                 });
                 activePage.columns = newColumns;
             }
+            
+            if (!isCustomOrder) pages.sort((a, b) => a.title.localeCompare(b.title));
+            
             modal.style.display = 'none';
             saveData(); renderMenu();
         });
