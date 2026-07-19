@@ -446,6 +446,16 @@
         function attachCellEditListeners() {
             const cells = document.querySelectorAll('.grid-cell[contenteditable="true"]');
             cells.forEach(cell => {
+                
+                // 1. Prevent 'Enter' from adding invisible line breaks
+                cell.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault(); // Stop the line break
+                        this.blur(); // Force the cell to save and deselect
+                    }
+                });
+
+                // 2. Clean the text when clicking away (saving)
                 cell.addEventListener('blur', function() {
                     const rowId = parseFloat(this.getAttribute('data-row-id'));
                     const colIndex = this.getAttribute('data-col');
@@ -453,8 +463,19 @@
                     const row = activePage.rows.find(r => r.id === rowId);
                     
                     if (row) {
-                        if (row.type === 'title') { row.text = this.innerHTML; } 
-                        else if (row.type === 'data' && colIndex !== null) { row.cells[parseInt(colIndex)] = this.innerHTML; }
+                        // Scrub rogue <br> tags and HTML spaces
+                        let cleanedHTML = this.innerHTML.replace(/<br\s*\/?>/gi, '').trim();
+                        cleanedHTML = cleanedHTML.replace(/&nbsp;/gi, ' ').trim();
+
+                        if (row.type === 'title') { 
+                            row.text = cleanedHTML; 
+                            this.innerHTML = cleanedHTML; // Update visually
+                        } 
+                        else if (row.type === 'data' && colIndex !== null) { 
+                            row.cells[parseInt(colIndex)] = cleanedHTML; 
+                            this.innerHTML = cleanedHTML; // Update visually
+                        }
+                        
                         saveData(); // Save to database on edit
                     }
                 });
