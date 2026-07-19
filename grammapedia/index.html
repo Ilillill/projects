@@ -14,7 +14,7 @@
             --accent-blue: #2980b9;
             --hover-bg: #f8f9fa;
             --title-bg-default: #f89c12;
-            --note-bg-default: #fff3cd; /* Soft yellow for notes */
+            --note-bg-default: #fff3cd; 
             --soft-shadow: 0 4px 6px rgba(0, 0, 0, 0.06);
             --button-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
@@ -28,24 +28,15 @@
             color: var(--text-color);
         }
 
-        /* Sidebar */
+        /* Sidebar - Widened to 340px to fit long titles */
         aside { 
-            width: 220px; 
+            width: 340px; 
             background-color: var(--bg-color); 
             box-shadow: 3px 0 10px rgba(0, 0, 0, 0.05);
             padding: 20px 15px; 
             display: flex; 
             flex-direction: column; 
             z-index: 10;
-        }
-        
-        .sidebar-header {
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border-light);
         }
 
         .menu-item { 
@@ -56,12 +47,21 @@
             font-size: 14px;
             transition: background 0.2s, box-shadow 0.2s;
             user-select: none;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .menu-item:active { cursor: grabbing; }
         .menu-item:hover, .menu-item.active { 
             background: var(--hover-bg); 
             font-weight: bold; 
             box-shadow: var(--soft-shadow);
+        }
+        
+        .sidebar-bottom-actions {
+            display: flex; 
+            gap: 10px; 
+            margin-top: 20px;
         }
         
         /* Main Content */
@@ -127,6 +127,7 @@
         .grid-cell font[size="1"] { font-size: 8px !important; }
         .grid-cell font[size="3"] { font-size: 14px !important; }
         .grid-cell font[size="5"] { font-size: 18px !important; }
+        .grid-cell font[size="7"] { font-size: 24px !important; } /* A++ Font Size */
         
         .grid-cell[contenteditable="true"]:focus { 
             background-color: #ffffff; 
@@ -208,12 +209,13 @@
 </head>
 <body>
     <aside>
-        <div class="sidebar-header">
-            <h3 style="margin:0; font-size: 13px; color: #888; text-transform: uppercase;">My Pages</h3>
-            <button id="sort-az-btn" class="icon-btn" title="Sort Alphabetically" style="font-size: 12px; padding: 4px 6px; font-weight: bold;">A-Z</button>
-        </div>
         <div id="menu-list" style="flex-grow: 1; overflow-y: auto;"></div>
-        <button id="new-page-btn" style="margin-top: 20px;" class="hide">+ New Blank Page</button>
+        
+        <!-- Bottom Actions (A-Z and New Page) -->
+        <div class="sidebar-bottom-actions">
+            <button id="sort-az-btn" title="Sort Alphabetically" style="font-size: 13px; font-weight: bold; border: 1px solid var(--border-light);">A-Z</button>
+            <button id="new-page-btn" style="flex-grow: 1;" class="hide">+ New Blank Page</button>
+        </div>
     </aside>
 
     <main>
@@ -228,12 +230,20 @@
             
             <div class="controls hide" id="action-controls">
                 <div class="toolbar" id="format-toolbar">
-                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('bold', false, null)"><b>B</b></button>
-                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('italic', false, null)"><i>I</i></button>
-                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('strikeThrough', false, null)"><s>S</s></button>
+                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('bold', false, null)" title="Bold"><b>B</b></button>
+                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('italic', false, null)" title="Italic"><i>I</i></button>
+                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('strikeThrough', false, null)" title="Strikethrough"><s>S</s></button>
+                    <div style="width: 1px; height: 16px; background: var(--border-light); margin: 0 4px;"></div>
+                    <!-- Alignment Buttons -->
+                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('justifyLeft', false, null)" title="Align Left">L</button>
+                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('justifyCenter', false, null)" title="Align Center">C</button>
+                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('justifyRight', false, null)" title="Align Right">R</button>
+                    <div style="width: 1px; height: 16px; background: var(--border-light); margin: 0 4px;"></div>
+                    <!-- Font Size Buttons -->
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '1')" title="Small Text (8px)">A-</button>
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '3')" title="Normal Text">A</button>
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '5')" title="Large Text">A+</button>
+                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '7')" title="Extra Large Text">A++</button>
                 </div>
                 <button id="add-row-btn" class="edit-control">+ Row</button>
                 <button id="add-title-btn" class="edit-control">+ Title</button>
@@ -290,6 +300,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
+
+        // Security Password Configuration
+        const EDIT_PASSWORD = "admin";
 
         let pages = [];
         let activePageId = null;
@@ -368,6 +381,7 @@
                 const div = document.createElement('div');
                 div.className = `menu-item ${page.id === activePageId ? 'active' : ''}`;
                 div.innerText = page.title;
+                div.title = page.title; // Shows full text on hover
                 div.draggable = true;
                 
                 div.onclick = () => {
@@ -378,12 +392,17 @@
                 };
 
                 div.addEventListener('dragstart', (e) => {
+                    if (appMode !== 'edit') {
+                        e.preventDefault(); // Only allow drag and drop in edit mode
+                        return;
+                    }
                     draggedMenuId = page.id;
                     e.dataTransfer.effectAllowed = 'move';
                     setTimeout(() => div.style.opacity = '0.5', 0);
                 });
 
                 div.addEventListener('dragover', (e) => {
+                    if (appMode !== 'edit') return;
                     e.preventDefault();
                     div.style.borderTop = '2px solid var(--accent-blue)';
                 });
@@ -391,6 +410,7 @@
                 div.addEventListener('dragleave', () => { div.style.borderTop = ''; });
 
                 div.addEventListener('drop', (e) => {
+                    if (appMode !== 'edit') return;
                     e.preventDefault();
                     div.style.borderTop = '';
                     const targetId = page.id;
@@ -518,6 +538,8 @@
 
             document.getElementById('action-controls').classList.toggle('hide', appMode === 'practice');
             document.querySelectorAll('.practice-control').forEach(el => el.classList.toggle('hide', appMode === 'edit'));
+            document.getElementById('new-page-btn').classList.toggle('hide', appMode === 'practice');
+            document.getElementById('sort-az-btn').classList.toggle('hide', appMode === 'practice');
             
             answersVisible = false;
             document.getElementById('toggle-answers').innerText = "Show All Answers";
@@ -525,6 +547,15 @@
         }
 
         document.getElementById('mode-toggle-btn').addEventListener('click', function() {
+            // Password Protection check before entering Edit Mode
+            if (appMode === 'practice') {
+                const userAttempt = prompt("Enter password to unlock Edit Mode:");
+                if (userAttempt !== EDIT_PASSWORD) {
+                    alert("Incorrect password. Returning to practice mode.");
+                    return;
+                }
+            }
+            
             appMode = appMode === 'edit' ? 'practice' : 'edit';
             updateModeUI();
         });
