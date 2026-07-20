@@ -26,10 +26,10 @@
             height: 100vh; 
             background-color: var(--bg-color); 
             color: var(--text-color);
-            overflow: hidden; /* Prevent body scrolling, allow main to scroll */
+            overflow: hidden; 
         }
 
-        /* Sidebar */
+        /* Sidebar - Adjusted for Categories */
         aside { 
             width: 340px; 
             background-color: var(--bg-color); 
@@ -40,76 +40,96 @@
             z-index: 200;
         }
 
+        /* Category Header Styling */
+        .category-group { margin-bottom: 8px; }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 8px;
+            background: #f0f3f5;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 13px;
+            color: #444;
+            cursor: grab;
+            user-select: none;
+            transition: background 0.2s;
+        }
+        .category-header:hover { background: #e2e8ea; }
+        .category-header:active { cursor: grabbing; }
+        
+        .cat-title-area { display: flex; align-items: center; gap: 8px; flex-grow: 1; overflow: hidden; }
+        .cat-title-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .collapse-icon { width: 12px; font-size: 10px; cursor: pointer; color: #888; text-align: center; }
+        
+        .cat-actions { display: none; gap: 4px; }
+        .category-header:hover .cat-actions { display: flex; }
+        .cat-btn { background: none; border: none; padding: 2px; cursor: pointer; color: #777; font-size: 12px; box-shadow: none; }
+        .cat-btn:hover { color: var(--accent-blue); transform: none; box-shadow: none; }
+        .cat-btn.delete:hover { color: var(--accent-red); }
+
+        .category-items {
+            padding-left: 12px;
+            margin-top: 4px;
+            border-left: 2px solid #eaedf0;
+            margin-left: 10px;
+        }
+
+        /* Page Menu Items - Slightly more compact */
         .menu-item { 
-            padding: 10px 12px; 
-            margin-bottom: 5px; 
-            border-radius: 6px; 
+            padding: 8px 10px; 
+            margin-bottom: 3px; 
+            border-radius: 4px; 
             cursor: grab; 
-            font-size: 14px;
+            font-size: 13px;
             transition: background 0.2s, box-shadow 0.2s;
             user-select: none;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            color: #333;
         }
         .menu-item:active { cursor: grabbing; }
         .menu-item:hover, .menu-item.active { 
             background: var(--hover-bg); 
             font-weight: bold; 
-            box-shadow: var(--soft-shadow);
+            color: var(--text-color);
         }
         
+        /* Drag & Drop Visuals */
+        .drag-over-top { border-top: 2px solid var(--accent-blue) !important; }
+        .drag-over-bottom { border-bottom: 2px solid var(--accent-blue) !important; }
+        .drag-over-bg { background: #e8f4f8 !important; }
+
         .sidebar-bottom-actions {
             display: flex; 
             flex-direction: column;
             gap: 10px; 
-            margin-top: 20px;
+            margin-top: 15px;
             padding-top: 15px;
             border-top: 1px solid var(--border-light);
         }
         
-        /* Main Content */
-        main { 
-            flex-grow: 1; 
-            position: relative;
-            overflow-y: auto; 
-            background-color: var(--bg-color); 
-        }
+        /* Main Content & Controls */
+        main { flex-grow: 1; position: relative; overflow-y: auto; background-color: var(--bg-color); }
         
-        /* Sticky Header */
         .header-section { 
-            position: sticky;
-            top: 0;
-            background: var(--bg-color);
-            z-index: 100;
-            padding: 20px 30px 15px 30px;
-            border-bottom: 1px solid var(--border-light);
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+            position: sticky; top: 0; background: var(--bg-color); z-index: 100;
+            padding: 20px 30px 15px 30px; border-bottom: 1px solid var(--border-light);
+            display: flex; flex-direction: column; gap: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.02);
         }
-        
         .top-bar { display: flex; justify-content: space-between; align-items: center; }
         .page-title { margin: 0; font-size: 22px; font-weight: 600; color: #2c3e50; }
         .top-actions { display: flex; gap: 10px; align-items: center; }
 
         button { 
-            padding: 6px 12px; 
-            cursor: pointer; 
-            border: none;
-            border-radius: 6px;
-            background: var(--bg-color); 
-            font-size: 13px;
-            box-shadow: var(--button-shadow);
-            transition: all 0.2s ease;
-            color: #333;
+            padding: 6px 12px; cursor: pointer; border: none; border-radius: 6px;
+            background: var(--bg-color); font-size: 13px; box-shadow: var(--button-shadow);
+            transition: all 0.2s ease; color: #333;
         }
-        button:hover { 
-            background: var(--hover-bg); 
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
-        }
+        button:hover { background: var(--hover-bg); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12); }
         button:active { transform: translateY(1px); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); }
 
         .mode-toggle { font-weight: bold; background-color: var(--accent-blue); color: white; }
@@ -121,97 +141,34 @@
         .toolbar { display: flex; gap: 4px; border-right: 1px solid var(--border-light); padding-right: 12px; margin-right: 4px; }
         .toolbar button { font-family: serif; padding: 4px 8px; font-size: 14px; font-weight: bold; }
 
-        /* HTML Table Layout */
-        .grid-container { 
-            font-size: 14px;
-            padding: 20px 30px 60px 30px;
-        }
-
-        .study-table {
-            border-spacing: 12px 6px;
-            border-collapse: separate;
-            width: max-content;
-        }
-
+        /* Grid & Table */
+        .grid-container { font-size: 14px; padding: 20px 30px 60px 30px; overflow-x: auto; }
+        .study-table { border-spacing: 12px 6px; border-collapse: separate; width: max-content; }
         .row-wrapper { transition: opacity 0.2s; }
         .row-wrapper.dragging { opacity: 0.4; }
         .row-wrapper.drag-over td { border-top: 2px solid var(--accent-blue); }
 
-        .grid-cell { 
-            padding: 3px 6px; 
-            outline: none;
-            vertical-align: middle;
-            border-radius: 4px;
-            height: 24px;
-        }
-        
+        .grid-cell { padding: 3px 6px; outline: none; vertical-align: middle; border-radius: 4px; height: 24px; }
         .grid-cell font[size="1"] { font-size: 8px !important; }
         .grid-cell font[size="3"] { font-size: 14px !important; }
         .grid-cell font[size="5"] { font-size: 18px !important; }
         .grid-cell font[size="7"] { font-size: 24px !important; }
-        
-        .grid-cell[contenteditable="true"]:focus { 
-            background-color: #ffffff; 
-            box-shadow: 0 0 0 2px #a8dadc;
-        }
+        .grid-cell[contenteditable="true"]:focus { background-color: #ffffff; box-shadow: 0 0 0 2px #a8dadc; }
 
-        /* Title Rows */
-        .title-cell {
-            color: white;
-            font-weight: bold;
-            text-align: center;
-            border-radius: 6px;
-            box-shadow: 0 2px 6px rgba(0,0,0, 0.15);
-            padding: 8px;
-            font-size: 15px;
-        }
+        .title-cell { color: white; font-weight: bold; text-align: center; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0, 0.15); padding: 8px; font-size: 15px; }
+        .note-cell { color: #333; text-align: left; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0, 0.08); padding: 8px 12px; font-size: 13px; }
+        .separator-cell { padding: 10px 0; height: auto; }
+        .separator-line { border: 0; height: 1px; background: var(--border-light); margin: 0; width: 100%; }
 
-        /* Note Rows */
-        .note-cell {
-            color: #333;
-            text-align: left;
-            border-radius: 6px;
-            box-shadow: 0 1px 4px rgba(0,0,0, 0.08);
-            padding: 8px 12px;
-            font-size: 13px;
-        }
-
-        /* Separator Rows */
-        .separator-cell {
-            padding: 10px 0;
-            height: auto;
-        }
-        .separator-line {
-            border: 0;
-            height: 1px;
-            background: var(--border-light);
-            margin: 0;
-            width: 100%;
-        }
-
-        /* Answer Input Styling */
-        .answer-input { 
-            width: 100%;
-            min-width: 90px; 
-            padding: 4px; 
-            border: none; 
-            border-radius: 4px;
-            text-align: center; 
-            outline: none;
-            background: #f1f3f5;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
-            font-family: inherit; font-size: inherit; font-weight: inherit; font-style: inherit;
-        }
+        .answer-input { width: 100%; min-width: 90px; padding: 4px; border: none; border-radius: 4px; text-align: center; outline: none; background: #f1f3f5; box-shadow: inset 0 1px 3px rgba(0,0,0,0.06); font-family: inherit; font-size: inherit; font-weight: inherit; font-style: inherit; }
         .answer-input:focus { background: white; box-shadow: 0 0 0 2px #bdc3c7; }
         .answer-input.correct { background-color: var(--accent-green); color: white; font-weight: bold; box-shadow: var(--button-shadow); }
         .answer-input.incorrect { background-color: var(--accent-red); color: white; box-shadow: var(--button-shadow); }
 
-        /* Row Actions */
         .action-cell { vertical-align: middle; white-space: nowrap; }
         .icon-btn { color: #888; border: none; background: none; padding: 2px 6px; box-shadow: none; font-size: 16px; cursor: pointer; }
         .icon-btn:hover { background: #eee; border-radius: 4px; color: #333; box-shadow: none; transform: none; }
         .icon-btn.delete-btn:hover { color: var(--accent-red); }
-        
         .drag-handle { cursor: grab; font-size: 18px; color: #ccc; padding: 0 5px; user-select: none; }
         .drag-handle:active { cursor: grabbing; }
         .color-picker { width: 22px; height: 22px; padding: 0; border: none; border-radius: 4px; cursor: pointer; background: none; }
@@ -230,20 +187,18 @@
 </head>
 <body>
     <aside>
-        <div id="menu-list" style="flex-grow: 1; overflow-y: auto;"></div>
+        <div id="menu-list" style="flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding-right: 5px;"></div>
         
-        <!-- Consolidated Bottom Actions -->
         <div class="sidebar-bottom-actions">
-            <div style="display: flex; gap: 10px;">
-                <button id="sort-az-btn" title="Sort Alphabetically" style="font-size: 13px; font-weight: bold; border: 1px solid var(--border-light);">A-Z</button>
-                <button id="new-page-btn" style="flex-grow: 1;" class="hide">+ New Blank Page</button>
+            <div style="display: flex; gap: 8px;">
+                <button id="new-cat-btn" class="hide" style="flex: 1; font-weight: bold; background: #f0f3f5;">+ Category</button>
+                <button id="new-page-btn" class="hide" style="flex: 1; font-weight: bold;">+ Page</button>
             </div>
             <button id="mode-toggle-btn" class="mode-toggle practice hide" style="width: 100%;">Mode: Practice</button>
         </div>
     </aside>
 
     <main>
-        <!-- Sticky Header Section -->
         <div class="header-section">
             <div class="top-bar">
                 <h2 id="page-title-display" class="page-title">Connecting to Database...</h2>
@@ -271,7 +226,7 @@
                 <button id="add-row-btn" class="edit-control">+ Row</button>
                 <button id="add-title-btn" class="edit-control">+ Title</button>
                 <button id="add-note-btn" class="edit-control">+ Note</button>
-                <button id="add-separator-btn" class="edit-control">+ Separator</button>
+                <button id="add-separator-btn" class="edit-control">+ Line</button>
                 <button id="duplicate-page-btn" class="edit-control" style="background: #e8f4f8; border: 1px solid #b3d4e0;">Duplicate</button>
                 <button id="edit-page-btn" class="edit-control">Settings</button>
             </div>
@@ -309,7 +264,6 @@
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBxKv-xXahSO2TEtwVwXTfU1eJ1ZsaaMAc",
             authDomain: "tasks-de4d9.firebaseapp.com",
@@ -324,11 +278,11 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        let pages = [];
+        // --- Data Structure State ---
+        let categories = [];
         let activePageId = null;
-        let isCustomOrder = false; 
         let appMode = 'practice';
-        let isPeeking = false; // State for temporary answer peek
+        let isPeeking = false; 
 
         signInAnonymously(auth).then(() => {
             loadDataFromFirebase();
@@ -342,29 +296,47 @@
                 const docRef = doc(db, "spanish_study_app", "pages_data");
                 const docSnap = await getDoc(docRef);
                 
-                if (docSnap.exists() && docSnap.data().pages && docSnap.data().pages.length > 0) {
-                    pages = docSnap.data().pages;
-                    activePageId = pages[0].id;
-                    isCustomOrder = docSnap.data().isCustomOrder || false;
+                if (docSnap.exists() && docSnap.data().categories) {
+                    // New Category Structure Exists
+                    categories = docSnap.data().categories;
+                    if (categories.length > 0 && categories[0].pages.length > 0) {
+                        activePageId = categories[0].pages[0].id;
+                    }
+                } else if (docSnap.exists() && docSnap.data().pages) {
+                    // Migration: Convert flat pages array to categorized structure safely
+                    categories = [{
+                        id: 'cat_default',
+                        title: 'My Pages',
+                        isOpen: true,
+                        pages: docSnap.data().pages
+                    }];
+                    if (categories[0].pages.length > 0) {
+                        activePageId = categories[0].pages[0].id;
+                    }
+                    saveData(); // Save migrated format
                 } else {
-                    pages = [{
-                        id: 1, title: "Hablar Template", columns: 2, answerColumnIndex: 1, 
+                    // Fresh database setup
+                    categories = [
+                        { id: 'cat_span', title: 'Spanish Conjugations', isOpen: true, pages: [] },
+                        { id: 'cat_fren', title: 'French Vocabulary', isOpen: true, pages: [] },
+                        { id: 'cat_pale', title: 'Paleontology', isOpen: true, pages: [] }
+                    ];
+                    
+                    const templatePage = {
+                        id: Date.now(), title: "Hablar Template", columns: 2, answerColumnIndex: 1, 
                         columnStyles: [{ bold: true, italic: true, fontSize: '14px' }, { bold: false, italic: false, fontSize: '14px' }],
                         rows: [
                             { id: 1, type: "title", text: "Present", color: "#f89c12" },
                             { id: 2, type: "data", cells: [ "yo", "hablo" ], userAnswer: "" },
                             { id: 3, type: "data", cells: [ "tú", "hablas" ], userAnswer: "" }
                         ]
-                    }];
-                    activePageId = 1;
-                    isCustomOrder = false;
-                }
-
-                if (!isCustomOrder) {
-                    pages.sort((a, b) => a.title.localeCompare(b.title));
+                    };
+                    categories[0].pages.push(templatePage);
+                    activePageId = templatePage.id;
                 }
 
                 document.getElementById('new-page-btn').classList.remove('hide');
+                document.getElementById('new-cat-btn').classList.remove('hide');
                 document.getElementById('mode-toggle-btn').classList.remove('hide');
                 if (appMode === 'practice') {
                     document.getElementById('peek-answers-btn').classList.remove('hide');
@@ -382,93 +354,214 @@
         async function saveData() {
             try {
                 const docRef = doc(db, "spanish_study_app", "pages_data");
-                await setDoc(docRef, { pages: pages, isCustomOrder: isCustomOrder });
+                await setDoc(docRef, { categories: categories });
             } catch (error) {
                 console.error("Error saving data:", error);
             }
         }
 
         function getActivePage() {
-            return pages.find(p => p.id === activePageId);
+            for (const cat of categories) {
+                const page = cat.pages.find(p => p.id === activePageId);
+                if (page) return { page, categoryId: cat.id };
+            }
+            return null;
         }
 
-        // --- Sidebar Menu Render & Drag-and-Drop ---
-        let draggedMenuId = null;
+        // --- Multi-Level Drag & Drop State ---
+        let dragSrcInfo = null; // { type: 'cat'|'page', id: string/number, parentId?: string }
 
         function renderMenu() {
             const menuList = document.getElementById('menu-list');
             menuList.innerHTML = '';
             
-            pages.forEach(page => {
-                const div = document.createElement('div');
-                div.className = `menu-item ${page.id === activePageId ? 'active' : ''}`;
-                div.innerText = page.title;
-                div.title = page.title; 
-                div.draggable = true;
+            categories.forEach((cat, catIndex) => {
+                const groupEl = document.createElement('div');
+                groupEl.className = 'category-group';
                 
-                div.onclick = () => {
-                    activePageId = page.id;
-                    isPeeking = false;
-                    resetPeekButton();
+                // --- Category Header ---
+                const headerEl = document.createElement('div');
+                headerEl.className = 'category-header';
+                if (appMode === 'edit') headerEl.draggable = true;
+                
+                headerEl.innerHTML = `
+                    <div class="cat-title-area" title="${cat.title}">
+                        <span class="collapse-icon">${cat.isOpen ? '▼' : '▶'}</span>
+                        <span class="cat-title-text">${cat.title}</span>
+                    </div>
+                    ${appMode === 'edit' ? `
+                    <div class="cat-actions">
+                        <button class="cat-btn edit" data-id="${cat.id}" title="Rename Folder">✏️</button>
+                        <button class="cat-btn delete" data-id="${cat.id}" title="Delete Folder">🗑️</button>
+                    </div>` : ''}
+                `;
+
+                // Toggle Collapse
+                headerEl.querySelector('.cat-title-area').addEventListener('click', () => {
+                    cat.isOpen = !cat.isOpen;
+                    saveData();
                     renderMenu();
-                };
-
-                div.addEventListener('dragstart', (e) => {
-                    if (appMode !== 'edit') {
-                        e.preventDefault(); 
-                        return;
-                    }
-                    draggedMenuId = page.id;
-                    e.dataTransfer.effectAllowed = 'move';
-                    setTimeout(() => div.style.opacity = '0.5', 0);
                 });
 
-                div.addEventListener('dragover', (e) => {
-                    if (appMode !== 'edit') return;
-                    e.preventDefault();
-                    div.style.borderTop = '2px solid var(--accent-blue)';
-                });
-
-                div.addEventListener('dragleave', () => { div.style.borderTop = ''; });
-
-                div.addEventListener('drop', (e) => {
-                    if (appMode !== 'edit') return;
-                    e.preventDefault();
-                    div.style.borderTop = '';
-                    const targetId = page.id;
+                // Cat Action Handlers (Edit mode only)
+                if (appMode === 'edit') {
+                    headerEl.querySelector('.cat-btn.edit').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const newName = prompt("Rename Category:", cat.title);
+                        if (newName && newName.trim() !== "") {
+                            cat.title = newName.trim();
+                            saveData(); renderMenu();
+                        }
+                    });
                     
-                    if (draggedMenuId && draggedMenuId !== targetId) {
-                        const fromIndex = pages.findIndex(p => p.id === draggedMenuId);
-                        const toIndex = pages.findIndex(p => p.id === targetId);
-                        
-                        const [movedPage] = pages.splice(fromIndex, 1);
-                        pages.splice(toIndex, 0, movedPage);
-                        
-                        isCustomOrder = true; 
-                        saveData();
-                        renderMenu();
+                    headerEl.querySelector('.cat-btn.delete').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (confirm(`Delete the folder "${cat.title}" and ALL pages inside it?`)) {
+                            categories = categories.filter(c => c.id !== cat.id);
+                            // Reset active page if the current one was deleted
+                            if (!getActivePage() && categories.length > 0 && categories[0].pages.length > 0) {
+                                activePageId = categories[0].pages[0].id;
+                            } else if (!getActivePage()) {
+                                activePageId = null;
+                            }
+                            saveData(); renderMenu();
+                        }
+                    });
+                }
+
+                // Category Drag Events
+                headerEl.addEventListener('dragstart', (e) => {
+                    if (appMode !== 'edit') { e.preventDefault(); return; }
+                    dragSrcInfo = { type: 'cat', id: cat.id };
+                    e.dataTransfer.effectAllowed = 'move';
+                    setTimeout(() => groupEl.style.opacity = '0.5', 0);
+                });
+
+                headerEl.addEventListener('dragover', (e) => {
+                    if (appMode !== 'edit') return;
+                    e.preventDefault();
+                    if (dragSrcInfo.type === 'cat') {
+                        headerEl.classList.add('drag-over-top');
+                    } else if (dragSrcInfo.type === 'page') {
+                        headerEl.classList.add('drag-over-bg');
                     }
                 });
 
-                div.addEventListener('dragend', () => {
-                    div.style.opacity = '1';
-                    draggedMenuId = null;
+                headerEl.addEventListener('dragleave', () => {
+                    headerEl.classList.remove('drag-over-top', 'drag-over-bg');
                 });
 
-                menuList.appendChild(div);
+                headerEl.addEventListener('drop', (e) => {
+                    if (appMode !== 'edit') return;
+                    e.preventDefault();
+                    e.stopPropagation(); // Stop from trickling down
+                    headerEl.classList.remove('drag-over-top', 'drag-over-bg');
+                    
+                    if (dragSrcInfo.type === 'cat' && dragSrcInfo.id !== cat.id) {
+                        // Reorder Categories
+                        const fromIndex = categories.findIndex(c => c.id === dragSrcInfo.id);
+                        const [movedCat] = categories.splice(fromIndex, 1);
+                        categories.splice(catIndex, 0, movedCat);
+                        saveData(); renderMenu();
+                    } else if (dragSrcInfo.type === 'page') {
+                        // Move Page into this Category (at the end)
+                        const sourceCat = categories.find(c => c.id === dragSrcInfo.parentId);
+                        if (sourceCat && sourceCat.id !== cat.id) {
+                            const pageIndex = sourceCat.pages.findIndex(p => p.id === dragSrcInfo.id);
+                            const [movedPage] = sourceCat.pages.splice(pageIndex, 1);
+                            cat.pages.push(movedPage);
+                            cat.isOpen = true; // Auto open target
+                            saveData(); renderMenu();
+                        }
+                    }
+                });
+
+                headerEl.addEventListener('dragend', () => {
+                    groupEl.style.opacity = '1';
+                    dragSrcInfo = null;
+                });
+
+                groupEl.appendChild(headerEl);
+
+                // --- Pages within Category ---
+                const itemsContainer = document.createElement('div');
+                itemsContainer.className = 'category-items';
+                itemsContainer.style.display = cat.isOpen ? 'block' : 'none';
+
+                cat.pages.forEach((page, pageIndex) => {
+                    const pageEl = document.createElement('div');
+                    pageEl.className = `menu-item ${page.id === activePageId ? 'active' : ''}`;
+                    pageEl.innerText = page.title;
+                    pageEl.title = page.title; 
+                    if (appMode === 'edit') pageEl.draggable = true;
+                    
+                    pageEl.onclick = () => {
+                        activePageId = page.id;
+                        isPeeking = false;
+                        resetPeekButton();
+                        renderMenu();
+                    };
+
+                    // Page Drag Events
+                    pageEl.addEventListener('dragstart', (e) => {
+                        if (appMode !== 'edit') { e.preventDefault(); return; }
+                        dragSrcInfo = { type: 'page', id: page.id, parentId: cat.id };
+                        e.dataTransfer.effectAllowed = 'move';
+                        setTimeout(() => pageEl.style.opacity = '0.5', 0);
+                        e.stopPropagation();
+                    });
+
+                    pageEl.addEventListener('dragover', (e) => {
+                        if (appMode !== 'edit') return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (dragSrcInfo.type === 'page') {
+                            pageEl.classList.add('drag-over-top');
+                        }
+                    });
+
+                    pageEl.addEventListener('dragleave', () => { pageEl.classList.remove('drag-over-top'); });
+
+                    pageEl.addEventListener('drop', (e) => {
+                        if (appMode !== 'edit') return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        pageEl.classList.remove('drag-over-top');
+                        
+                        if (dragSrcInfo.type === 'page' && dragSrcInfo.id !== page.id) {
+                            const sourceCat = categories.find(c => c.id === dragSrcInfo.parentId);
+                            const sourceIndex = sourceCat.pages.findIndex(p => p.id === dragSrcInfo.id);
+                            const [movedPage] = sourceCat.pages.splice(sourceIndex, 1);
+                            
+                            cat.pages.splice(pageIndex, 0, movedPage);
+                            saveData(); renderMenu();
+                        }
+                    });
+
+                    pageEl.addEventListener('dragend', () => {
+                        pageEl.style.opacity = '1';
+                        dragSrcInfo = null;
+                    });
+
+                    itemsContainer.appendChild(pageEl);
+                });
+
+                groupEl.appendChild(itemsContainer);
+                menuList.appendChild(groupEl);
             });
             renderGrid();
         }
 
         // --- Grid Render ---
         function renderGrid() {
-            const activePage = getActivePage();
-            if (!activePage) {
-                document.getElementById('page-title-display').innerText = "No Pages";
+            const activeData = getActivePage();
+            if (!activeData) {
+                document.getElementById('page-title-display').innerText = "No Pages Available";
                 document.getElementById('grid-container').innerHTML = '';
                 return;
             }
 
+            const activePage = activeData.page;
             document.getElementById('page-title-display').innerText = activePage.title;
             const container = document.getElementById('grid-container');
             
@@ -482,24 +575,12 @@
 
                 if (row.type === 'title') {
                     const rowColor = row.color || 'var(--title-bg-default)';
-                    html += `
-                        <td class="grid-cell title-cell" ${isEditable} data-row-id="${row.id}" style="background-color: ${rowColor};" colspan="${activePage.columns}">
-                            ${row.text}
-                        </td>
-                    `;
+                    html += `<td class="grid-cell title-cell" ${isEditable} data-row-id="${row.id}" style="background-color: ${rowColor};" colspan="${activePage.columns}">${row.text}</td>`;
                 } else if (row.type === 'note') {
                     const rowColor = row.color || 'var(--note-bg-default)';
-                    html += `
-                        <td class="grid-cell note-cell" ${isEditable} data-row-id="${row.id}" style="background-color: ${rowColor};" colspan="${activePage.columns}">
-                            ${row.text}
-                        </td>
-                    `;
+                    html += `<td class="grid-cell note-cell" ${isEditable} data-row-id="${row.id}" style="background-color: ${rowColor};" colspan="${activePage.columns}">${row.text}</td>`;
                 } else if (row.type === 'separator') {
-                    html += `
-                        <td class="grid-cell separator-cell" colspan="${activePage.columns}">
-                            <hr class="separator-line">
-                        </td>
-                    `;
+                    html += `<td class="grid-cell separator-cell" colspan="${activePage.columns}"><hr class="separator-line"></td>`;
                 } else {
                     for (let colIndex = 0; colIndex < activePage.columns; colIndex++) {
                         const cellText = row.cells[colIndex] || "";
@@ -512,19 +593,13 @@
                             const userAnswer = row.userAnswer || "";
                             const displayValue = isPeeking ? cellText : userAnswer;
                             
-                            // Determine color based on user's persistent answer
                             let statusClass = "";
                             if (isPeeking) {
                                 statusClass = "correct"; 
                             } else if (userAnswer !== "") {
-                                const tempDiv = document.createElement('div');
-                                tempDiv.innerHTML = cellText;
+                                const tempDiv = document.createElement('div'); tempDiv.innerHTML = cellText;
                                 const pureCorrectAnswer = (tempDiv.textContent || tempDiv.innerText).trim();
-                                if (userAnswer.toLowerCase() === pureCorrectAnswer.toLowerCase()) {
-                                    statusClass = "correct";
-                                } else {
-                                    statusClass = "incorrect";
-                                }
+                                statusClass = (userAnswer.toLowerCase() === pureCorrectAnswer.toLowerCase()) ? "correct" : "incorrect";
                             }
 
                             html += `
@@ -533,10 +608,7 @@
                                        data-correct-answer="${cellText}" value="${displayValue}" autocomplete="off" ${isPeeking ? 'readonly' : ''}>
                             </td>`;
                         } else {
-                            html += `
-                            <td class="grid-cell" ${isEditable} data-row-id="${row.id}" data-col="${colIndex}" style="${styleStr}">
-                                ${cellText}
-                            </td>`;
+                            html += `<td class="grid-cell" ${isEditable} data-row-id="${row.id}" data-col="${colIndex}" style="${styleStr}">${cellText}</td>`;
                         }
                     }
                 }
@@ -555,7 +627,6 @@
                         <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
                     </td>`;
                 }
-
                 html += `</tr>`; 
             });
 
@@ -566,7 +637,7 @@
                 attachInputListeners();
             } else {
                 attachCellEditListeners();
-                attachDragAndDrop();
+                attachDragAndDropRows();
             }
         }
 
@@ -577,7 +648,7 @@
             btn.style.color = "#333";
         }
 
-        // --- Interaction UI Mode Update ---
+        // --- UI Updates ---
         function updateModeUI() {
             const btn = document.getElementById('mode-toggle-btn');
             btn.innerText = appMode === 'edit' ? 'Mode: Edit' : 'Mode: Practice';
@@ -586,10 +657,11 @@
             document.getElementById('action-controls').classList.toggle('hide', appMode === 'practice');
             document.querySelectorAll('.practice-control').forEach(el => el.classList.toggle('hide', appMode === 'edit'));
             document.getElementById('new-page-btn').classList.toggle('hide', appMode === 'practice');
+            document.getElementById('new-cat-btn').classList.toggle('hide', appMode === 'practice');
             
             isPeeking = false;
             resetPeekButton();
-            renderGrid();
+            renderMenu(); // Re-render menu to show/hide edit icons
         }
 
         document.getElementById('mode-toggle-btn').addEventListener('click', function() {
@@ -597,7 +669,7 @@
             updateModeUI();
         });
 
-        // Peek Answers
+        // Peek / Clear
         document.getElementById('peek-answers-btn').addEventListener('click', function() {
             isPeeking = !isPeeking;
             this.innerText = isPeeking ? "Stop Peeking" : "Peek Answers";
@@ -606,53 +678,39 @@
             renderGrid();
         });
 
-        // Clear Month Reset
         document.getElementById('clear-month-btn').addEventListener('click', function() {
-            if (confirm("Are you sure you want to CLEAR ALL your practice answers for this page? This will reset your monthly progress back to blank cells.")) {
-                const activePage = getActivePage();
-                activePage.rows.forEach(r => {
-                    if (r.type === 'data') r.userAnswer = "";
-                });
-                
-                isPeeking = false;
-                resetPeekButton();
-                saveData();
-                renderGrid();
+            if (confirm("CLEAR ALL practice answers for this page? This resets your monthly progress.")) {
+                const activeData = getActivePage();
+                if(activeData) {
+                    activeData.page.rows.forEach(r => { if (r.type === 'data') r.userAnswer = ""; });
+                    isPeeking = false; resetPeekButton(); saveData(); renderGrid();
+                }
             }
         });
 
-        // --- Core Events ---
+        // --- Core Row Editing Logic ---
         function attachInputListeners() {
             const inputs = document.querySelectorAll('.answer-input');
             inputs.forEach((input, index) => {
-                
                 input.addEventListener('keydown', function(event) {
                     if (event.key === 'Enter') {
                         event.preventDefault();
                         if (isPeeking) return;
 
                         const rowId = parseFloat(this.closest('.row-wrapper').getAttribute('data-row-id'));
-                        const activePage = getActivePage();
-                        const row = activePage.rows.find(r => r.id === rowId);
+                        const activeData = getActivePage();
+                        const row = activeData.page.rows.find(r => r.id === rowId);
 
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = this.getAttribute('data-correct-answer');
+                        const tempDiv = document.createElement('div'); tempDiv.innerHTML = this.getAttribute('data-correct-answer');
                         const correctAnswer = (tempDiv.textContent || tempDiv.innerText).trim();
                         const userAnswer = this.value.trim();
 
-                        if (row) {
-                            row.userAnswer = userAnswer;
-                            saveData();
-                        }
+                        if (row) { row.userAnswer = userAnswer; saveData(); }
 
                         if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
-                            this.classList.remove('incorrect');
-                            this.classList.add('correct');
+                            this.classList.remove('incorrect'); this.classList.add('correct');
                             this.value = correctAnswer; 
-                            if (row) {
-                                row.userAnswer = correctAnswer; 
-                                saveData();
-                            }
+                            if (row) { row.userAnswer = correctAnswer; saveData(); }
                             if (index + 1 < inputs.length) inputs[index + 1].focus();
                         } else {
                             this.classList.add('incorrect'); this.classList.remove('correct');
@@ -660,12 +718,11 @@
                     }
                 });
 
-                // Save automatically if user clicks away without pressing Enter
                 input.addEventListener('blur', function() {
                     if (isPeeking) return;
                     const rowId = parseFloat(this.closest('.row-wrapper').getAttribute('data-row-id'));
-                    const activePage = getActivePage();
-                    const row = activePage.rows.find(r => r.id === rowId);
+                    const activeData = getActivePage();
+                    const row = activeData.page.rows.find(r => r.id === rowId);
                     
                     if (row && row.userAnswer !== this.value.trim()) {
                         row.userAnswer = this.value.trim();
@@ -679,29 +736,24 @@
             const cells = document.querySelectorAll('.grid-cell[contenteditable="true"]');
             cells.forEach(cell => {
                 cell.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault(); 
-                        this.blur(); 
-                    }
+                    if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
                 });
 
                 cell.addEventListener('blur', function() {
                     const rowId = parseFloat(this.getAttribute('data-row-id'));
                     const colIndex = this.getAttribute('data-col');
-                    const activePage = getActivePage();
-                    const row = activePage.rows.find(r => r.id === rowId);
+                    const activeData = getActivePage();
+                    const row = activeData.page.rows.find(r => r.id === rowId);
                     
                     if (row) {
                         let cleanedHTML = this.innerHTML.replace(/<br\s*\/?>/gi, '').trim();
                         cleanedHTML = cleanedHTML.replace(/&nbsp;/gi, ' ').trim();
 
                         if (row.type === 'title' || row.type === 'note') { 
-                            row.text = cleanedHTML; 
-                            this.innerHTML = cleanedHTML;
+                            row.text = cleanedHTML; this.innerHTML = cleanedHTML;
                         } 
                         else if (row.type === 'data' && colIndex !== null) { 
-                            row.cells[parseInt(colIndex)] = cleanedHTML; 
-                            this.innerHTML = cleanedHTML;
+                            row.cells[parseInt(colIndex)] = cleanedHTML; this.innerHTML = cleanedHTML;
                         }
                         saveData(); 
                     }
@@ -709,8 +761,8 @@
             });
         }
 
-        // --- Drag and Drop Logic (Rows) ---
-        function attachDragAndDrop() {
+        // --- Drag and Drop Logic (Inside Grid) ---
+        function attachDragAndDropRows() {
             const rows = document.querySelectorAll('.row-wrapper');
             let draggedRowId = null;
 
@@ -719,127 +771,116 @@
                     draggedRowId = parseFloat(row.getAttribute('data-row-id'));
                     e.dataTransfer.effectAllowed = 'move';
                     setTimeout(() => row.classList.add('dragging'), 0);
+                    e.stopPropagation();
                 });
 
                 row.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                    row.classList.add('drag-over');
+                    e.preventDefault(); e.dataTransfer.dropEffect = 'move'; row.classList.add('drag-over');
                 });
-
                 row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
 
                 row.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    row.classList.remove('drag-over');
+                    e.preventDefault(); e.stopPropagation(); row.classList.remove('drag-over');
                     const targetRowId = parseFloat(row.getAttribute('data-row-id'));
                     
                     if (draggedRowId && draggedRowId !== targetRowId) {
-                        reorderRows(draggedRowId, targetRowId);
+                        const activeData = getActivePage();
+                        const fromIndex = activeData.page.rows.findIndex(r => r.id === draggedRowId);
+                        const toIndex = activeData.page.rows.findIndex(r => r.id === targetRowId);
+                        const [movedRow] = activeData.page.rows.splice(fromIndex, 1);
+                        activeData.page.rows.splice(toIndex, 0, movedRow);
+                        saveData(); renderGrid();
                     }
                 });
 
                 row.addEventListener('dragend', () => {
-                    row.classList.remove('dragging');
-                    draggedRowId = null;
+                    row.classList.remove('dragging'); draggedRowId = null;
                 });
             });
         }
 
-        function reorderRows(draggedId, targetId) {
-            const activePage = getActivePage();
-            const fromIndex = activePage.rows.findIndex(r => r.id === draggedId);
-            const toIndex = activePage.rows.findIndex(r => r.id === targetId);
-            
-            const [movedRow] = activePage.rows.splice(fromIndex, 1);
-            activePage.rows.splice(toIndex, 0, movedRow);
-            
-            saveData();
-            renderGrid();
-        }
+        // --- Application Controls ---
 
-        // --- Button Actions ---
-        
-        document.getElementById('sort-az-btn').addEventListener('click', () => {
-            isCustomOrder = false; 
-            pages.sort((a, b) => a.title.localeCompare(b.title));
-            saveData();
-            renderMenu();
+        document.getElementById('new-cat-btn').addEventListener('click', () => {
+            const catName = prompt("New Category Name:");
+            if (catName && catName.trim() !== "") {
+                categories.push({ id: Date.now().toString(), title: catName.trim(), isOpen: true, pages: [] });
+                saveData(); renderMenu();
+            }
         });
 
         document.getElementById('new-page-btn').addEventListener('click', () => {
+            if (categories.length === 0) return alert("Please create a Category first.");
+            const activeData = getActivePage();
+            const targetCat = activeData ? categories.find(c => c.id === activeData.categoryId) : categories[0];
+            
             const newId = Date.now();
-            pages.push({
+            targetCat.pages.push({
                 id: newId, title: "New Blank Page", columns: 2, answerColumnIndex: 1,
                 columnStyles: [{ bold: false, italic: false, fontSize: '14px' }, { bold: false, italic: false, fontSize: '14px' }],
                 rows: []
             });
-            if (!isCustomOrder) pages.sort((a, b) => a.title.localeCompare(b.title));
+            targetCat.isOpen = true;
             activePageId = newId;
             saveData(); renderMenu();
         });
 
         document.getElementById('duplicate-page-btn').addEventListener('click', () => {
-            const activePage = getActivePage();
-            const newPage = JSON.parse(JSON.stringify(activePage));
+            const activeData = getActivePage();
+            if(!activeData) return;
+            const newPage = JSON.parse(JSON.stringify(activeData.page));
             newPage.id = Date.now();
-            newPage.title = activePage.title + " (Copy)";
-            
-            // Clean up old persistent practice answers on the copy
+            newPage.title = activeData.page.title + " (Copy)";
             newPage.rows.forEach(r => {
                 r.id = Date.now() + Math.random();
-                if (r.type === 'data') r.userAnswer = "";
+                if (r.type === 'data') r.userAnswer = ""; 
             });
             
-            pages.push(newPage);
-            if (!isCustomOrder) pages.sort((a, b) => a.title.localeCompare(b.title));
+            const cat = categories.find(c => c.id === activeData.categoryId);
+            cat.pages.push(newPage);
             activePageId = newPage.id;
             saveData(); renderMenu();
         });
 
         document.getElementById('add-row-btn').addEventListener('click', () => {
-            getActivePage().rows.push({ id: Date.now() + Math.random(), type: "data", cells: Array(getActivePage().columns).fill(""), userAnswer: "" });
+            getActivePage().page.rows.push({ id: Date.now() + Math.random(), type: "data", cells: Array(getActivePage().page.columns).fill(""), userAnswer: "" });
             saveData(); renderGrid();
         });
-
         document.getElementById('add-title-btn').addEventListener('click', () => {
-            getActivePage().rows.push({ id: Date.now() + Math.random(), type: "title", text: "New Title", color: "#f89c12" });
+            getActivePage().page.rows.push({ id: Date.now() + Math.random(), type: "title", text: "New Title", color: "#f89c12" });
             saveData(); renderGrid();
         });
-
         document.getElementById('add-note-btn').addEventListener('click', () => {
-            getActivePage().rows.push({ id: Date.now() + Math.random(), type: "note", text: "New Note", color: "#fff3cd" });
+            getActivePage().page.rows.push({ id: Date.now() + Math.random(), type: "note", text: "New Note", color: "#fff3cd" });
             saveData(); renderGrid();
         });
-
         document.getElementById('add-separator-btn').addEventListener('click', () => {
-            getActivePage().rows.push({ id: Date.now() + Math.random(), type: "separator" });
+            getActivePage().page.rows.push({ id: Date.now() + Math.random(), type: "separator" });
             saveData(); renderGrid();
         });
 
         window.duplicateRow = function(rowId) {
-            const activePage = getActivePage();
+            const activePage = getActivePage().page;
             const index = activePage.rows.findIndex(r => r.id === rowId);
             if (index > -1) {
-                const originalRow = activePage.rows[index];
-                const newRow = JSON.parse(JSON.stringify(originalRow));
+                const newRow = JSON.parse(JSON.stringify(activePage.rows[index]));
                 newRow.id = Date.now() + Math.random();
-                if (newRow.type === 'data') newRow.userAnswer = ""; // Wipe practice data on cloned row
+                if (newRow.type === 'data') newRow.userAnswer = ""; 
                 activePage.rows.splice(index + 1, 0, newRow);
                 saveData(); renderGrid();
             }
         };
 
         window.deleteRow = function(rowId) {
-            if (confirm("Are you sure you want to delete this row?")) {
-                const activePage = getActivePage();
+            if (confirm("Delete this row?")) {
+                const activePage = getActivePage().page;
                 activePage.rows = activePage.rows.filter(row => row.id !== rowId);
                 saveData(); renderGrid();
             }
         };
 
         window.updateRowColor = function(rowId, color) {
-            const row = getActivePage().rows.find(r => r.id === rowId);
+            const row = getActivePage().page.rows.find(r => r.id === rowId);
             if (row && (row.type === 'title' || row.type === 'note')) { row.color = color; saveData(); renderGrid(); }
         };
 
@@ -847,7 +888,7 @@
         const modal = document.getElementById('edit-modal');
         function renderModalColStyles(colCount) {
             const container = document.getElementById('modal-col-styles');
-            const activePage = getActivePage();
+            const activePage = getActivePage().page;
             container.innerHTML = '';
             for (let i = 0; i < colCount; i++) {
                 const style = (activePage.columnStyles && activePage.columnStyles[i]) || { bold: false, italic: false, fontSize: '14px' };
@@ -869,7 +910,7 @@
         document.getElementById('modal-columns').addEventListener('change', function() { renderModalColStyles(parseInt(this.value) || 1); });
         
         document.getElementById('edit-page-btn').addEventListener('click', () => {
-            const activePage = getActivePage();
+            const activePage = getActivePage().page;
             document.getElementById('modal-title').value = activePage.title;
             document.getElementById('modal-columns').value = activePage.columns;
             document.getElementById('modal-answer-index').value = activePage.answerColumnIndex;
@@ -878,29 +919,25 @@
         });
 
         document.getElementById('modal-delete-page').addEventListener('click', () => {
-            if (confirm("Are you sure you want to delete this ENTIRE PAGE? This cannot be undone.")) {
-                pages = pages.filter(p => p.id !== activePageId);
+            if (confirm("Delete this ENTIRE PAGE? This cannot be undone.")) {
+                const activeData = getActivePage();
+                const cat = categories.find(c => c.id === activeData.categoryId);
+                cat.pages = cat.pages.filter(p => p.id !== activePageId);
                 
-                if (pages.length > 0) {
-                    activePageId = pages[0].id;
-                } else {
-                    pages.push({
-                        id: Date.now(), title: "New Blank Page", columns: 2, answerColumnIndex: 1,
-                        columnStyles: [{ bold: false, italic: false, fontSize: '14px' }, { bold: false, italic: false, fontSize: '14px' }],
-                        rows: []
-                    });
-                    activePageId = pages[0].id;
+                activePageId = null;
+                // Find next available page
+                for (const c of categories) {
+                    if (c.pages.length > 0) { activePageId = c.pages[0].id; break; }
                 }
                 
                 modal.style.display = 'none';
-                saveData(); 
-                renderMenu();
+                saveData(); renderMenu();
             }
         });
 
         document.getElementById('modal-cancel').addEventListener('click', () => modal.style.display = 'none');
         document.getElementById('modal-save').addEventListener('click', () => {
-            const activePage = getActivePage();
+            const activePage = getActivePage().page;
             const newColumns = parseInt(document.getElementById('modal-columns').value);
             activePage.title = document.getElementById('modal-title').value;
             activePage.answerColumnIndex = parseInt(document.getElementById('modal-answer-index').value);
@@ -923,9 +960,6 @@
                 });
                 activePage.columns = newColumns;
             }
-            
-            if (!isCustomOrder) pages.sort((a, b) => a.title.localeCompare(b.title));
-            
             modal.style.display = 'none';
             saveData(); renderMenu();
         });
