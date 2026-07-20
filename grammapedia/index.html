@@ -41,7 +41,7 @@
             transition: margin-left 0.3s ease;
         }
         
-        aside.hidden { margin-left: -370px; /* Fully hides the sidebar */ }
+        aside.hidden { margin-left: -370px; }
 
         .category-group { margin-bottom: 8px; }
         .category-header {
@@ -141,13 +141,15 @@
         .answer-input.correct { background-color: var(--accent-green); color: white; font-weight: bold; box-shadow: var(--button-shadow); }
         .answer-input.incorrect { background-color: var(--accent-red); color: white; box-shadow: var(--button-shadow); }
 
-        .action-cell { vertical-align: middle; white-space: nowrap; }
-        .icon-btn { color: #888; border: none; background: none; padding: 2px 6px; box-shadow: none; font-size: 16px; cursor: pointer; }
+        /* Row Actions - Strictly controlled height to prevent enormous rows */
+        .action-cell { vertical-align: middle; white-space: nowrap; padding: 0 4px; }
+        .action-cell-content { display: flex; align-items: center; gap: 4px; height: 20px; } 
+        .icon-btn { color: #888; border: none; background: none; padding: 2px 4px; box-shadow: none; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 20px; line-height: 1; }
         .icon-btn:hover { background: #eee; border-radius: 4px; color: #333; box-shadow: none; transform: none; }
         .icon-btn.delete-btn:hover { color: var(--accent-red); }
-        .drag-handle { cursor: grab; font-size: 18px; color: #ccc; padding: 0 5px; user-select: none; }
+        .drag-handle { cursor: grab; font-size: 16px; color: #ccc; padding: 0 2px; user-select: none; display: flex; align-items: center; height: 20px; line-height: 1; }
         .drag-handle:active { cursor: grabbing; }
-        .color-picker { width: 22px; height: 22px; padding: 0; border: none; border-radius: 4px; cursor: pointer; background: none; }
+        .color-picker { width: 20px; height: 20px; padding: 0; border: none; border-radius: 4px; cursor: pointer; background: none; }
 
         /* Modals */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); backdrop-filter: blur(2px); z-index: 300; justify-content: center; align-items: center; }
@@ -235,11 +237,24 @@
             <label>Page Title</label>
             <input type="text" id="modal-title">
             
-            <label>Table Alignment</label>
-            <select id="modal-alignment">
-                <option value="left">Left Aligned</option>
-                <option value="center">Center Aligned</option>
-            </select>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <div style="flex: 1;">
+                    <label style="margin-top: 0;">Alignment</label>
+                    <select id="modal-alignment">
+                        <option value="left">Left Aligned</option>
+                        <option value="center">Center Aligned</option>
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label style="margin-top: 0;">Table Width</label>
+                    <select id="modal-table-width">
+                        <option value="max-content">Auto (Hugs Text)</option>
+                        <option value="100%">100% (Full Width)</option>
+                        <option value="80%">80% Width</option>
+                        <option value="60%">60% Width</option>
+                    </select>
+                </div>
+            </div>
 
             <div style="display: flex; gap: 10px;">
                 <div style="flex: 1;"><label>Columns</label><input type="number" id="modal-columns" min="1" max="10"></div>
@@ -339,7 +354,7 @@
                     ];
                     
                     const templatePage = {
-                        id: Date.now(), title: "Hablar Template", columns: 2, answerColumnIndex: 1, alignment: "left",
+                        id: Date.now(), title: "Hablar Template", columns: 2, answerColumnIndex: 1, alignment: "left", tableWidth: "max-content",
                         columnStyles: [{ bold: true, italic: true, fontSize: '14px' }, { bold: false, italic: false, fontSize: '14px' }],
                         rows: [
                             { id: 1, type: "title", text: "Present", color: "#f89c12" },
@@ -541,9 +556,10 @@
             document.getElementById('page-title-display').innerText = activePage.title;
             const container = document.getElementById('grid-container');
             
-            // Handle Alignment
+            // Handle Alignment & Width
+            const tableWidth = activePage.tableWidth || 'max-content';
             const alignStyle = activePage.alignment === 'center' ? 'margin: 0 auto;' : 'margin: 0;';
-            let html = `<table class="study-table" style="${alignStyle}"><tbody>`;
+            let html = `<table class="study-table" style="${alignStyle} width: ${tableWidth};"><tbody>`;
 
             if (!activePage.columnStyles) activePage.columnStyles = [];
 
@@ -592,7 +608,8 @@
                 }
                 
                 if (appMode === 'edit') {
-                    html += `<td class="action-cell">`;
+                    html += `<td class="action-cell">
+                        <div class="action-cell-content">`;
                     if (row.type === 'title' || row.type === 'note') {
                         const defaultColor = row.type === 'title' ? '#f89c12' : '#fff3cd';
                         html += `<input type="color" class="color-picker" value="${row.color || defaultColor}" onchange="updateRowColor(${row.id}, this.value)" title="Change Color">`;
@@ -601,8 +618,9 @@
                         html += `<button class="icon-btn" onclick="duplicateRow(${row.id})" title="Duplicate Row">&#10697;</button>`;
                     }
                     html += `
-                        <button class="icon-btn delete-btn" onclick="deleteRow(${row.id})" title="Delete Row">&times;</button>
-                        <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
+                            <button class="icon-btn delete-btn" onclick="deleteRow(${row.id})" title="Delete Row">&times;</button>
+                            <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
+                        </div>
                     </td>`;
                 }
                 html += `</tr>`; 
@@ -822,7 +840,7 @@
             
             const newId = Date.now();
             targetCat.pages.push({
-                id: newId, title: "New Blank Page", columns: 2, answerColumnIndex: 1, alignment: "left",
+                id: newId, title: "New Blank Page", columns: 2, answerColumnIndex: 1, alignment: "left", tableWidth: "max-content",
                 columnStyles: [{ bold: false, italic: false, fontSize: '14px' }, { bold: false, italic: false, fontSize: '14px' }],
                 rows: []
             });
@@ -838,19 +856,16 @@
         });
 
         document.getElementById('sort-data-btn').addEventListener('click', () => {
-            if (!confirm("Are you sure you want to sort all data rows alphabetically by the first column? This cannot be undone!")) return;
+            if (!confirm("Are you sure you want to sort all data rows alphabetically by the first column? Your titles and notes will stay where they are. This cannot be undone!")) return;
             const activePage = getActivePage().page;
             
-            // Extract data rows
             let dataRows = activePage.rows.map((r, i) => ({row: r, index: i})).filter(item => item.row.type === 'data');
-            // Sort them based on raw text of column 0
             dataRows.sort((a, b) => {
                 let valA = (a.row.cells[0] || "").replace(/<[^>]*>?/gm, '').trim().toLowerCase();
                 let valB = (b.row.cells[0] || "").replace(/<[^>]*>?/gm, '').trim().toLowerCase();
                 return valA.localeCompare(valB);
             });
             
-            // Reinsert sorted rows into their original slots
             const originalIndices = activePage.rows.map((r, i) => i).filter(i => activePage.rows[i].type === 'data');
             originalIndices.forEach((origIdx, loopIdx) => {
                 activePage.rows[origIdx] = dataRows[loopIdx].row;
@@ -947,6 +962,7 @@
             const activePage = getActivePage().page;
             document.getElementById('modal-title').value = activePage.title;
             document.getElementById('modal-alignment').value = activePage.alignment || "left";
+            document.getElementById('modal-table-width').value = activePage.tableWidth || "max-content";
             document.getElementById('modal-columns').value = activePage.columns;
             document.getElementById('modal-answer-index').value = activePage.answerColumnIndex;
             renderModalColStyles(activePage.columns);
@@ -975,6 +991,7 @@
             const newColumns = parseInt(document.getElementById('modal-columns').value);
             activePage.title = document.getElementById('modal-title').value;
             activePage.alignment = document.getElementById('modal-alignment').value;
+            activePage.tableWidth = document.getElementById('modal-table-width').value;
             activePage.answerColumnIndex = parseInt(document.getElementById('modal-answer-index').value);
             
             activePage.columnStyles = [];
