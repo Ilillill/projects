@@ -184,7 +184,6 @@
                 <button id="new-cat-btn" class="hide" style="flex: 1; font-weight: bold; background: #f0f3f5;">+ Category</button>
                 <button id="new-page-btn" class="hide" style="flex: 1; font-weight: bold;">+ Page</button>
             </div>
-            <button id="mode-toggle-btn" class="mode-toggle practice hide" style="width: 100%;">Mode: Practice</button>
         </div>
     </aside>
 
@@ -202,8 +201,9 @@
                     <button id="sort-az-pages-btn" class="edit-control hide" title="Sort Pages A-Z">Sort Menu A-Z</button>
                     
                     <button id="stats-btn" class="practice-control hide" title="View Study Statistics">📊 Stats</button>
-                    <button id="peek-answers-btn" class="practice-control hide">Peek Answers</button>
+                    <button id="peek-answers-btn" class="practice-control hide">Show</button>
                     <button id="clear-answers-btn" class="practice-control hide" style="background: var(--accent-red); color: white;">Clear Answers</button>
+                    <button id="mode-toggle-btn" class="mode-toggle practice hide">Mode: Practice</button>
                 </div>
             </div>
             
@@ -321,6 +321,9 @@
         let isCustomOrder = false; 
         let appMode = 'practice';
         let isPeeking = false; 
+        
+        let draggedMenuId = null;
+        let dragSrcInfo = null; // FIXED: Variable needed for drag & drop to work in strict module mode
 
         signInAnonymously(auth).then(() => {
             loadDataFromFirebase();
@@ -453,8 +456,6 @@
              printWindow.focus();
              setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
         });
-
-        let draggedMenuId = null;
 
         function renderMenu() {
             const menuList = document.getElementById('menu-list');
@@ -708,7 +709,7 @@
 
         function resetPeekButton() {
             const btn = document.getElementById('peek-answers-btn');
-            btn.innerText = "Peek Answers";
+            btn.innerText = "Show"; // FIXED text
             btn.style.background = "var(--bg-color)";
             btn.style.color = "#333";
         }
@@ -737,7 +738,7 @@
 
         document.getElementById('peek-answers-btn').addEventListener('click', function() {
             isPeeking = !isPeeking;
-            this.innerText = isPeeking ? "Stop Peeking" : "Peek Answers";
+            this.innerText = isPeeking ? "Hide" : "Show"; // FIXED text
             this.style.background = isPeeking ? "var(--accent-blue)" : "var(--bg-color)";
             this.style.color = isPeeking ? "white" : "#333";
             renderGrid();
@@ -817,10 +818,15 @@
                             this.classList.remove('incorrect'); this.classList.add('correct');
                             this.value = correctAnswer; 
                             if (row) { row.userAnswer = correctAnswer; saveData(); }
-                            renderMenu(); // Check if this was the last correct answer needed for the menu checkmark
-                            if (index + 1 < inputs.length) inputs[index + 1].focus();
                         } else {
                             this.classList.add('incorrect'); this.classList.remove('correct');
+                        }
+                        
+                        // FIXED: Re-render menu to check for completion, THEN query DOM for new inputs
+                        renderMenu(); 
+                        const reQueriedInputs = document.querySelectorAll('.answer-input');
+                        if (index + 1 < reQueriedInputs.length) {
+                            reQueriedInputs[index + 1].focus();
                         }
                     }
                 });
