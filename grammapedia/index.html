@@ -26,9 +26,10 @@
             height: 100vh; 
             background-color: var(--bg-color); 
             color: var(--text-color);
+            overflow: hidden; /* Prevent body scrolling, allow main to scroll */
         }
 
-        /* Sidebar - Widened to 340px to fit long titles */
+        /* Sidebar */
         aside { 
             width: 340px; 
             background-color: var(--bg-color); 
@@ -36,7 +37,7 @@
             padding: 20px 15px; 
             display: flex; 
             flex-direction: column; 
-            z-index: 10;
+            z-index: 200;
         }
 
         .menu-item { 
@@ -60,14 +61,35 @@
         
         .sidebar-bottom-actions {
             display: flex; 
+            flex-direction: column;
             gap: 10px; 
             margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-light);
         }
         
         /* Main Content */
-        main { flex-grow: 1; padding: 20px 30px; overflow-y: auto; background-color: var(--bg-color); }
+        main { 
+            flex-grow: 1; 
+            position: relative;
+            overflow-y: auto; 
+            background-color: var(--bg-color); 
+        }
         
-        .header-section { margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px; }
+        /* Sticky Header */
+        .header-section { 
+            position: sticky;
+            top: 0;
+            background: var(--bg-color);
+            z-index: 100;
+            padding: 20px 30px 15px 30px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        }
+        
         .top-bar { display: flex; justify-content: space-between; align-items: center; }
         .page-title { margin: 0; font-size: 22px; font-weight: 600; color: #2c3e50; }
         .top-actions { display: flex; gap: 10px; align-items: center; }
@@ -102,8 +124,7 @@
         /* HTML Table Layout */
         .grid-container { 
             font-size: 14px;
-            overflow-x: auto;
-            padding-bottom: 50px;
+            padding: 20px 30px 60px 30px;
         }
 
         .study-table {
@@ -127,7 +148,7 @@
         .grid-cell font[size="1"] { font-size: 8px !important; }
         .grid-cell font[size="3"] { font-size: 14px !important; }
         .grid-cell font[size="5"] { font-size: 18px !important; }
-        .grid-cell font[size="7"] { font-size: 24px !important; } /* A++ Font Size */
+        .grid-cell font[size="7"] { font-size: 24px !important; }
         
         .grid-cell[contenteditable="true"]:focus { 
             background-color: #ffffff; 
@@ -196,7 +217,7 @@
         .color-picker { width: 22px; height: 22px; padding: 0; border: none; border-radius: 4px; cursor: pointer; background: none; }
 
         /* Modals */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); backdrop-filter: blur(2px); z-index: 20; justify-content: center; align-items: center; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); backdrop-filter: blur(2px); z-index: 300; justify-content: center; align-items: center; }
         .modal { background: var(--bg-color); padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 320px; }
         .modal label { display: block; margin-bottom: 4px; font-size: 12px; color: #555; font-weight: bold; }
         .modal input[type="text"], .modal input[type="number"] { width: 100%; padding: 6px; margin-bottom: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
@@ -211,20 +232,24 @@
     <aside>
         <div id="menu-list" style="flex-grow: 1; overflow-y: auto;"></div>
         
-        <!-- Bottom Actions (A-Z and New Page) -->
+        <!-- Consolidated Bottom Actions -->
         <div class="sidebar-bottom-actions">
-            <button id="sort-az-btn" title="Sort Alphabetically" style="font-size: 13px; font-weight: bold; border: 1px solid var(--border-light);">A-Z</button>
-            <button id="new-page-btn" style="flex-grow: 1;" class="hide">+ New Blank Page</button>
+            <div style="display: flex; gap: 10px;">
+                <button id="sort-az-btn" title="Sort Alphabetically" style="font-size: 13px; font-weight: bold; border: 1px solid var(--border-light);">A-Z</button>
+                <button id="new-page-btn" style="flex-grow: 1;" class="hide">+ New Blank Page</button>
+            </div>
+            <button id="mode-toggle-btn" class="mode-toggle practice hide" style="width: 100%;">Mode: Practice</button>
         </div>
     </aside>
 
     <main>
+        <!-- Sticky Header Section -->
         <div class="header-section">
             <div class="top-bar">
                 <h2 id="page-title-display" class="page-title">Connecting to Database...</h2>
                 <div class="top-actions">
-                    <button id="toggle-answers" class="practice-control hide">Show All Answers</button>
-                    <button id="mode-toggle-btn" class="mode-toggle practice hide">Current Mode: PRACTICE</button>
+                    <button id="peek-answers-btn" class="practice-control hide">Peek Answers</button>
+                    <button id="clear-month-btn" class="practice-control hide" style="background: var(--accent-red); color: white;">Clear Month</button>
                 </div>
             </div>
             
@@ -234,12 +259,10 @@
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('italic', false, null)" title="Italic"><i>I</i></button>
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('strikeThrough', false, null)" title="Strikethrough"><s>S</s></button>
                     <div style="width: 1px; height: 16px; background: var(--border-light); margin: 0 4px;"></div>
-                    <!-- Alignment Buttons -->
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('justifyLeft', false, null)" title="Align Left">L</button>
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('justifyCenter', false, null)" title="Align Center">C</button>
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('justifyRight', false, null)" title="Align Right">R</button>
                     <div style="width: 1px; height: 16px; background: var(--border-light); margin: 0 4px;"></div>
-                    <!-- Font Size Buttons -->
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '1')" title="Small Text (8px)">A-</button>
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '3')" title="Normal Text">A</button>
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '5')" title="Large Text">A+</button>
@@ -249,7 +272,7 @@
                 <button id="add-title-btn" class="edit-control">+ Title</button>
                 <button id="add-note-btn" class="edit-control">+ Note</button>
                 <button id="add-separator-btn" class="edit-control">+ Separator</button>
-                <button id="duplicate-page-btn" class="edit-control" style="background: #e8f4f8; border: 1px solid #b3d4e0;">Dup Page</button>
+                <button id="duplicate-page-btn" class="edit-control" style="background: #e8f4f8; border: 1px solid #b3d4e0;">Duplicate</button>
                 <button id="edit-page-btn" class="edit-control">Settings</button>
             </div>
         </div>
@@ -301,14 +324,11 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // Security Password Configuration
-        const EDIT_PASSWORD = "admin";
-
         let pages = [];
         let activePageId = null;
         let isCustomOrder = false; 
         let appMode = 'practice';
-        let answersVisible = false;
+        let isPeeking = false; // State for temporary answer peek
 
         signInAnonymously(auth).then(() => {
             loadDataFromFirebase();
@@ -332,8 +352,8 @@
                         columnStyles: [{ bold: true, italic: true, fontSize: '14px' }, { bold: false, italic: false, fontSize: '14px' }],
                         rows: [
                             { id: 1, type: "title", text: "Present", color: "#f89c12" },
-                            { id: 2, type: "data", cells: [ "yo", "hablo" ] },
-                            { id: 3, type: "data", cells: [ "tú", "hablas" ] }
+                            { id: 2, type: "data", cells: [ "yo", "hablo" ], userAnswer: "" },
+                            { id: 3, type: "data", cells: [ "tú", "hablas" ], userAnswer: "" }
                         ]
                     }];
                     activePageId = 1;
@@ -346,7 +366,10 @@
 
                 document.getElementById('new-page-btn').classList.remove('hide');
                 document.getElementById('mode-toggle-btn').classList.remove('hide');
-                if (appMode === 'practice') document.getElementById('toggle-answers').classList.remove('hide');
+                if (appMode === 'practice') {
+                    document.getElementById('peek-answers-btn').classList.remove('hide');
+                    document.getElementById('clear-month-btn').classList.remove('hide');
+                }
                 
                 updateModeUI();
                 renderMenu();
@@ -362,7 +385,6 @@
                 await setDoc(docRef, { pages: pages, isCustomOrder: isCustomOrder });
             } catch (error) {
                 console.error("Error saving data:", error);
-                alert("Failed to save changes to the database.");
             }
         }
 
@@ -381,19 +403,19 @@
                 const div = document.createElement('div');
                 div.className = `menu-item ${page.id === activePageId ? 'active' : ''}`;
                 div.innerText = page.title;
-                div.title = page.title; // Shows full text on hover
+                div.title = page.title; 
                 div.draggable = true;
                 
                 div.onclick = () => {
                     activePageId = page.id;
-                    answersVisible = false;
-                    document.getElementById('toggle-answers').innerText = "Show All Answers";
+                    isPeeking = false;
+                    resetPeekButton();
                     renderMenu();
                 };
 
                 div.addEventListener('dragstart', (e) => {
                     if (appMode !== 'edit') {
-                        e.preventDefault(); // Only allow drag and drop in edit mode
+                        e.preventDefault(); 
                         return;
                     }
                     draggedMenuId = page.id;
@@ -487,10 +509,28 @@
                         if (colStyle.italic) styleStr += ` font-style: italic;`;
 
                         if (appMode === 'practice' && colIndex === activePage.answerColumnIndex) {
+                            const userAnswer = row.userAnswer || "";
+                            const displayValue = isPeeking ? cellText : userAnswer;
+                            
+                            // Determine color based on user's persistent answer
+                            let statusClass = "";
+                            if (isPeeking) {
+                                statusClass = "correct"; 
+                            } else if (userAnswer !== "") {
+                                const tempDiv = document.createElement('div');
+                                tempDiv.innerHTML = cellText;
+                                const pureCorrectAnswer = (tempDiv.textContent || tempDiv.innerText).trim();
+                                if (userAnswer.toLowerCase() === pureCorrectAnswer.toLowerCase()) {
+                                    statusClass = "correct";
+                                } else {
+                                    statusClass = "incorrect";
+                                }
+                            }
+
                             html += `
                             <td class="grid-cell" style="padding: 0; ${styleStr}">
-                                <input type="text" class="answer-input ${answersVisible ? 'correct' : ''}" 
-                                       data-correct-answer="${cellText}" value="${answersVisible ? cellText : ''}" autocomplete="off">
+                                <input type="text" class="answer-input ${statusClass}" 
+                                       data-correct-answer="${cellText}" value="${displayValue}" autocomplete="off" ${isPeeking ? 'readonly' : ''}>
                             </td>`;
                         } else {
                             html += `
@@ -530,56 +570,106 @@
             }
         }
 
+        function resetPeekButton() {
+            const btn = document.getElementById('peek-answers-btn');
+            btn.innerText = "Peek Answers";
+            btn.style.background = "var(--bg-color)";
+            btn.style.color = "#333";
+        }
+
         // --- Interaction UI Mode Update ---
         function updateModeUI() {
             const btn = document.getElementById('mode-toggle-btn');
-            btn.innerText = appMode === 'edit' ? 'Current Mode: EDIT' : 'Current Mode: PRACTICE';
+            btn.innerText = appMode === 'edit' ? 'Mode: Edit' : 'Mode: Practice';
             btn.className = appMode === 'edit' ? 'mode-toggle' : 'mode-toggle practice';
 
             document.getElementById('action-controls').classList.toggle('hide', appMode === 'practice');
             document.querySelectorAll('.practice-control').forEach(el => el.classList.toggle('hide', appMode === 'edit'));
             document.getElementById('new-page-btn').classList.toggle('hide', appMode === 'practice');
-            document.getElementById('sort-az-btn').classList.toggle('hide', appMode === 'practice');
             
-            answersVisible = false;
-            document.getElementById('toggle-answers').innerText = "Show All Answers";
+            isPeeking = false;
+            resetPeekButton();
             renderGrid();
         }
 
         document.getElementById('mode-toggle-btn').addEventListener('click', function() {
-            // Password Protection check before entering Edit Mode
-            if (appMode === 'practice') {
-                const userAttempt = prompt("Enter password to unlock Edit Mode:");
-                if (userAttempt !== EDIT_PASSWORD) {
-                    alert("Incorrect password. Returning to practice mode.");
-                    return;
-                }
-            }
-            
             appMode = appMode === 'edit' ? 'practice' : 'edit';
             updateModeUI();
+        });
+
+        // Peek Answers
+        document.getElementById('peek-answers-btn').addEventListener('click', function() {
+            isPeeking = !isPeeking;
+            this.innerText = isPeeking ? "Stop Peeking" : "Peek Answers";
+            this.style.background = isPeeking ? "var(--accent-blue)" : "var(--bg-color)";
+            this.style.color = isPeeking ? "white" : "#333";
+            renderGrid();
+        });
+
+        // Clear Month Reset
+        document.getElementById('clear-month-btn').addEventListener('click', function() {
+            if (confirm("Are you sure you want to CLEAR ALL your practice answers for this page? This will reset your monthly progress back to blank cells.")) {
+                const activePage = getActivePage();
+                activePage.rows.forEach(r => {
+                    if (r.type === 'data') r.userAnswer = "";
+                });
+                
+                isPeeking = false;
+                resetPeekButton();
+                saveData();
+                renderGrid();
+            }
         });
 
         // --- Core Events ---
         function attachInputListeners() {
             const inputs = document.querySelectorAll('.answer-input');
             inputs.forEach((input, index) => {
+                
                 input.addEventListener('keydown', function(event) {
                     if (event.key === 'Enter') {
                         event.preventDefault();
+                        if (isPeeking) return;
+
+                        const rowId = parseFloat(this.closest('.row-wrapper').getAttribute('data-row-id'));
+                        const activePage = getActivePage();
+                        const row = activePage.rows.find(r => r.id === rowId);
+
                         const tempDiv = document.createElement('div');
                         tempDiv.innerHTML = this.getAttribute('data-correct-answer');
                         const correctAnswer = (tempDiv.textContent || tempDiv.innerText).trim();
                         const userAnswer = this.value.trim();
 
+                        if (row) {
+                            row.userAnswer = userAnswer;
+                            saveData();
+                        }
+
                         if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
                             this.classList.remove('incorrect');
                             this.classList.add('correct');
                             this.value = correctAnswer; 
+                            if (row) {
+                                row.userAnswer = correctAnswer; 
+                                saveData();
+                            }
                             if (index + 1 < inputs.length) inputs[index + 1].focus();
                         } else {
                             this.classList.add('incorrect'); this.classList.remove('correct');
                         }
+                    }
+                });
+
+                // Save automatically if user clicks away without pressing Enter
+                input.addEventListener('blur', function() {
+                    if (isPeeking) return;
+                    const rowId = parseFloat(this.closest('.row-wrapper').getAttribute('data-row-id'));
+                    const activePage = getActivePage();
+                    const row = activePage.rows.find(r => r.id === rowId);
+                    
+                    if (row && row.userAnswer !== this.value.trim()) {
+                        row.userAnswer = this.value.trim();
+                        saveData();
                     }
                 });
             });
@@ -694,7 +784,13 @@
             const newPage = JSON.parse(JSON.stringify(activePage));
             newPage.id = Date.now();
             newPage.title = activePage.title + " (Copy)";
-            newPage.rows.forEach(r => r.id = Date.now() + Math.random());
+            
+            // Clean up old persistent practice answers on the copy
+            newPage.rows.forEach(r => {
+                r.id = Date.now() + Math.random();
+                if (r.type === 'data') r.userAnswer = "";
+            });
+            
             pages.push(newPage);
             if (!isCustomOrder) pages.sort((a, b) => a.title.localeCompare(b.title));
             activePageId = newPage.id;
@@ -702,7 +798,7 @@
         });
 
         document.getElementById('add-row-btn').addEventListener('click', () => {
-            getActivePage().rows.push({ id: Date.now() + Math.random(), type: "data", cells: Array(getActivePage().columns).fill("") });
+            getActivePage().rows.push({ id: Date.now() + Math.random(), type: "data", cells: Array(getActivePage().columns).fill(""), userAnswer: "" });
             saveData(); renderGrid();
         });
 
@@ -728,6 +824,7 @@
                 const originalRow = activePage.rows[index];
                 const newRow = JSON.parse(JSON.stringify(originalRow));
                 newRow.id = Date.now() + Math.random();
+                if (newRow.type === 'data') newRow.userAnswer = ""; // Wipe practice data on cloned row
                 activePage.rows.splice(index + 1, 0, newRow);
                 saveData(); renderGrid();
             }
@@ -746,12 +843,6 @@
             if (row && (row.type === 'title' || row.type === 'note')) { row.color = color; saveData(); renderGrid(); }
         };
 
-        document.getElementById('toggle-answers').addEventListener('click', function() {
-            answersVisible = !answersVisible;
-            this.innerText = answersVisible ? "Hide All Answers" : "Show All Answers";
-            renderGrid(); 
-        });
-
         // --- Modals ---
         const modal = document.getElementById('edit-modal');
         function renderModalColStyles(colCount) {
@@ -769,6 +860,7 @@
                             <option value="8px" ${style.fontSize === '8px' ? 'selected' : ''}>Small (8px)</option>
                             <option value="14px" ${style.fontSize === '14px' ? 'selected' : ''}>Normal (14px)</option>
                             <option value="18px" ${style.fontSize === '18px' ? 'selected' : ''}>Large (18px)</option>
+                            <option value="24px" ${style.fontSize === '24px' ? 'selected' : ''}>Extra Large (24px)</option>
                         </select>
                     </div>`;
             }
