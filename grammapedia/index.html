@@ -29,7 +29,6 @@
             overflow: hidden; 
         }
 
-        /* Sidebar Styling & Toggle */
         aside { 
             width: 340px; 
             background-color: var(--bg-color); 
@@ -69,7 +68,6 @@
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #333;
         }
         
-        /* Cursor Context */
         body[data-mode="practice"] .menu-item { cursor: pointer; }
         body[data-mode="edit"] .menu-item { cursor: grab; }
         body[data-mode="edit"] .menu-item:active { cursor: grabbing; }
@@ -79,15 +77,12 @@
         
         .menu-item:hover, .menu-item.active { background: var(--hover-bg); font-weight: bold; color: var(--text-color); }
         
-        /* Drag & Drop Visuals */
         .drag-over-top { border-top: 2px solid var(--accent-blue) !important; }
         .drag-over-bottom { border-bottom: 2px solid var(--accent-blue) !important; }
         .drag-over-bg { background: #e8f4f8 !important; }
         
-        /* Main Content */
         main { flex-grow: 1; position: relative; overflow-y: auto; background-color: var(--bg-color); }
         
-        /* Unified Sticky Header */
         .header-section { 
             position: sticky; top: 0; background: var(--bg-color); z-index: 100;
             padding: 15px 30px; border-bottom: 1px solid var(--border-light);
@@ -96,9 +91,24 @@
         
         .top-bar { display: flex; justify-content: space-between; align-items: center; gap: 15px; }
         .brand-area { display: flex; align-items: center; gap: 15px; }
-        .page-title { margin: 0; font-size: 20px; font-weight: 600; color: #2c3e50; }
         
-        /* Buttons */
+        /* Inline Editable Page Title Styling */
+        .page-title { 
+            margin: 0; font-size: 20px; font-weight: 600; color: #2c3e50; 
+            padding: 4px 8px; border-radius: 4px; transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        body[data-mode="edit"] .page-title { 
+            cursor: text; 
+            border: 1px dashed #ccc; 
+            background: #fdfdfd; 
+        }
+        body[data-mode="edit"] .page-title:focus { 
+            background: #fff; 
+            border: 1px dashed var(--accent-blue); 
+            outline: none; 
+        }
+
         button { 
             padding: 6px 12px; cursor: pointer; border: none; border-radius: 6px;
             background: var(--bg-color); font-size: 13px; box-shadow: var(--button-shadow);
@@ -116,19 +126,22 @@
         .toolbar { display: flex; gap: 4px; border-right: 1px solid var(--border-light); padding-right: 12px; margin-right: 4px; }
         .toolbar button { font-family: serif; padding: 4px 8px; font-size: 14px; font-weight: bold; }
 
-        /* Grid & Table */
         .grid-container { font-size: 14px; padding: 20px 30px 60px 30px; overflow-x: auto; }
-        .study-table { border-spacing: 12px 6px; border-collapse: separate; width: max-content; }
+        .study-table { border-spacing: 12px 6px; border-collapse: separate; width: max-content; transition: margin 0.3s; }
         
         .row-wrapper { transition: opacity 0.2s; }
         .row-wrapper.dragging { opacity: 0.4; }
         .row-wrapper.drag-over td { border-top: 2px solid var(--accent-blue); }
 
         .grid-cell { padding: 3px 6px; outline: none; vertical-align: middle; border-radius: 4px; height: 24px; }
+        
+        /* Font Sizes */
         .grid-cell font[size="1"] { font-size: 8px !important; }
+        .grid-cell font[size="2"] { font-size: 10px !important; }
         .grid-cell font[size="3"] { font-size: 14px !important; }
         .grid-cell font[size="5"] { font-size: 18px !important; }
         .grid-cell font[size="7"] { font-size: 24px !important; }
+        
         .grid-cell[contenteditable="true"]:focus { background-color: #ffffff; box-shadow: 0 0 0 2px #a8dadc; }
 
         .title-cell { color: white; font-weight: bold; text-align: center; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0, 0.15); padding: 8px; font-size: 15px; }
@@ -141,7 +154,6 @@
         .answer-input.correct { background-color: var(--accent-green); color: white; font-weight: bold; box-shadow: var(--button-shadow); }
         .answer-input.incorrect { background-color: var(--accent-red); color: white; box-shadow: var(--button-shadow); }
 
-        /* Row Actions - Strictly controlled height to prevent enormous rows */
         .action-cell { vertical-align: middle; white-space: nowrap; padding: 0 4px; }
         .action-cell-content { display: flex; align-items: center; gap: 4px; height: 20px; } 
         .icon-btn { color: #888; border: none; background: none; padding: 2px 4px; box-shadow: none; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 20px; line-height: 1; }
@@ -161,7 +173,6 @@
         .col-style-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; font-size: 12px; }
         .col-style-row select { padding: 2px; font-size: 12px; }
         
-        /* Stats Styles */
         .stat-box { background: #f0f3f5; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center; }
         .stat-number { font-size: 28px; font-weight: bold; color: var(--accent-green); }
         .stat-label { font-size: 12px; color: #555; text-transform: uppercase; letter-spacing: 1px; }
@@ -180,11 +191,14 @@
             <div class="top-bar">
                 <div class="brand-area">
                     <button id="toggle-sidebar-btn" title="Toggle Menu" style="font-size: 16px; padding: 4px 8px;">☰</button>
-                    <h2 id="page-title-display" class="page-title">Connecting...</h2>
+                    <!-- Inline Editable Page Title -->
+                    <h2 id="page-title-display" class="page-title" spellcheck="false">Connecting...</h2>
                 </div>
                 
-                <!-- Unified App Controls -->
                 <div class="action-controls">
+                    <!-- Global Actions -->
+                    <button id="export-pdf-btn" title="Export as clean PDF Table" style="background: #e8f4f8;">🖨️ Export PDF</button>
+
                     <!-- Edit Actions -->
                     <button id="new-cat-btn" class="edit-control hide" style="background: #e8f4f8;">+ Category</button>
                     <button id="new-page-btn" class="edit-control hide" style="background: #e8f4f8;">+ Page</button>
@@ -207,15 +221,24 @@
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('italic', false, null)" title="Italic"><i>I</i></button>
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('strikeThrough', false, null)" title="Strikethrough"><s>S</s></button>
                     <div style="width: 1px; height: 16px; background: var(--border-light); margin: 0 4px;"></div>
+                    
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('justifyLeft', false, null)" title="Align Left">L</button>
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('justifyCenter', false, null)" title="Align Center">C</button>
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('justifyRight', false, null)" title="Align Right">R</button>
                     <div style="width: 1px; height: 16px; background: var(--border-light); margin: 0 4px;"></div>
-                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '1')" title="Small Text (8px)">A-</button>
-                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '3')" title="Normal Text">A</button>
-                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '5')" title="Large Text">A+</button>
-                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '7')" title="Extra Large Text">A++</button>
+                    
+                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '1')" title="Size 8">8</button>
+                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '2')" title="Size 10">10</button>
+                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '3')" title="Size 14">14</button>
+                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '5')" title="Size 18">18</button>
+                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '7')" title="Size 24">24</button>
                 </div>
+                
+                <!-- Table Alignment Toggle Moved Here -->
+                <button id="toggle-table-align-btn" title="Toggle Table Position (Left/Center)" style="font-family: serif; font-weight: bold;">⬌ Table Align</button>
+                
+                <div style="width: 1px; height: 24px; background: var(--border-light); margin: 0 4px;"></div>
+                
                 <button id="add-row-btn">+ Row</button>
                 <button id="add-title-btn">+ Title</button>
                 <button id="add-note-btn">+ Note</button>
@@ -229,34 +252,20 @@
         <div id="grid-container" class="grid-container"></div>
     </main>
 
-    <!-- Edit Page Modal -->
+    <!-- Edit Page Modal (Title & Alignment removed as they are now strictly UI buttons) -->
     <div id="edit-modal" class="modal-overlay">
         <div class="modal">
-            <h3 style="margin-top: 0; font-size: 16px;">Page Settings</h3>
+            <h3 style="margin-top: 0; font-size: 16px;">Column Settings</h3>
             
-            <label>Page Title</label>
-            <input type="text" id="modal-title">
-            
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <div style="flex: 1;">
-                    <label style="margin-top: 0;">Alignment</label>
-                    <select id="modal-alignment">
-                        <option value="left">Left Aligned</option>
-                        <option value="center">Center Aligned</option>
-                    </select>
-                </div>
-                <div style="flex: 1;">
-                    <label style="margin-top: 0;">Table Width</label>
-                    <select id="modal-table-width">
-                        <option value="max-content">Auto (Hugs Text)</option>
-                        <option value="100%">100% (Full Width)</option>
-                        <option value="80%">80% Width</option>
-                        <option value="60%">60% Width</option>
-                    </select>
-                </div>
-            </div>
+            <label style="margin-top: 0;">Table Width</label>
+            <select id="modal-table-width">
+                <option value="max-content">Auto (Hugs Text)</option>
+                <option value="100%">100% (Full Width)</option>
+                <option value="80%">80% Width</option>
+                <option value="60%">60% Width</option>
+            </select>
 
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <div style="flex: 1;"><label>Columns</label><input type="number" id="modal-columns" min="1" max="10"></div>
                 <div style="flex: 1;"><label>Answer Col (0-based)</label><input type="number" id="modal-answer-index" min="0"></div>
             </div>
@@ -355,7 +364,7 @@
                     
                     const templatePage = {
                         id: Date.now(), title: "Hablar Template", columns: 2, answerColumnIndex: 1, alignment: "left", tableWidth: "max-content",
-                        columnStyles: [{ bold: true, italic: true, fontSize: '14px' }, { bold: false, italic: false, fontSize: '14px' }],
+                        columnStyles: [{ bold: false, italic: false, fontSize: '14px' }, { bold: false, italic: false, fontSize: '14px' }],
                         rows: [
                             { id: 1, type: "title", text: "Present", color: "#f89c12" },
                             { id: 2, type: "data", cells: [ "yo", "hablo" ], userAnswer: "" },
@@ -394,6 +403,84 @@
         // --- Sidebar Toggle ---
         document.getElementById('toggle-sidebar-btn').addEventListener('click', () => {
             document.getElementById('sidebar').classList.toggle('hidden');
+        });
+
+        // --- Inline Title Edit ---
+        const titleEl = document.getElementById('page-title-display');
+        titleEl.addEventListener('keydown', function(e) {
+            if (appMode === 'edit' && e.key === 'Enter') {
+                e.preventDefault();
+                this.blur();
+            }
+        });
+        titleEl.addEventListener('blur', function() {
+            if (appMode !== 'edit') return;
+            const newTitle = this.innerText.trim();
+            if (newTitle) {
+                const activeData = getActivePage();
+                if (activeData) {
+                    activeData.page.title = newTitle;
+                    saveData();
+                    renderMenu(); 
+                }
+            } else {
+                this.innerText = getActivePage().page.title; // revert if empty
+            }
+        });
+
+        // --- Table Alignment Toggle ---
+        document.getElementById('toggle-table-align-btn').addEventListener('click', () => {
+            const activeData = getActivePage();
+            if (activeData) {
+                activeData.page.alignment = activeData.page.alignment === 'center' ? 'left' : 'center';
+                saveData();
+                renderGrid();
+            }
+        });
+
+        // --- Export to PDF ---
+        document.getElementById('export-pdf-btn').addEventListener('click', () => {
+             const activeData = getActivePage();
+             if(!activeData) return;
+             const page = activeData.page;
+             
+             let printWindow = window.open('', '_blank');
+             let html = `<html><head><title>${page.title}</title>
+             <style>
+                body { font-family: -apple-system, sans-serif; padding: 20px; font-size: 14px; }
+                table { border-collapse: collapse; width: ${page.tableWidth || '100%'}; margin: ${page.alignment === 'center' ? '0 auto' : '0'}; }
+                th, td { border: 1px solid #ccc; padding: 10px; text-align: left; vertical-align: middle; }
+                .title { background: #f89c12; color: white; font-weight: bold; text-align: center; font-size: 16px; }
+                .note { background: #fff3cd; font-style: italic; }
+             </style></head><body>
+             <h2>${page.title}</h2>
+             <table>`;
+             
+             page.rows.forEach(r => {
+                 if (r.type === 'title') {
+                     html += `<tr><td colspan="${page.columns}" class="title">${r.text}</td></tr>`;
+                 } else if (r.type === 'note') {
+                     html += `<tr><td colspan="${page.columns}" class="note">${r.text}</td></tr>`;
+                 } else if (r.type === 'separator') {
+                     // Separators look bad in PDF tables, ignoring them keeps it clean
+                 } else {
+                     html += '<tr>';
+                     for(let i = 0; i < page.columns; i++) {
+                         let cellVal = r.cells[i] || "";
+                         let colStyle = page.columnStyles[i] || {};
+                         let styleStr = colStyle.bold ? "font-weight:bold;" : "";
+                         styleStr += colStyle.italic ? "font-style:italic;" : "";
+                         html += `<td style="${styleStr}">${cellVal}</td>`;
+                     }
+                     html += '</tr>';
+                 }
+             });
+             html += `</table></body></html>`;
+             printWindow.document.write(html);
+             printWindow.document.close();
+             printWindow.focus();
+             // Slight timeout allows CSS to render before triggering the print dialog
+             setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
         });
 
         // --- Sidebar Menu Render & Drag-and-Drop ---
@@ -655,6 +742,10 @@
             document.querySelectorAll('.edit-control').forEach(el => el.classList.toggle('hide', appMode === 'practice'));
             document.querySelectorAll('.practice-control').forEach(el => el.classList.toggle('hide', appMode === 'edit'));
             
+            // Allow Title Editing in Edit Mode
+            const titleEl = document.getElementById('page-title-display');
+            titleEl.setAttribute('contenteditable', appMode === 'edit' ? 'true' : 'false');
+
             isPeeking = false;
             resetPeekButton();
             renderMenu(); 
@@ -948,6 +1039,7 @@
                         <label style="margin:0;"><input type="checkbox" id="mod-col-i-${i}" ${style.italic ? 'checked' : ''}> I</label>
                         <select id="mod-col-s-${i}">
                             <option value="8px" ${style.fontSize === '8px' ? 'selected' : ''}>Small (8px)</option>
+                            <option value="10px" ${style.fontSize === '10px' ? 'selected' : ''}>Size 10</option>
                             <option value="14px" ${style.fontSize === '14px' ? 'selected' : ''}>Normal (14px)</option>
                             <option value="18px" ${style.fontSize === '18px' ? 'selected' : ''}>Large (18px)</option>
                             <option value="24px" ${style.fontSize === '24px' ? 'selected' : ''}>Extra Large (24px)</option>
@@ -960,8 +1052,6 @@
         
         document.getElementById('edit-page-btn').addEventListener('click', () => {
             const activePage = getActivePage().page;
-            document.getElementById('modal-title').value = activePage.title;
-            document.getElementById('modal-alignment').value = activePage.alignment || "left";
             document.getElementById('modal-table-width').value = activePage.tableWidth || "max-content";
             document.getElementById('modal-columns').value = activePage.columns;
             document.getElementById('modal-answer-index').value = activePage.answerColumnIndex;
@@ -989,8 +1079,6 @@
         document.getElementById('modal-save').addEventListener('click', () => {
             const activePage = getActivePage().page;
             const newColumns = parseInt(document.getElementById('modal-columns').value);
-            activePage.title = document.getElementById('modal-title').value;
-            activePage.alignment = document.getElementById('modal-alignment').value;
             activePage.tableWidth = document.getElementById('modal-table-width').value;
             activePage.answerColumnIndex = parseInt(document.getElementById('modal-answer-index').value);
             
