@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minimalist Spanish Study App</title>
+    <title>Grammapedia</title>
     <style>
         :root {
             --bg-color: #ffffff;
@@ -29,7 +29,7 @@
             overflow: hidden; 
         }
 
-        /* Sidebar - Adjusted for Categories */
+        /* Sidebar Styling & Toggle */
         aside { 
             width: 340px; 
             background-color: var(--bg-color); 
@@ -38,27 +38,18 @@
             display: flex; 
             flex-direction: column; 
             z-index: 200;
+            transition: margin-left 0.3s ease;
         }
-
-        /* Category Header Styling */
-        .category-group { margin-bottom: 8px; }
         
+        aside.hidden { margin-left: -370px; /* Fully hides the sidebar */ }
+
+        .category-group { margin-bottom: 8px; }
         .category-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 6px 8px;
-            background: #f0f3f5;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 13px;
-            color: #444;
-            cursor: grab;
-            user-select: none;
-            transition: background 0.2s;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 6px 8px; background: #f0f3f5; border-radius: 4px;
+            font-weight: bold; font-size: 13px; color: #444; user-select: none; transition: background 0.2s;
         }
         .category-header:hover { background: #e2e8ea; }
-        .category-header:active { cursor: grabbing; }
         
         .cat-title-area { display: flex; align-items: center; gap: 8px; flex-grow: 1; overflow: hidden; }
         .cat-title-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -67,67 +58,51 @@
         .cat-actions { display: none; gap: 4px; }
         .category-header:hover .cat-actions { display: flex; }
         .cat-btn { background: none; border: none; padding: 2px; cursor: pointer; color: #777; font-size: 12px; box-shadow: none; }
-        .cat-btn:hover { color: var(--accent-blue); transform: none; box-shadow: none; }
+        .cat-btn:hover { color: var(--accent-blue); }
         .cat-btn.delete:hover { color: var(--accent-red); }
 
-        .category-items {
-            padding-left: 12px;
-            margin-top: 4px;
-            border-left: 2px solid #eaedf0;
-            margin-left: 10px;
-        }
+        .category-items { padding-left: 12px; margin-top: 4px; border-left: 2px solid #eaedf0; margin-left: 10px; }
 
-        /* Page Menu Items - Slightly more compact */
         .menu-item { 
-            padding: 8px 10px; 
-            margin-bottom: 3px; 
-            border-radius: 4px; 
-            cursor: grab; 
-            font-size: 13px;
-            transition: background 0.2s, box-shadow 0.2s;
-            user-select: none;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            color: #333;
+            padding: 8px 10px; margin-bottom: 3px; border-radius: 4px; 
+            font-size: 13px; transition: background 0.2s, box-shadow 0.2s; user-select: none;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #333;
         }
-        .menu-item:active { cursor: grabbing; }
-        .menu-item:hover, .menu-item.active { 
-            background: var(--hover-bg); 
-            font-weight: bold; 
-            color: var(--text-color);
-        }
+        
+        /* Cursor Context */
+        body[data-mode="practice"] .menu-item { cursor: pointer; }
+        body[data-mode="edit"] .menu-item { cursor: grab; }
+        body[data-mode="edit"] .menu-item:active { cursor: grabbing; }
+        body[data-mode="edit"] .category-header { cursor: grab; }
+        body[data-mode="edit"] .category-header:active { cursor: grabbing; }
+        body[data-mode="practice"] .category-header { cursor: pointer; }
+        
+        .menu-item:hover, .menu-item.active { background: var(--hover-bg); font-weight: bold; color: var(--text-color); }
         
         /* Drag & Drop Visuals */
         .drag-over-top { border-top: 2px solid var(--accent-blue) !important; }
         .drag-over-bottom { border-bottom: 2px solid var(--accent-blue) !important; }
         .drag-over-bg { background: #e8f4f8 !important; }
-
-        .sidebar-bottom-actions {
-            display: flex; 
-            flex-direction: column;
-            gap: 10px; 
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid var(--border-light);
-        }
         
-        /* Main Content & Controls */
+        /* Main Content */
         main { flex-grow: 1; position: relative; overflow-y: auto; background-color: var(--bg-color); }
         
+        /* Unified Sticky Header */
         .header-section { 
             position: sticky; top: 0; background: var(--bg-color); z-index: 100;
-            padding: 20px 30px 15px 30px; border-bottom: 1px solid var(--border-light);
+            padding: 15px 30px; border-bottom: 1px solid var(--border-light);
             display: flex; flex-direction: column; gap: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.02);
         }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; }
-        .page-title { margin: 0; font-size: 22px; font-weight: 600; color: #2c3e50; }
-        .top-actions { display: flex; gap: 10px; align-items: center; }
-
+        
+        .top-bar { display: flex; justify-content: space-between; align-items: center; gap: 15px; }
+        .brand-area { display: flex; align-items: center; gap: 15px; }
+        .page-title { margin: 0; font-size: 20px; font-weight: 600; color: #2c3e50; }
+        
+        /* Buttons */
         button { 
             padding: 6px 12px; cursor: pointer; border: none; border-radius: 6px;
             background: var(--bg-color); font-size: 13px; box-shadow: var(--button-shadow);
-            transition: all 0.2s ease; color: #333;
+            transition: all 0.2s ease; color: #333; display: flex; align-items: center; justify-content: center; gap: 5px;
         }
         button:hover { background: var(--hover-bg); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12); }
         button:active { transform: translateY(1px); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); }
@@ -137,13 +112,14 @@
         .mode-toggle.practice { background-color: var(--accent-green); }
         .mode-toggle.practice:hover { background-color: #219a52; }
 
-        .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .action-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         .toolbar { display: flex; gap: 4px; border-right: 1px solid var(--border-light); padding-right: 12px; margin-right: 4px; }
         .toolbar button { font-family: serif; padding: 4px 8px; font-size: 14px; font-weight: bold; }
 
         /* Grid & Table */
         .grid-container { font-size: 14px; padding: 20px 30px 60px 30px; overflow-x: auto; }
         .study-table { border-spacing: 12px 6px; border-collapse: separate; width: max-content; }
+        
         .row-wrapper { transition: opacity 0.2s; }
         .row-wrapper.dragging { opacity: 0.4; }
         .row-wrapper.drag-over td { border-top: 2px solid var(--accent-blue); }
@@ -175,40 +151,55 @@
 
         /* Modals */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); backdrop-filter: blur(2px); z-index: 300; justify-content: center; align-items: center; }
-        .modal { background: var(--bg-color); padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 320px; }
-        .modal label { display: block; margin-bottom: 4px; font-size: 12px; color: #555; font-weight: bold; }
-        .modal input[type="text"], .modal input[type="number"] { width: 100%; padding: 6px; margin-bottom: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .modal { background: var(--bg-color); padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 340px; }
+        .modal label { display: block; margin-bottom: 4px; font-size: 12px; color: #555; font-weight: bold; margin-top: 10px; }
+        .modal input[type="text"], .modal input[type="number"], .modal select { width: 100%; padding: 6px; margin-bottom: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
         .modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
-        .col-style-container { border: 1px solid #ddd; border-radius: 4px; padding: 10px; margin-bottom: 10px; max-height: 150px; overflow-y: auto; background: #fafafa; }
+        .col-style-container { border: 1px solid #ddd; border-radius: 4px; padding: 10px; margin-bottom: 5px; max-height: 150px; overflow-y: auto; background: #fafafa; }
         .col-style-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; font-size: 12px; }
         .col-style-row select { padding: 2px; font-size: 12px; }
+        
+        /* Stats Styles */
+        .stat-box { background: #f0f3f5; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center; }
+        .stat-number { font-size: 28px; font-weight: bold; color: var(--accent-green); }
+        .stat-label { font-size: 12px; color: #555; text-transform: uppercase; letter-spacing: 1px; }
+
         .hide { display: none !important; }
     </style>
 </head>
-<body>
-    <aside>
+<body data-mode="practice">
+    <aside id="sidebar">
+        <h1 style="font-size: 18px; margin: 0 0 15px 0; color: var(--accent-blue);">Grammapedia</h1>
         <div id="menu-list" style="flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding-right: 5px;"></div>
-        
-        <div class="sidebar-bottom-actions">
-            <div style="display: flex; gap: 8px;">
-                <button id="new-cat-btn" class="hide" style="flex: 1; font-weight: bold; background: #f0f3f5;">+ Category</button>
-                <button id="new-page-btn" class="hide" style="flex: 1; font-weight: bold;">+ Page</button>
-            </div>
-            <button id="mode-toggle-btn" class="mode-toggle practice hide" style="width: 100%;">Mode: Practice</button>
-        </div>
     </aside>
 
     <main>
         <div class="header-section">
             <div class="top-bar">
-                <h2 id="page-title-display" class="page-title">Connecting to Database...</h2>
-                <div class="top-actions">
+                <div class="brand-area">
+                    <button id="toggle-sidebar-btn" title="Toggle Menu" style="font-size: 16px; padding: 4px 8px;">☰</button>
+                    <h2 id="page-title-display" class="page-title">Connecting...</h2>
+                </div>
+                
+                <!-- Unified App Controls -->
+                <div class="action-controls">
+                    <!-- Edit Actions -->
+                    <button id="new-cat-btn" class="edit-control hide" style="background: #e8f4f8;">+ Category</button>
+                    <button id="new-page-btn" class="edit-control hide" style="background: #e8f4f8;">+ Page</button>
+                    <button id="sort-az-pages-btn" class="edit-control hide" title="Sort Pages A-Z">Sort Menu A-Z</button>
+                    
+                    <!-- Practice Actions -->
+                    <button id="stats-btn" class="practice-control hide" title="View Study Statistics">📊 Stats</button>
                     <button id="peek-answers-btn" class="practice-control hide">Peek Answers</button>
-                    <button id="clear-month-btn" class="practice-control hide" style="background: var(--accent-red); color: white;">Clear Month</button>
+                    <button id="clear-answers-btn" class="practice-control hide" style="background: var(--accent-red); color: white;">Clear Answers</button>
+                    
+                    <!-- Global Mode Toggle -->
+                    <button id="mode-toggle-btn" class="mode-toggle practice hide">Mode: Practice</button>
                 </div>
             </div>
             
-            <div class="controls hide" id="action-controls">
+            <!-- Page Editing Controls -->
+            <div class="action-controls edit-control hide" id="page-edit-controls">
                 <div class="toolbar" id="format-toolbar">
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('bold', false, null)" title="Bold"><b>B</b></button>
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('italic', false, null)" title="Italic"><i>I</i></button>
@@ -223,12 +214,13 @@
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '5')" title="Large Text">A+</button>
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '7')" title="Extra Large Text">A++</button>
                 </div>
-                <button id="add-row-btn" class="edit-control">+ Row</button>
-                <button id="add-title-btn" class="edit-control">+ Title</button>
-                <button id="add-note-btn" class="edit-control">+ Note</button>
-                <button id="add-separator-btn" class="edit-control">+ Line</button>
-                <button id="duplicate-page-btn" class="edit-control" style="background: #e8f4f8; border: 1px solid #b3d4e0;">Duplicate</button>
-                <button id="edit-page-btn" class="edit-control">Settings</button>
+                <button id="add-row-btn">+ Row</button>
+                <button id="add-title-btn">+ Title</button>
+                <button id="add-note-btn">+ Note</button>
+                <button id="add-separator-btn">+ Line</button>
+                <button id="sort-data-btn" title="Alphabetically Sort Vocabulary Rows">Sort Rows (A-Z)</button>
+                <button id="duplicate-page-btn">Duplicate Page</button>
+                <button id="edit-page-btn" style="border: 1px solid var(--border-light);">⚙ Settings</button>
             </div>
         </div>
         
@@ -239,12 +231,21 @@
     <div id="edit-modal" class="modal-overlay">
         <div class="modal">
             <h3 style="margin-top: 0; font-size: 16px;">Page Settings</h3>
+            
             <label>Page Title</label>
             <input type="text" id="modal-title">
+            
+            <label>Table Alignment</label>
+            <select id="modal-alignment">
+                <option value="left">Left Aligned</option>
+                <option value="center">Center Aligned</option>
+            </select>
+
             <div style="display: flex; gap: 10px;">
                 <div style="flex: 1;"><label>Columns</label><input type="number" id="modal-columns" min="1" max="10"></div>
                 <div style="flex: 1;"><label>Answer Col (0-based)</label><input type="number" id="modal-answer-index" min="0"></div>
             </div>
+            
             <label>Default Column Styles</label>
             <div id="modal-col-styles" class="col-style-container"></div>
             
@@ -254,6 +255,29 @@
                     <button id="modal-cancel">Cancel</button>
                     <button id="modal-save" style="background: var(--text-color); color: white;">Save</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div id="stats-modal" class="modal-overlay">
+        <div class="modal">
+            <h3 style="margin-top: 0; font-size: 16px; text-align: center;">Learning Statistics</h3>
+            
+            <label>Current Page Progress</label>
+            <div class="stat-box">
+                <div class="stat-number"><span id="stat-page-ans">0</span> / <span id="stat-page-total">0</span></div>
+                <div class="stat-label">Questions Answered</div>
+            </div>
+
+            <label>Global Grammapedia Progress</label>
+            <div class="stat-box">
+                <div class="stat-number"><span id="stat-global-ans">0</span> / <span id="stat-global-total">0</span></div>
+                <div class="stat-label">Total Questions Answered</div>
+            </div>
+
+            <div style="display: flex; justify-content: center; margin-top: 15px;">
+                <button id="stats-close-btn" style="background: var(--text-color); color: white;">Close</button>
             </div>
         </div>
     </div>
@@ -278,9 +302,9 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // --- Data Structure State ---
         let categories = [];
         let activePageId = null;
+        let isCustomOrder = false; 
         let appMode = 'practice';
         let isPeeking = false; 
 
@@ -297,25 +321,17 @@
                 const docSnap = await getDoc(docRef);
                 
                 if (docSnap.exists() && docSnap.data().categories) {
-                    // New Category Structure Exists
                     categories = docSnap.data().categories;
                     if (categories.length > 0 && categories[0].pages.length > 0) {
                         activePageId = categories[0].pages[0].id;
                     }
                 } else if (docSnap.exists() && docSnap.data().pages) {
-                    // Migration: Convert flat pages array to categorized structure safely
                     categories = [{
-                        id: 'cat_default',
-                        title: 'My Pages',
-                        isOpen: true,
-                        pages: docSnap.data().pages
+                        id: 'cat_default', title: 'My Pages', isOpen: true, pages: docSnap.data().pages
                     }];
-                    if (categories[0].pages.length > 0) {
-                        activePageId = categories[0].pages[0].id;
-                    }
-                    saveData(); // Save migrated format
+                    if (categories[0].pages.length > 0) activePageId = categories[0].pages[0].id;
+                    saveData(); 
                 } else {
-                    // Fresh database setup
                     categories = [
                         { id: 'cat_span', title: 'Spanish Conjugations', isOpen: true, pages: [] },
                         { id: 'cat_fren', title: 'French Vocabulary', isOpen: true, pages: [] },
@@ -323,7 +339,7 @@
                     ];
                     
                     const templatePage = {
-                        id: Date.now(), title: "Hablar Template", columns: 2, answerColumnIndex: 1, 
+                        id: Date.now(), title: "Hablar Template", columns: 2, answerColumnIndex: 1, alignment: "left",
                         columnStyles: [{ bold: true, italic: true, fontSize: '14px' }, { bold: false, italic: false, fontSize: '14px' }],
                         rows: [
                             { id: 1, type: "title", text: "Present", color: "#f89c12" },
@@ -335,14 +351,8 @@
                     activePageId = templatePage.id;
                 }
 
-                document.getElementById('new-page-btn').classList.remove('hide');
-                document.getElementById('new-cat-btn').classList.remove('hide');
                 document.getElementById('mode-toggle-btn').classList.remove('hide');
-                if (appMode === 'practice') {
-                    document.getElementById('peek-answers-btn').classList.remove('hide');
-                    document.getElementById('clear-month-btn').classList.remove('hide');
-                }
-                
+                document.getElementById('stats-btn').classList.remove('hide');
                 updateModeUI();
                 renderMenu();
             } catch (error) {
@@ -354,10 +364,8 @@
         async function saveData() {
             try {
                 const docRef = doc(db, "spanish_study_app", "pages_data");
-                await setDoc(docRef, { categories: categories });
-            } catch (error) {
-                console.error("Error saving data:", error);
-            }
+                await setDoc(docRef, { categories: categories, isCustomOrder: isCustomOrder });
+            } catch (error) { console.error("Error saving data:", error); }
         }
 
         function getActivePage() {
@@ -368,8 +376,13 @@
             return null;
         }
 
-        // --- Multi-Level Drag & Drop State ---
-        let dragSrcInfo = null; // { type: 'cat'|'page', id: string/number, parentId?: string }
+        // --- Sidebar Toggle ---
+        document.getElementById('toggle-sidebar-btn').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('hidden');
+        });
+
+        // --- Sidebar Menu Render & Drag-and-Drop ---
+        let draggedMenuId = null;
 
         function renderMenu() {
             const menuList = document.getElementById('menu-list');
@@ -379,7 +392,6 @@
                 const groupEl = document.createElement('div');
                 groupEl.className = 'category-group';
                 
-                // --- Category Header ---
                 const headerEl = document.createElement('div');
                 headerEl.className = 'category-header';
                 if (appMode === 'edit') headerEl.draggable = true;
@@ -396,40 +408,29 @@
                     </div>` : ''}
                 `;
 
-                // Toggle Collapse
                 headerEl.querySelector('.cat-title-area').addEventListener('click', () => {
-                    cat.isOpen = !cat.isOpen;
-                    saveData();
-                    renderMenu();
+                    cat.isOpen = !cat.isOpen; saveData(); renderMenu();
                 });
 
-                // Cat Action Handlers (Edit mode only)
                 if (appMode === 'edit') {
                     headerEl.querySelector('.cat-btn.edit').addEventListener('click', (e) => {
                         e.stopPropagation();
                         const newName = prompt("Rename Category:", cat.title);
-                        if (newName && newName.trim() !== "") {
-                            cat.title = newName.trim();
-                            saveData(); renderMenu();
-                        }
+                        if (newName && newName.trim() !== "") { cat.title = newName.trim(); saveData(); renderMenu(); }
                     });
                     
                     headerEl.querySelector('.cat-btn.delete').addEventListener('click', (e) => {
                         e.stopPropagation();
                         if (confirm(`Delete the folder "${cat.title}" and ALL pages inside it?`)) {
                             categories = categories.filter(c => c.id !== cat.id);
-                            // Reset active page if the current one was deleted
                             if (!getActivePage() && categories.length > 0 && categories[0].pages.length > 0) {
                                 activePageId = categories[0].pages[0].id;
-                            } else if (!getActivePage()) {
-                                activePageId = null;
-                            }
+                            } else if (!getActivePage()) { activePageId = null; }
                             saveData(); renderMenu();
                         }
                     });
                 }
 
-                // Category Drag Events
                 headerEl.addEventListener('dragstart', (e) => {
                     if (appMode !== 'edit') { e.preventDefault(); return; }
                     dragSrcInfo = { type: 'cat', id: cat.id };
@@ -440,50 +441,37 @@
                 headerEl.addEventListener('dragover', (e) => {
                     if (appMode !== 'edit') return;
                     e.preventDefault();
-                    if (dragSrcInfo.type === 'cat') {
-                        headerEl.classList.add('drag-over-top');
-                    } else if (dragSrcInfo.type === 'page') {
-                        headerEl.classList.add('drag-over-bg');
-                    }
+                    if (dragSrcInfo.type === 'cat') headerEl.classList.add('drag-over-top');
+                    else if (dragSrcInfo.type === 'page') headerEl.classList.add('drag-over-bg');
                 });
 
-                headerEl.addEventListener('dragleave', () => {
-                    headerEl.classList.remove('drag-over-top', 'drag-over-bg');
-                });
+                headerEl.addEventListener('dragleave', () => { headerEl.classList.remove('drag-over-top', 'drag-over-bg'); });
 
                 headerEl.addEventListener('drop', (e) => {
                     if (appMode !== 'edit') return;
-                    e.preventDefault();
-                    e.stopPropagation(); // Stop from trickling down
+                    e.preventDefault(); e.stopPropagation();
                     headerEl.classList.remove('drag-over-top', 'drag-over-bg');
                     
                     if (dragSrcInfo.type === 'cat' && dragSrcInfo.id !== cat.id) {
-                        // Reorder Categories
                         const fromIndex = categories.findIndex(c => c.id === dragSrcInfo.id);
                         const [movedCat] = categories.splice(fromIndex, 1);
                         categories.splice(catIndex, 0, movedCat);
                         saveData(); renderMenu();
                     } else if (dragSrcInfo.type === 'page') {
-                        // Move Page into this Category (at the end)
                         const sourceCat = categories.find(c => c.id === dragSrcInfo.parentId);
                         if (sourceCat && sourceCat.id !== cat.id) {
                             const pageIndex = sourceCat.pages.findIndex(p => p.id === dragSrcInfo.id);
                             const [movedPage] = sourceCat.pages.splice(pageIndex, 1);
                             cat.pages.push(movedPage);
-                            cat.isOpen = true; // Auto open target
+                            cat.isOpen = true; 
                             saveData(); renderMenu();
                         }
                     }
                 });
 
-                headerEl.addEventListener('dragend', () => {
-                    groupEl.style.opacity = '1';
-                    dragSrcInfo = null;
-                });
-
+                headerEl.addEventListener('dragend', () => { groupEl.style.opacity = '1'; dragSrcInfo = null; });
                 groupEl.appendChild(headerEl);
 
-                // --- Pages within Category ---
                 const itemsContainer = document.createElement('div');
                 itemsContainer.className = 'category-items';
                 itemsContainer.style.display = cat.isOpen ? 'block' : 'none';
@@ -497,12 +485,9 @@
                     
                     pageEl.onclick = () => {
                         activePageId = page.id;
-                        isPeeking = false;
-                        resetPeekButton();
-                        renderMenu();
+                        isPeeking = false; resetPeekButton(); renderMenu();
                     };
 
-                    // Page Drag Events
                     pageEl.addEventListener('dragstart', (e) => {
                         if (appMode !== 'edit') { e.preventDefault(); return; }
                         dragSrcInfo = { type: 'page', id: page.id, parentId: cat.id };
@@ -513,36 +498,27 @@
 
                     pageEl.addEventListener('dragover', (e) => {
                         if (appMode !== 'edit') return;
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (dragSrcInfo.type === 'page') {
-                            pageEl.classList.add('drag-over-top');
-                        }
+                        e.preventDefault(); e.stopPropagation();
+                        if (dragSrcInfo.type === 'page') pageEl.classList.add('drag-over-top');
                     });
 
                     pageEl.addEventListener('dragleave', () => { pageEl.classList.remove('drag-over-top'); });
 
                     pageEl.addEventListener('drop', (e) => {
                         if (appMode !== 'edit') return;
-                        e.preventDefault();
-                        e.stopPropagation();
+                        e.preventDefault(); e.stopPropagation();
                         pageEl.classList.remove('drag-over-top');
                         
                         if (dragSrcInfo.type === 'page' && dragSrcInfo.id !== page.id) {
                             const sourceCat = categories.find(c => c.id === dragSrcInfo.parentId);
                             const sourceIndex = sourceCat.pages.findIndex(p => p.id === dragSrcInfo.id);
                             const [movedPage] = sourceCat.pages.splice(sourceIndex, 1);
-                            
                             cat.pages.splice(pageIndex, 0, movedPage);
                             saveData(); renderMenu();
                         }
                     });
 
-                    pageEl.addEventListener('dragend', () => {
-                        pageEl.style.opacity = '1';
-                        dragSrcInfo = null;
-                    });
-
+                    pageEl.addEventListener('dragend', () => { pageEl.style.opacity = '1'; dragSrcInfo = null; });
                     itemsContainer.appendChild(pageEl);
                 });
 
@@ -565,7 +541,9 @@
             document.getElementById('page-title-display').innerText = activePage.title;
             const container = document.getElementById('grid-container');
             
-            let html = '<table class="study-table"><tbody>';
+            // Handle Alignment
+            const alignStyle = activePage.alignment === 'center' ? 'margin: 0 auto;' : 'margin: 0;';
+            let html = `<table class="study-table" style="${alignStyle}"><tbody>`;
 
             if (!activePage.columnStyles) activePage.columnStyles = [];
 
@@ -650,18 +628,18 @@
 
         // --- UI Updates ---
         function updateModeUI() {
+            document.body.setAttribute('data-mode', appMode);
             const btn = document.getElementById('mode-toggle-btn');
             btn.innerText = appMode === 'edit' ? 'Mode: Edit' : 'Mode: Practice';
             btn.className = appMode === 'edit' ? 'mode-toggle' : 'mode-toggle practice';
 
-            document.getElementById('action-controls').classList.toggle('hide', appMode === 'practice');
+            // Show/Hide Top Control Groups
+            document.querySelectorAll('.edit-control').forEach(el => el.classList.toggle('hide', appMode === 'practice'));
             document.querySelectorAll('.practice-control').forEach(el => el.classList.toggle('hide', appMode === 'edit'));
-            document.getElementById('new-page-btn').classList.toggle('hide', appMode === 'practice');
-            document.getElementById('new-cat-btn').classList.toggle('hide', appMode === 'practice');
             
             isPeeking = false;
             resetPeekButton();
-            renderMenu(); // Re-render menu to show/hide edit icons
+            renderMenu(); 
         }
 
         document.getElementById('mode-toggle-btn').addEventListener('click', function() {
@@ -678,8 +656,8 @@
             renderGrid();
         });
 
-        document.getElementById('clear-month-btn').addEventListener('click', function() {
-            if (confirm("CLEAR ALL practice answers for this page? This resets your monthly progress.")) {
+        document.getElementById('clear-answers-btn').addEventListener('click', function() {
+            if (confirm("CLEAR ALL practice answers for this page? This will reset all questions back to blank cells.")) {
                 const activeData = getActivePage();
                 if(activeData) {
                     activeData.page.rows.forEach(r => { if (r.type === 'data') r.userAnswer = ""; });
@@ -687,6 +665,34 @@
                 }
             }
         });
+
+        // Statistics
+        document.getElementById('stats-btn').addEventListener('click', function() {
+            let totalGlobal = 0, answeredGlobal = 0, totalPage = 0, answeredPage = 0;
+            const activeData = getActivePage();
+
+            categories.forEach(cat => {
+                cat.pages.forEach(p => {
+                    p.rows.forEach(r => {
+                        if (r.type === 'data') {
+                            totalGlobal++;
+                            if (r.userAnswer && r.userAnswer.trim() !== "") answeredGlobal++;
+                            if (activeData && p.id === activeData.page.id) {
+                                totalPage++;
+                                if (r.userAnswer && r.userAnswer.trim() !== "") answeredPage++;
+                            }
+                        }
+                    });
+                });
+            });
+
+            document.getElementById('stat-page-total').innerText = totalPage;
+            document.getElementById('stat-page-ans').innerText = answeredPage;
+            document.getElementById('stat-global-total').innerText = totalGlobal;
+            document.getElementById('stat-global-ans').innerText = answeredGlobal;
+            document.getElementById('stats-modal').style.display = 'flex';
+        });
+        document.getElementById('stats-close-btn').addEventListener('click', () => document.getElementById('stats-modal').style.display = 'none');
 
         // --- Core Row Editing Logic ---
         function attachInputListeners() {
@@ -816,13 +822,41 @@
             
             const newId = Date.now();
             targetCat.pages.push({
-                id: newId, title: "New Blank Page", columns: 2, answerColumnIndex: 1,
+                id: newId, title: "New Blank Page", columns: 2, answerColumnIndex: 1, alignment: "left",
                 columnStyles: [{ bold: false, italic: false, fontSize: '14px' }, { bold: false, italic: false, fontSize: '14px' }],
                 rows: []
             });
             targetCat.isOpen = true;
             activePageId = newId;
             saveData(); renderMenu();
+        });
+
+        document.getElementById('sort-az-pages-btn').addEventListener('click', () => {
+            isCustomOrder = false; 
+            categories.forEach(cat => { cat.pages.sort((a, b) => a.title.localeCompare(b.title)); });
+            saveData(); renderMenu();
+        });
+
+        document.getElementById('sort-data-btn').addEventListener('click', () => {
+            if (!confirm("Are you sure you want to sort all data rows alphabetically by the first column? This cannot be undone!")) return;
+            const activePage = getActivePage().page;
+            
+            // Extract data rows
+            let dataRows = activePage.rows.map((r, i) => ({row: r, index: i})).filter(item => item.row.type === 'data');
+            // Sort them based on raw text of column 0
+            dataRows.sort((a, b) => {
+                let valA = (a.row.cells[0] || "").replace(/<[^>]*>?/gm, '').trim().toLowerCase();
+                let valB = (b.row.cells[0] || "").replace(/<[^>]*>?/gm, '').trim().toLowerCase();
+                return valA.localeCompare(valB);
+            });
+            
+            // Reinsert sorted rows into their original slots
+            const originalIndices = activePage.rows.map((r, i) => i).filter(i => activePage.rows[i].type === 'data');
+            originalIndices.forEach((origIdx, loopIdx) => {
+                activePage.rows[origIdx] = dataRows[loopIdx].row;
+            });
+            
+            saveData(); renderGrid();
         });
 
         document.getElementById('duplicate-page-btn').addEventListener('click', () => {
@@ -912,6 +946,7 @@
         document.getElementById('edit-page-btn').addEventListener('click', () => {
             const activePage = getActivePage().page;
             document.getElementById('modal-title').value = activePage.title;
+            document.getElementById('modal-alignment').value = activePage.alignment || "left";
             document.getElementById('modal-columns').value = activePage.columns;
             document.getElementById('modal-answer-index').value = activePage.answerColumnIndex;
             renderModalColStyles(activePage.columns);
@@ -925,7 +960,6 @@
                 cat.pages = cat.pages.filter(p => p.id !== activePageId);
                 
                 activePageId = null;
-                // Find next available page
                 for (const c of categories) {
                     if (c.pages.length > 0) { activePageId = c.pages[0].id; break; }
                 }
@@ -940,6 +974,7 @@
             const activePage = getActivePage().page;
             const newColumns = parseInt(document.getElementById('modal-columns').value);
             activePage.title = document.getElementById('modal-title').value;
+            activePage.alignment = document.getElementById('modal-alignment').value;
             activePage.answerColumnIndex = parseInt(document.getElementById('modal-answer-index').value);
             
             activePage.columnStyles = [];
