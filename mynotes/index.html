@@ -14,12 +14,13 @@
             --primary: #2C3E50;
             --accent: #27AE60;
             --accent-hover: #219653;
-            --bg: #FFFFFF; /* Pure white background */
-            --card-bg: #FFFFFF; /* Pure white background */
+            --bg: #FFFFFF; 
+            --card-bg: #FFFFFF; 
             --text: #333333;
             --text-muted: #718096;
             --border: #E0E6ED;
             --hover-bg: #F8FAFC;
+            --cat-bg: #EDF2F7; /* Distinguishable category background */
             --danger: #E53E3E;
         }
 
@@ -75,8 +76,9 @@
         .btn-outline:hover { background: var(--hover-bg); border-color: var(--primary); }
         .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
         .btn-danger:hover { background: var(--danger); color: white; }
-        .btn-icon { background: transparent; padding: 4px; color: var(--text-muted); border: none; font-size: 13px; border-radius: 4px;}
+        .btn-icon { background: transparent; padding: 4px 6px; color: var(--text-muted); border: none; font-size: 13px; border-radius: 4px;}
         .btn-icon:hover { color: var(--primary); background: var(--hover-bg); }
+        .btn-icon.active { background: var(--border); color: var(--primary); font-weight: bold; }
 
         /* --- Main Layout Grid --- */
         .main-container {
@@ -91,7 +93,6 @@
             width: 280px;      
             min-width: 280px;  
             background-color: var(--bg);
-            /* Used shadow instead of border/background to separate */
             box-shadow: 4px 0 15px rgba(0,0,0,0.04);
             display: flex;
             flex-direction: column;
@@ -117,36 +118,37 @@
             overflow-y: auto; 
             flex-grow: 1; 
             padding: 10px; 
-            padding-bottom: 80px; /* Space for search bar */
+            padding-bottom: 80px; 
         }
 
         /* Categories Dropdowns */
         .category-block {
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
         .category-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 10px;
+            padding: 8px 12px;
             cursor: pointer;
             border-radius: 4px;
+            background-color: var(--cat-bg);
             color: var(--primary);
             font-weight: 600;
             font-size: 13px;
             transition: background-color 0.2s;
         }
         .category-header:hover {
-            background-color: var(--hover-bg);
+            background-color: #E2E8F0;
         }
         .cat-actions { display: none; gap: 4px; }
         .category-header:hover .cat-actions { display: flex; }
         .cat-actions button { padding: 2px 6px; font-size: 11px; }
 
         .category-notes {
-            padding-left: 15px;
+            padding-left: 10px;
             margin-top: 4px;
-            display: block; /* Allows dropdown toggling via JS */
+            display: block; 
         }
         
         .note-card {
@@ -158,7 +160,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            /* Subtle animation, no jumping */
             transition: background-color 0.2s, color 0.2s;
             border: 1px solid transparent;
         }
@@ -225,11 +226,6 @@
             height: 100%;
             overflow-y: auto;
             padding: 40px 60px;
-        }
-        .view-header {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 20px;
         }
         .view-body {
             font-size: 15px;
@@ -316,10 +312,12 @@
         <!-- LEFT COLUMN: Navigation & Search -->
         <aside class="list-pane">
             <div class="sidebar-header">
-                <span class="sidebar-header-title">My Notes</span>
+                <span class="sidebar-header-title"></span>
                 <div>
-                    <button class="btn-icon" onclick="createCategory()" title="New Category">📂+</button>
-                    <button class="btn-icon" onclick="createNewNote()" title="New Note">📝+</button>
+                    <!-- Sorting Toggle Added -->
+                    <button id="sortToggleBtn" class="btn-icon active" onclick="toggleSortMode()" title="Toggle Alphabetical Sort">🔤</button>
+                    <button class="btn-icon" onclick="createCategory()" title="New Category">Cat +</button>
+                    <button class="btn-icon" onclick="createNewNote()" title="New Note">Note +</button>
                 </div>
             </div>
 
@@ -340,11 +338,8 @@
                 <div>Select a note or create a new one.</div>
             </div>
             
-            <!-- PURE INFORMATION VIEW MODE -->
+            <!-- PURE INFORMATION VIEW MODE (Clean, No Buttons) -->
             <div id="viewMode">
-                <div class="view-header">
-                    <button class="btn-outline" onclick="exportPDF()" style="font-size: 12px; padding: 4px 10px;">📄 Export PDF</button>
-                </div>
                 <div id="viewContent" class="view-body"></div>
             </div>
 
@@ -353,6 +348,7 @@
                 <div class="editor-header">
                     <span id="savedIndicator" style="color:var(--text-muted); font-size:12px; font-weight:500;">✓ Saved</span>
                     <div class="action-cluster">
+                        <button class="btn-outline" onclick="exportPDF()" title="Export Note to PDF">📄 Export PDF</button>
                         <button class="btn-outline" onclick="cancelEdit()">Close</button>
                         <button class="btn-danger" onclick="deleteNote()">Delete</button>
                     </div>
@@ -372,6 +368,7 @@
                     <!-- Custom Rich Text Editor -->
                     <div class="rte-container">
                         <div class="rte-toolbar">
+                            <!-- Font Size -->
                             <select onchange="applyFontSize(this.value); this.selectedIndex = 0;" style="width: 80px;" title="Font Size">
                                 <option value="" disabled selected>Size</option>
                                 <option value="8">8</option>
@@ -381,6 +378,16 @@
                                 <option value="24">24</option>
                                 <option value="48">48</option>
                             </select>
+                            
+                            <!-- Line Height Dropdown Added -->
+                            <select onchange="applyLineHeight(this.value); this.selectedIndex = 0;" style="width: 100px;" title="Line Height">
+                                <option value="" disabled selected>Spacing</option>
+                                <option value="1.0">Single (1.0)</option>
+                                <option value="1.2">1.2</option>
+                                <option value="1.5">1.5</option>
+                                <option value="2.0">Double (2.0)</option>
+                            </select>
+                            
                             <span style="border-left: 1px solid var(--border); margin: 0 4px; height: 16px;"></span>
 
                             <button class="rte-btn" onclick="formatText('bold')" style="font-weight: bold;">B</button>
@@ -441,11 +448,13 @@
         let allCategories = [];
         let searchQuery = ''; 
         let activeNoteId = null;
-        let collapsedCategories = {}; // Tracks accordion states
+        let collapsedCategories = {}; 
+        let sortMode = 'alpha'; // Defaulting to alphabetical
 
         const navigationTreeEl = document.getElementById('navigationTree');
         const searchInput = document.getElementById('searchInput');
         const noteCategorySelect = document.getElementById('noteCategory');
+        const sortToggleBtn = document.getElementById('sortToggleBtn');
         
         const emptyStateEl = document.getElementById('emptyState');
         const viewModeEl = document.getElementById('viewMode');
@@ -467,7 +476,13 @@
         }).catch((error) => console.error("Auth failed:", error));
 
 
-        // --- UI RENDERING ---
+        // --- UI RENDERING & SORTING ---
+
+        window.toggleSortMode = () => {
+            sortMode = sortMode === 'alpha' ? 'manual' : 'alpha';
+            sortToggleBtn.classList.toggle('active', sortMode === 'alpha');
+            renderNavigationTree();
+        };
 
         function updateUI() {
             updateEditorSelects();
@@ -476,7 +491,7 @@
 
         function updateEditorSelects() {
             const currentVal = noteCategorySelect.value;
-            const sortedCats = [...allCategories].sort((a,b) => (a.order || 0) - (b.order || 0));
+            const sortedCats = [...allCategories].sort((a,b) => (a.name||'').localeCompare(b.name||''));
             noteCategorySelect.innerHTML = '<option value="">-- Uncategorized --</option>' + 
                 sortedCats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
             noteCategorySelect.value = currentVal;
@@ -490,7 +505,6 @@
         function renderNavigationTree() {
             let html = '';
             
-            // Apply search filtering
             let filteredNotes = allNotes;
             if (searchQuery) {
                 filteredNotes = allNotes.filter(n => 
@@ -499,15 +513,24 @@
                 );
             }
 
-            // Sort logic (Categories by order, Notes by order then title)
-            const sortedCategories = [...allCategories].sort((a, b) => (a.order || 0) - (b.order || 0));
+            // Apply selected Sort Mode to Categories
+            let sortedCategories = [...allCategories];
+            if (sortMode === 'alpha') {
+                sortedCategories.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            } else {
+                sortedCategories.sort((a, b) => (a.order || 0) - (b.order || 0));
+            }
             
             sortedCategories.forEach(cat => {
-                const catNotes = filteredNotes
-                    .filter(n => n.categoryId === cat.id)
-                    .sort((a, b) => (a.order || 0) - (b.order || 0));
+                let catNotes = filteredNotes.filter(n => n.categoryId === cat.id);
                 
-                // Hide empty categories only if searching
+                // Apply selected Sort Mode to Notes
+                if (sortMode === 'alpha') {
+                    catNotes.sort((a, b) => (a.title || 'Untitled').localeCompare(b.title || 'Untitled'));
+                } else {
+                    catNotes.sort((a, b) => (a.order || 0) - (b.order || 0));
+                }
+                
                 if (searchQuery && catNotes.length === 0) return;
 
                 const isCollapsed = collapsedCategories[cat.id];
@@ -520,7 +543,7 @@
                          ondragover="window.allowDrop(event)">
                          
                         <div class="category-header" onclick="window.toggleCat('${cat.id}')">
-                            <span>${isCollapsed ? '📁' : '📂'} ${cat.name}</span>
+                            <span>${cat.name}</span>
                             <div class="cat-actions">
                                 <button class="btn-icon" onclick="event.stopPropagation(); window.renameCategory('${cat.id}', '${cat.name}')">✎</button>
                                 <button class="btn-icon" onclick="event.stopPropagation(); window.deleteCategory('${cat.id}')">✖</button>
@@ -534,18 +557,21 @@
                 `;
             });
 
-            // Uncategorized Notes
-            const uncatNotes = filteredNotes
-                .filter(n => !n.categoryId)
-                .sort((a, b) => (a.order || 0) - (b.order || 0));
+            // Uncategorized Notes sorting
+            let uncatNotes = filteredNotes.filter(n => !n.categoryId);
+            if (sortMode === 'alpha') {
+                uncatNotes.sort((a, b) => (a.title || 'Untitled').localeCompare(b.title || 'Untitled'));
+            } else {
+                uncatNotes.sort((a, b) => (a.order || 0) - (b.order || 0));
+            }
 
             if (uncatNotes.length > 0) {
                 html += `
                     <div class="category-block" 
                          ondrop="window.drop(event, 'category', '')" 
                          ondragover="window.allowDrop(event)">
-                        <div class="category-header" style="color: var(--text-muted);">
-                            <span>📄 Uncategorized</span>
+                        <div class="category-header" style="background: transparent; color: var(--text-muted); pointer-events: none;">
+                            <span>Uncategorized</span>
                         </div>
                         <div class="category-notes">
                             ${uncatNotes.map(note => generateNoteCard(note)).join('')}
@@ -579,12 +605,13 @@
         };
 
 
-        // --- DRAG AND DROP (CATEGORIES & NOTES) ---
+        // --- DRAG AND DROP (Fixed Firefox payload) ---
 
         window.drag = (ev, type, id) => {
             ev.dataTransfer.setData("dragType", type);
             ev.dataTransfer.setData("dragId", id);
-            ev.stopPropagation(); // Prevent triggering parent drags
+            ev.dataTransfer.setData("text/plain", id); // Required for Firefox DnD
+            ev.stopPropagation(); 
         };
         window.allowDrop = (ev) => ev.preventDefault();
         
@@ -596,23 +623,24 @@
             const dragId = ev.dataTransfer.getData("dragId");
             if (!dragId || dragId === dropId) return;
 
+            // If Alphabetical sorting is locked, force custom sorting on on drag completion
+            if (sortMode === 'alpha') {
+                window.toggleSortMode();
+            }
+
             try {
-                // 1. Drag Note -> Drop on Category (Move Note)
                 if (dragType === 'note' && dropType === 'category') {
                     await updateDoc(doc(db, "brain_notes", dragId), { 
                         categoryId: dropId,
-                        order: Date.now() // Append to bottom of that category
+                        order: Date.now() 
                     });
                 }
-                
-                // 2. Drag Note -> Drop on Note (Reorder Notes)
                 else if (dragType === 'note' && dropType === 'note') {
                     const note1 = allNotes.find(n => n.id === dragId);
                     const note2 = allNotes.find(n => n.id === dropId);
                     const order1 = note1.order || 0;
                     const order2 = note2.order || 0;
                     
-                    // Swap orders and ensure they share the same category
                     await updateDoc(doc(db, "brain_notes", dragId), { 
                         order: order2, categoryId: note2.categoryId || '' 
                     });
@@ -620,15 +648,12 @@
                         order: order1 
                     });
                 }
-
-                // 3. Drag Category -> Drop on Category (Reorder Categories)
                 else if (dragType === 'category' && dropType === 'category') {
                     const cat1 = allCategories.find(c => c.id === dragId);
                     const cat2 = allCategories.find(c => c.id === dropId);
                     const order1 = cat1.order || 0;
                     const order2 = cat2.order || 0;
                     
-                    // Swap orders
                     await updateDoc(doc(db, "brain_categories", dragId), { order: order2 });
                     await updateDoc(doc(db, "brain_categories", dropId), { order: order1 });
                 }
@@ -668,7 +693,7 @@
             clearTimeout(autoSaveTimer);
             autoSaveTimer = setTimeout(() => {
                 window.saveNoteSilent();
-            }, 1000); // 1 Second debounced autosave
+            }, 1000); 
         };
 
         window.saveNoteSilent = async () => {
@@ -700,7 +725,6 @@
             
             document.getElementById('savedIndicator').textContent = "Creating...";
 
-            // Create record instantly in DB
             const newDoc = await addDoc(notesCol, {
                 title: '',
                 categoryId: '',
@@ -766,20 +790,26 @@
             }
         };
 
-        // --- PDF EXPORT ---
+        // --- PDF EXPORT (From Edit Mode) ---
         window.exportPDF = () => {
-            const element = document.getElementById('viewContent');
-            const note = allNotes.find(n => n.id === activeNoteId);
-            const title = note && note.title ? note.title : 'Note';
+            const element = document.getElementById('noteContent');
+            const titleInput = document.getElementById('noteTitle').value;
+            const title = titleInput ? titleInput : 'Note';
+            
+            // Temporarily strip edit mode highlights for clean export
+            element.contentEditable = "false"; 
             
             const opt = {
-                margin:       10,
+                margin:       15,
                 filename:     `${title}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
-            html2pdf().set(opt).from(element).save();
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.contentEditable = "true";
+            });
         };
 
         // --- RICH TEXT FORMATTING ---
@@ -790,7 +820,6 @@
             window.triggerAutoSave();
         };
         
-        // Exact Pixel Font Size injection workaround for ContentEditable
         window.applyFontSize = (sizeInPixels) => {
             const selection = window.getSelection();
             if (!selection.rangeCount) return;
@@ -802,6 +831,44 @@
             span.appendChild(range.extractContents());
             range.insertNode(span);
             
+            window.triggerAutoSave();
+        };
+
+        // Line Height Application
+        window.applyLineHeight = (height) => {
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+            
+            let node = selection.focusNode;
+            if (node.nodeType === 3) node = node.parentNode;
+            
+            const editor = document.getElementById('noteContent');
+            let blockFound = false;
+            
+            // Traverse up to find the closest block-level element to apply spacing
+            while (node && node !== editor) {
+                const display = window.getComputedStyle(node).display;
+                if (display === 'block' || display === 'list-item') {
+                    node.style.lineHeight = height;
+                    blockFound = true;
+                    break;
+                }
+                node = node.parentNode;
+            }
+            
+            // Fallback for flat text without paragraphs
+            if (!blockFound) {
+                document.execCommand('formatBlock', false, 'DIV');
+                let newNode = window.getSelection().focusNode;
+                if (newNode.nodeType === 3) newNode = newNode.parentNode;
+                while (newNode && newNode !== editor) {
+                    if (newNode.tagName === 'DIV' || window.getComputedStyle(newNode).display === 'block') {
+                        newNode.style.lineHeight = height;
+                        break;
+                    }
+                    newNode = newNode.parentNode;
+                }
+            }
             window.triggerAutoSave();
         };
 
