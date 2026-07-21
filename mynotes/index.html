@@ -8,19 +8,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        /* Imported Inter (Default) and Lora (Serif) */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
 
         :root {
-            --primary: #2C3E50;
+            --primary: #1A202C;
             --accent: #27AE60;
-            --accent-hover: #219653;
             --bg: #FFFFFF; 
-            --card-bg: #FFFFFF; 
-            --text: #333333;
-            --text-muted: #718096;
-            --border: #E0E6ED;
-            --hover-bg: #F8FAFC;
-            --cat-bg: #EDF2F7; /* Distinguishable category background */
+            --text: #2D3748;
+            --text-muted: #A0AEC0;
+            --border: #EDF2F7;
+            --hover-bg: #F7FAFC;
             --danger: #E53E3E;
         }
 
@@ -30,7 +28,7 @@
             background-color: var(--bg);
             color: var(--text);
             font-family: 'Inter', sans-serif;
-            font-size: 14px;
+            font-size: 15px;
             display: flex;
             flex-direction: column;
             height: 100vh;
@@ -45,40 +43,40 @@
 
         /* --- Global Inputs --- */
         input[type="text"], select {
-            background: var(--card-bg);
+            background: transparent;
             color: var(--text);
-            border: 1px solid var(--border);
+            border: 1px solid transparent;
             padding: 8px 12px;
             font-family: inherit;
-            font-size: 13px;
-            border-radius: 4px;
+            font-size: 14px;
+            border-radius: 6px;
             box-sizing: border-box;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
         }
         input[type="text"]:focus, select:focus { 
-            border-color: var(--accent); outline: none; 
+            outline: none; 
+            background: var(--hover-bg);
         }
+        select { cursor: pointer; }
+        select:hover { background: var(--hover-bg); }
         
         button {
             background: var(--accent);
             color: white;
             border: none;
-            padding: 6px 12px;
+            padding: 8px 14px;
             cursor: pointer;
-            border-radius: 4px;
+            border-radius: 6px;
             font-family: inherit;
             font-weight: 500;
             font-size: 13px;
             transition: all 0.2s;
         }
-        button:hover { background: var(--accent-hover); }
+        button:hover { opacity: 0.9; }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
-        .btn-outline:hover { background: var(--hover-bg); border-color: var(--primary); }
-        .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
-        .btn-danger:hover { background: var(--danger); color: white; }
-        .btn-icon { background: transparent; padding: 4px 6px; color: var(--text-muted); border: none; font-size: 13px; border-radius: 4px;}
-        .btn-icon:hover { color: var(--primary); background: var(--hover-bg); }
-        .btn-icon.active { background: var(--border); color: var(--primary); font-weight: bold; }
+        .btn-outline:hover { background: var(--hover-bg); }
+        .btn-danger { background: transparent; color: var(--danger); }
+        .btn-danger:hover { background: #FFF5F5; }
 
         /* --- Main Layout Grid --- */
         .main-container {
@@ -92,113 +90,50 @@
         .list-pane {
             width: 280px;      
             min-width: 280px;  
-            background-color: var(--bg);
-            box-shadow: 4px 0 15px rgba(0,0,0,0.04);
+            background-color: #FCFDFD; /* Extremely subtle off-white for separation */
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             z-index: 10;
             position: relative;
         }
-        
-        .sidebar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .sidebar-header-title {
-            font-weight: 600;
-            color: var(--primary);
-            font-size: 15px;
-        }
 
         .navigation-tree { 
             overflow-y: auto; 
             flex-grow: 1; 
-            padding: 10px; 
-            padding-bottom: 80px; 
-        }
-
-        /* Categories Dropdowns */
-        .category-block {
-            margin-bottom: 8px;
-        }
-        .category-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 12px;
-            cursor: pointer;
-            border-radius: 4px;
-            background-color: var(--cat-bg);
-            color: var(--primary);
-            font-weight: 600;
-            font-size: 13px;
-            transition: background-color 0.2s;
-        }
-        .category-header:hover {
-            background-color: #E2E8F0;
-        }
-        .cat-actions { display: none; gap: 4px; }
-        .category-header:hover .cat-actions { display: flex; }
-        .cat-actions button { padding: 2px 6px; font-size: 11px; }
-
-        .category-notes {
-            padding-left: 10px;
-            margin-top: 4px;
-            display: block; 
+            padding: 20px 15px 80px 15px; 
         }
         
         .note-card {
-            padding: 8px 10px;
-            background: var(--card-bg);
-            border-radius: 4px;
+            padding: 10px 14px;
+            border-radius: 6px;
             margin-bottom: 4px;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: background-color 0.2s, color 0.2s;
-            border: 1px solid transparent;
+            transition: background-color 0.2s;
+            color: var(--text-muted);
         }
         .note-card:hover { 
             background-color: var(--hover-bg); 
             color: var(--primary);
         }
         .note-card.active { 
-            background-color: var(--hover-bg);
-            border: 1px solid var(--border);
+            background-color: white;
+            color: var(--primary);
             font-weight: 500;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         .note-card-title { 
-            color: inherit; 
-            font-size: 13px;
+            font-size: 14px;
             flex-grow: 1;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
 
-        /* Tiny Edit Button */
-        .card-edit-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 2px;
-            cursor: pointer;
-            font-size: 12px;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        .note-card:hover .card-edit-btn, 
-        .note-card.active .card-edit-btn {
-            opacity: 1;
-        }
-        .card-edit-btn:hover { color: var(--primary); }
-
-        /* Search Bar at bottom */
+        /* Search Bar & New Note Button at bottom */
         .search-container { 
             position: absolute;
             bottom: 0;
@@ -206,8 +141,24 @@
             width: 100%;
             padding: 15px;
             box-sizing: border-box;
+            background: #FCFDFD;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .search-container input {
+            flex-grow: 1;
             background: var(--bg);
-            box-shadow: 0 -4px 10px rgba(0,0,0,0.02);
+            border: 1px solid var(--border);
+        }
+        .btn-new-note {
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            border-radius: 6px;
         }
 
         /* --- Content Pane (Right Column) --- */
@@ -215,7 +166,7 @@
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            background-color: var(--card-bg);
+            background-color: var(--bg);
             min-width: 0;
         }
 
@@ -225,17 +176,17 @@
             flex-direction: column;
             height: 100%;
             overflow-y: auto;
-            padding: 40px 60px;
+            padding: 60px 80px;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
         }
         .view-body {
-            font-size: 15px;
+            font-size: 16px;
             line-height: 1.7;
             color: var(--text);
         }
-        .view-body table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
-        .view-body th, .view-body td { border: 1px solid var(--border); padding: 10px; }
-        .view-body a { color: #2980B9; }
-        .view-body blockquote { border-left: 4px solid var(--border); margin: 0 0 1em 0; padding-left: 15px; color: var(--text-muted); font-style: italic;}
 
         /* Edit Mode */
         #editMode {
@@ -256,13 +207,28 @@
             align-items: center;
         }
         
-        .editor-body { padding: 0 30px 30px 30px; flex-grow: 1; display: flex; flex-direction: column; gap: 15px; min-height: 0; }
+        .editor-body { 
+            padding: 0 40px 40px 40px; 
+            flex-grow: 1; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 0; 
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
         
-        .title-input { font-size: 28px; font-weight: 700; border: none; padding: 0; border-radius: 0; background: transparent; color: var(--primary); }
-        .title-input:focus { box-shadow: none; border-bottom: 1px solid var(--border); }
-        
-        .meta-row { display: flex; gap: 15px; align-items: center; }
-        .meta-label { color: var(--text-muted); font-size: 12px; font-weight: 600; }
+        .title-input { 
+            font-size: 32px; 
+            font-weight: 700; 
+            border: none; 
+            padding: 10px 0 20px 0; 
+            border-radius: 0; 
+            background: transparent; 
+            color: var(--primary); 
+        }
+        .title-input:focus { background: transparent; }
 
         /* Rich Text Editor */
         .rte-container { flex-grow: 1; display: flex; flex-direction: column; min-height: 0; }
@@ -273,60 +239,62 @@
             flex-wrap: wrap;
             align-items: center;
             border-bottom: 1px solid var(--border);
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         .rte-btn {
             background: transparent;
             border: none;
-            padding: 4px 8px;
+            padding: 6px 10px;
             border-radius: 4px;
             cursor: pointer;
             color: var(--text-muted);
             font-weight: 500;
-            font-size: 13px;
+            font-size: 14px;
         }
         .rte-btn:hover { background: var(--hover-bg); color: var(--primary); }
-        .rte-color { width: 24px; height: 24px; padding: 0; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; background: transparent; }
+        .rte-color { width: 24px; height: 24px; padding: 0; border: none; border-radius: 4px; cursor: pointer; background: transparent; }
         
         .rte-content {
             flex-grow: 1;
-            padding: 0;
+            padding: 10px 0;
             outline: none;
             overflow-y: auto;
             line-height: 1.6;
             color: var(--text);
             font-size: 15px;
         }
-        .rte-content table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-        .rte-content th, .rte-content td { border: 1px solid var(--border); padding: 8px; }
-        .rte-content blockquote { border-left: 4px solid var(--border); margin: 0; padding-left: 10px; color: var(--text-muted); }
+        
+        /* Proper formatting for rendered HTML elements including lists */
+        .rte-content table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .rte-content th, .rte-content td { border: 1px solid var(--border); padding: 10px; }
+        .rte-content blockquote { border-left: 3px solid var(--text-muted); margin: 0; padding-left: 15px; color: var(--text-muted); font-style: italic;}
+        .rte-content ul, .rte-content ol { 
+            padding-left: 20px; 
+            margin: 0.5em 0; 
+        }
+        /* Inherit line-height dynamically to fix list spacing bug */
+        .rte-content ul, .rte-content ol, .rte-content li {
+            line-height: inherit;
+        }
+        .rte-content li { margin-bottom: 0.2em; }
 
         .empty-state { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: var(--text-muted); gap: 10px; }
     </style>
 </head>
 <body>
 
-    <!-- MAIN GRID -->
     <div class="main-container">
         
         <!-- LEFT COLUMN: Navigation & Search -->
         <aside class="list-pane">
-            <div class="sidebar-header">
-                <span class="sidebar-header-title"></span>
-                <div>
-                    <!-- Sorting Toggle Added -->
-                    <button id="sortToggleBtn" class="btn-icon active" onclick="toggleSortMode()" title="Toggle Alphabetical Sort">🔤</button>
-                    <button class="btn-icon" onclick="createCategory()" title="New Category">Cat +</button>
-                    <button class="btn-icon" onclick="createNewNote()" title="New Note">Note +</button>
-                </div>
-            </div>
-
             <div class="navigation-tree" id="navigationTree">
-                <!-- Dropdown Categories and Notes populate here -->
+                <!-- Notes populate here natively sorted A-Z -->
             </div>
 
+            <!-- Seamless Search and Add Row -->
             <div class="search-container">
-                <input type="text" id="searchInput" placeholder="Search notes..." style="width: 100%;">
+                <input type="text" id="searchInput" placeholder="Search notes...">
+                <button class="btn-new-note" onclick="createNewNote()" title="Create New Note">+</button>
             </div>
         </aside>
 
@@ -334,11 +302,10 @@
         <main class="content-pane">
             
             <div id="emptyState" class="empty-state">
-                <div style="font-size: 32px; opacity: 0.3;">📄</div>
-                <div>Select a note or create a new one.</div>
+                <div>Select a note or create a new one</div>
             </div>
             
-            <!-- PURE INFORMATION VIEW MODE (Clean, No Buttons) -->
+            <!-- VIEW MODE -->
             <div id="viewMode">
                 <div id="viewContent" class="view-body"></div>
             </div>
@@ -346,30 +313,35 @@
             <!-- EDIT MODE (Auto-saving) -->
             <div id="editMode">
                 <div class="editor-header">
-                    <span id="savedIndicator" style="color:var(--text-muted); font-size:12px; font-weight:500;">✓ Saved</span>
+                    <span id="savedIndicator" style="color:var(--text-muted); font-size:13px;">✓ Saved</span>
                     <div class="action-cluster">
-                        <button class="btn-outline" onclick="exportPDF()" title="Export Note to PDF">📄 Export PDF</button>
-                        <button class="btn-outline" onclick="cancelEdit()">Close</button>
+                        <button class="btn-outline" onclick="exportPDF()" title="Export Note to PDF">Export PDF</button>
+                        <button class="btn-outline" onclick="cancelEdit()">Done</button>
                         <button class="btn-danger" onclick="deleteNote()">Delete</button>
                     </div>
                 </div>
                 
                 <div class="editor-body">
                     <input type="hidden" id="noteId">
-                    <input type="text" class="title-input" id="noteTitle" placeholder="Note Title..." oninput="triggerAutoSave()">
+                    <!-- Title Input -->
+                    <input type="text" class="title-input" id="noteTitle" placeholder="Untitled Note" oninput="triggerAutoSave()">
                     
-                    <div class="meta-row">
-                        <span class="meta-label">Category</span>
-                        <select id="noteCategory" style="width: 200px;" onchange="triggerAutoSave()">
-                            <option value="">-- Uncategorized --</option>
-                        </select>
-                    </div>
-
                     <!-- Custom Rich Text Editor -->
                     <div class="rte-container">
                         <div class="rte-toolbar">
+                            <!-- Font Family Dropdown -->
+                            <select onchange="formatText('fontName', this.value); this.selectedIndex = 0;" style="width: 100px;" title="Font Family">
+                                <option value="" disabled selected>Font</option>
+                                <option value="Inter, sans-serif">Default</option>
+                                <option value="Lora, serif">Lora</option>
+                                <option value="Arial, sans-serif">Arial</option>
+                                <option value="Calibri, sans-serif">Calibri</option>
+                                <option value="'Times New Roman', Times, serif">Times</option>
+                                <option value="monospace">Code</option>
+                            </select>
+
                             <!-- Font Size -->
-                            <select onchange="applyFontSize(this.value); this.selectedIndex = 0;" style="width: 80px;" title="Font Size">
+                            <select onchange="applyFontSize(this.value); this.selectedIndex = 0;" style="width: 70px;" title="Font Size">
                                 <option value="" disabled selected>Size</option>
                                 <option value="8">8</option>
                                 <option value="10">10</option>
@@ -379,13 +351,13 @@
                                 <option value="48">48</option>
                             </select>
                             
-                            <!-- Line Height Dropdown Added -->
-                            <select onchange="applyLineHeight(this.value); this.selectedIndex = 0;" style="width: 100px;" title="Line Height">
+                            <!-- Line Height -->
+                            <select onchange="applyLineHeight(this.value); this.selectedIndex = 0;" style="width: 90px;" title="Line Height">
                                 <option value="" disabled selected>Spacing</option>
-                                <option value="1.0">Single (1.0)</option>
+                                <option value="1.0">1.0</option>
                                 <option value="1.2">1.2</option>
                                 <option value="1.5">1.5</option>
-                                <option value="2.0">Double (2.0)</option>
+                                <option value="2.0">2.0</option>
                             </select>
                             
                             <span style="border-left: 1px solid var(--border); margin: 0 4px; height: 16px;"></span>
@@ -393,13 +365,6 @@
                             <button class="rte-btn" onclick="formatText('bold')" style="font-weight: bold;">B</button>
                             <button class="rte-btn" onclick="formatText('italic')" style="font-style: italic;">I</button>
                             <button class="rte-btn" onclick="formatText('underline')" style="text-decoration: underline;">U</button>
-                            <button class="rte-btn" onclick="formatText('strikethrough')" style="text-decoration: line-through;">S</button>
-                            <span style="border-left: 1px solid var(--border); margin: 0 4px; height: 16px;"></span>
-                            
-                            <!-- Headers -->
-                            <button class="rte-btn" onclick="formatText('formatBlock', 'H1')" style="font-weight: bold;">H1</button>
-                            <button class="rte-btn" onclick="formatText('formatBlock', 'H2')" style="font-weight: bold;">H2</button>
-                            <button class="rte-btn" onclick="formatText('formatBlock', 'H3')" style="font-weight: bold;">H3</button>
                             <span style="border-left: 1px solid var(--border); margin: 0 4px; height: 16px;"></span>
                             
                             <input type="color" class="rte-color" id="foreColorPicker" onchange="formatText('foreColor', this.value)" title="Text Color">
@@ -413,7 +378,7 @@
                             <button class="rte-btn" onclick="formatText('formatBlock', 'BLOCKQUOTE')">Quote</button>
                             <button class="rte-btn" onclick="formatText('removeFormat')">Clear</button>
                         </div>
-                        <div id="noteContent" class="rte-content" contenteditable="true" placeholder="Start typing here..." oninput="triggerAutoSave()"></div>
+                        <div id="noteContent" class="rte-content" contenteditable="true" placeholder="Start typing..." oninput="triggerAutoSave()"></div>
                     </div>
                 </div>
             </div>
@@ -440,21 +405,14 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-
         const notesCol = collection(db, "brain_notes");
-        const categoriesCol = collection(db, "brain_categories");
 
         let allNotes = [];
-        let allCategories = [];
         let searchQuery = ''; 
         let activeNoteId = null;
-        let collapsedCategories = {}; 
-        let sortMode = 'alpha'; // Defaulting to alphabetical
 
         const navigationTreeEl = document.getElementById('navigationTree');
         const searchInput = document.getElementById('searchInput');
-        const noteCategorySelect = document.getElementById('noteCategory');
-        const sortToggleBtn = document.getElementById('sortToggleBtn');
         
         const emptyStateEl = document.getElementById('emptyState');
         const viewModeEl = document.getElementById('viewMode');
@@ -463,39 +421,15 @@
 
         // Initialize Data
         signInAnonymously(auth).then(() => {
-            onSnapshot(categoriesCol, (snapshot) => {
-                allCategories = [];
-                snapshot.forEach(doc => allCategories.push({ id: doc.id, ...doc.data() }));
-                updateUI();
-            });
             onSnapshot(notesCol, (snapshot) => {
                 allNotes = [];
                 snapshot.forEach(doc => allNotes.push({ id: doc.id, ...doc.data() }));
-                updateUI();
+                renderNavigationTree();
             });
         }).catch((error) => console.error("Auth failed:", error));
 
 
-        // --- UI RENDERING & SORTING ---
-
-        window.toggleSortMode = () => {
-            sortMode = sortMode === 'alpha' ? 'manual' : 'alpha';
-            sortToggleBtn.classList.toggle('active', sortMode === 'alpha');
-            renderNavigationTree();
-        };
-
-        function updateUI() {
-            updateEditorSelects();
-            renderNavigationTree();
-        }
-
-        function updateEditorSelects() {
-            const currentVal = noteCategorySelect.value;
-            const sortedCats = [...allCategories].sort((a,b) => (a.name||'').localeCompare(b.name||''));
-            noteCategorySelect.innerHTML = '<option value="">-- Uncategorized --</option>' + 
-                sortedCats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            noteCategorySelect.value = currentVal;
-        }
+        // --- UI RENDERING & ALPHABETICAL SORTING ---
 
         searchInput.addEventListener('input', () => {
             searchQuery = searchInput.value.toLowerCase();
@@ -503,8 +437,6 @@
         });
 
         function renderNavigationTree() {
-            let html = '';
-            
             let filteredNotes = allNotes;
             if (searchQuery) {
                 filteredNotes = allNotes.filter(n => 
@@ -513,174 +445,23 @@
                 );
             }
 
-            // Apply selected Sort Mode to Categories
-            let sortedCategories = [...allCategories];
-            if (sortMode === 'alpha') {
-                sortedCategories.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-            } else {
-                sortedCategories.sort((a, b) => (a.order || 0) - (b.order || 0));
-            }
-            
-            sortedCategories.forEach(cat => {
-                let catNotes = filteredNotes.filter(n => n.categoryId === cat.id);
-                
-                // Apply selected Sort Mode to Notes
-                if (sortMode === 'alpha') {
-                    catNotes.sort((a, b) => (a.title || 'Untitled').localeCompare(b.title || 'Untitled'));
-                } else {
-                    catNotes.sort((a, b) => (a.order || 0) - (b.order || 0));
-                }
-                
-                if (searchQuery && catNotes.length === 0) return;
-
-                const isCollapsed = collapsedCategories[cat.id];
-                
-                html += `
-                    <div class="category-block" 
-                         draggable="true" 
-                         ondragstart="window.drag(event, 'category', '${cat.id}')"
-                         ondrop="window.drop(event, 'category', '${cat.id}')" 
-                         ondragover="window.allowDrop(event)">
-                         
-                        <div class="category-header" onclick="window.toggleCat('${cat.id}')">
-                            <span>${cat.name}</span>
-                            <div class="cat-actions">
-                                <button class="btn-icon" onclick="event.stopPropagation(); window.renameCategory('${cat.id}', '${cat.name}')">✎</button>
-                                <button class="btn-icon" onclick="event.stopPropagation(); window.deleteCategory('${cat.id}')">✖</button>
-                            </div>
-                        </div>
-                        
-                        <div class="category-notes" style="display: ${isCollapsed ? 'none' : 'block'}">
-                            ${catNotes.map(note => generateNoteCard(note)).join('')}
-                        </div>
-                    </div>
-                `;
+            // Always strictly sort notes Alphabetically (A-Z)
+            filteredNotes.sort((a, b) => {
+                const titleA = a.title ? a.title.trim() : 'Untitled';
+                const titleB = b.title ? b.title.trim() : 'Untitled';
+                return titleA.localeCompare(titleB, undefined, {sensitivity: 'base'});
             });
 
-            // Uncategorized Notes sorting
-            let uncatNotes = filteredNotes.filter(n => !n.categoryId);
-            if (sortMode === 'alpha') {
-                uncatNotes.sort((a, b) => (a.title || 'Untitled').localeCompare(b.title || 'Untitled'));
-            } else {
-                uncatNotes.sort((a, b) => (a.order || 0) - (b.order || 0));
-            }
-
-            if (uncatNotes.length > 0) {
-                html += `
-                    <div class="category-block" 
-                         ondrop="window.drop(event, 'category', '')" 
-                         ondragover="window.allowDrop(event)">
-                        <div class="category-header" style="background: transparent; color: var(--text-muted); pointer-events: none;">
-                            <span>Uncategorized</span>
-                        </div>
-                        <div class="category-notes">
-                            ${uncatNotes.map(note => generateNoteCard(note)).join('')}
-                        </div>
+            navigationTreeEl.innerHTML = filteredNotes.map(note => {
+                const isActive = activeNoteId === note.id;
+                return `
+                    <div class="note-card ${isActive ? 'active' : ''}" onclick="window.enterEditMode('${note.id}')">
+                        <div class="note-card-title">${note.title || 'Untitled Note'}</div>
                     </div>
                 `;
-            }
-
-            navigationTreeEl.innerHTML = html;
+            }).join('');
         }
 
-        function generateNoteCard(note) {
-            const isActive = activeNoteId === note.id;
-            return `
-                <div class="note-card ${isActive ? 'active' : ''}" 
-                     onclick="window.openNoteView('${note.id}')"
-                     draggable="true" 
-                     ondragstart="window.drag(event, 'note', '${note.id}')"
-                     ondrop="window.drop(event, 'note', '${note.id}')" 
-                     ondragover="window.allowDrop(event)">
-                     
-                    <div class="note-card-title">${note.title || 'Untitled Note'}</div>
-                    <button class="card-edit-btn" onclick="event.stopPropagation(); window.enterEditMode('${note.id}')" title="Edit">✎</button>
-                </div>
-            `;
-        }
-
-        window.toggleCat = (id) => {
-            collapsedCategories[id] = !collapsedCategories[id];
-            renderNavigationTree();
-        };
-
-
-        // --- DRAG AND DROP (Fixed Firefox payload) ---
-
-        window.drag = (ev, type, id) => {
-            ev.dataTransfer.setData("dragType", type);
-            ev.dataTransfer.setData("dragId", id);
-            ev.dataTransfer.setData("text/plain", id); // Required for Firefox DnD
-            ev.stopPropagation(); 
-        };
-        window.allowDrop = (ev) => ev.preventDefault();
-        
-        window.drop = async (ev, dropType, dropId) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            
-            const dragType = ev.dataTransfer.getData("dragType");
-            const dragId = ev.dataTransfer.getData("dragId");
-            if (!dragId || dragId === dropId) return;
-
-            // If Alphabetical sorting is locked, force custom sorting on on drag completion
-            if (sortMode === 'alpha') {
-                window.toggleSortMode();
-            }
-
-            try {
-                if (dragType === 'note' && dropType === 'category') {
-                    await updateDoc(doc(db, "brain_notes", dragId), { 
-                        categoryId: dropId,
-                        order: Date.now() 
-                    });
-                }
-                else if (dragType === 'note' && dropType === 'note') {
-                    const note1 = allNotes.find(n => n.id === dragId);
-                    const note2 = allNotes.find(n => n.id === dropId);
-                    const order1 = note1.order || 0;
-                    const order2 = note2.order || 0;
-                    
-                    await updateDoc(doc(db, "brain_notes", dragId), { 
-                        order: order2, categoryId: note2.categoryId || '' 
-                    });
-                    await updateDoc(doc(db, "brain_notes", dropId), { 
-                        order: order1 
-                    });
-                }
-                else if (dragType === 'category' && dropType === 'category') {
-                    const cat1 = allCategories.find(c => c.id === dragId);
-                    const cat2 = allCategories.find(c => c.id === dropId);
-                    const order1 = cat1.order || 0;
-                    const order2 = cat2.order || 0;
-                    
-                    await updateDoc(doc(db, "brain_categories", dragId), { order: order2 });
-                    await updateDoc(doc(db, "brain_categories", dropId), { order: order1 });
-                }
-            } catch(e) {
-                console.error("Drag Drop Update Failed:", e);
-            }
-        };
-
-
-        // --- CATEGORY CRUD ---
-
-        window.createCategory = async () => {
-            const name = prompt("Enter new category name:");
-            if (!name || !name.trim()) return;
-            const newOrder = allCategories.length > 0 ? Math.max(...allCategories.map(c => c.order || 0)) + 10 : 10;
-            await addDoc(categoriesCol, { name: name.trim(), order: newOrder });
-        };
-        window.renameCategory = async (id, oldName) => {
-            const name = prompt("Rename category:", oldName);
-            if (!name || !name.trim()) return;
-            await updateDoc(doc(db, "brain_categories", id), { name: name.trim() });
-        };
-        window.deleteCategory = async (id) => {
-            if (confirm("Delete this category? (Notes will become uncategorized)")) {
-                await deleteDoc(doc(db, "brain_categories", id));
-            }
-        };
 
         // --- NOTE INTERACTION (AUTO-SAVE) ---
         
@@ -702,7 +483,6 @@
             
             const payload = {
                 title: document.getElementById('noteTitle').value || 'Untitled Note',
-                categoryId: noteCategorySelect.value,
                 content: editorContent.innerHTML,
                 updatedAt: serverTimestamp()
             };
@@ -711,10 +491,10 @@
                 await updateDoc(doc(db, "brain_notes", id), payload);
                 const ind = document.getElementById('savedIndicator');
                 ind.textContent = "✓ Saved";
-                ind.style.color = "var(--accent)";
+                ind.style.color = "var(--text-muted)";
             } catch (error) {
                 console.error("Autosave Failed", error);
-                document.getElementById('savedIndicator').textContent = "⚠️ Save Failed";
+                document.getElementById('savedIndicator').textContent = "⚠️ Error";
             }
         };
 
@@ -727,27 +507,13 @@
 
             const newDoc = await addDoc(notesCol, {
                 title: '',
-                categoryId: '',
                 content: '',
-                order: Date.now(),
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp()
             });
             
             activeNoteId = newDoc.id;
             window.enterEditMode(newDoc.id);
-        };
-
-        window.openNoteView = (id) => {
-            activeNoteId = id;
-            emptyStateEl.style.display = 'none';
-            editModeEl.style.display = 'none';
-            viewModeEl.style.display = 'flex';
-            
-            const note = allNotes.find(n => n.id === id);
-            document.getElementById('viewContent').innerHTML = (note.content || '');
-            
-            renderNavigationTree(); 
         };
 
         window.enterEditMode = (id) => {
@@ -759,24 +525,31 @@
             const note = allNotes.find(n => n.id === id);
             document.getElementById('noteId').value = note.id;
             document.getElementById('noteTitle').value = note.title || '';
-            noteCategorySelect.value = note.categoryId || '';
             editorContent.innerHTML = note.content || '';
             
             document.getElementById('savedIndicator').textContent = "✓ Saved";
-            document.getElementById('savedIndicator').style.color = "var(--text-muted)";
-            
             renderNavigationTree();
         };
 
         window.cancelEdit = () => {
             if (activeNoteId) {
-                window.openNoteView(activeNoteId);
+                // Switch to purely reading view
+                emptyStateEl.style.display = 'none';
+                editModeEl.style.display = 'none';
+                viewModeEl.style.display = 'flex';
+                
+                const note = allNotes.find(n => n.id === activeNoteId);
+                let displayHtml = `
+                    <h1 style="margin-top:0; color:var(--primary); font-size:32px;">${note.title || 'Untitled Note'}</h1>
+                    ${note.content || ''}
+                `;
+                document.getElementById('viewContent').innerHTML = displayHtml;
             } else {
                 activeNoteId = null;
                 editModeEl.style.display = 'none';
                 emptyStateEl.style.display = 'flex';
-                renderNavigationTree();
             }
+            renderNavigationTree();
         };
 
         window.deleteNote = async () => {
@@ -796,7 +569,6 @@
             const titleInput = document.getElementById('noteTitle').value;
             const title = titleInput ? titleInput : 'Note';
             
-            // Temporarily strip edit mode highlights for clean export
             element.contentEditable = "false"; 
             
             const opt = {
@@ -834,29 +606,31 @@
             window.triggerAutoSave();
         };
 
-        // Line Height Application
+        // Fixed Line Height Application (Now fully supports lists)
         window.applyLineHeight = (height) => {
             const selection = window.getSelection();
             if (!selection.rangeCount) return;
             
             let node = selection.focusNode;
-            if (node.nodeType === 3) node = node.parentNode;
+            if (node.nodeType === 3) node = node.parentNode; // Handle text nodes
             
             const editor = document.getElementById('noteContent');
             let blockFound = false;
             
-            // Traverse up to find the closest block-level element to apply spacing
+            // Allow applying line height to paragraphs, divs, lists, and list items
+            const blockTags = ['DIV', 'P', 'LI', 'UL', 'OL', 'BLOCKQUOTE', 'TD'];
+            
             while (node && node !== editor) {
-                const display = window.getComputedStyle(node).display;
-                if (display === 'block' || display === 'list-item') {
+                if (blockTags.includes(node.tagName) || window.getComputedStyle(node).display === 'block') {
                     node.style.lineHeight = height;
                     blockFound = true;
-                    break;
+                    // If applied directly to an LI, we don't need to break out further. 
+                    // List CSS inheritance (line-height: inherit) resolves inner gaps natively.
+                    break; 
                 }
                 node = node.parentNode;
             }
             
-            // Fallback for flat text without paragraphs
             if (!blockFound) {
                 document.execCommand('formatBlock', false, 'DIV');
                 let newNode = window.getSelection().focusNode;
