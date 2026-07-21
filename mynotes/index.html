@@ -14,7 +14,7 @@
         :root {
             --primary: #1A202C;
             --accent: #27AE60;
-            --bg: #FFFFFF; 
+            --bg: #FFFFFF; /* Entire page is pure white */
             --text: #2D3748;
             --text-muted: #A0AEC0;
             --border: #EDF2F7;
@@ -90,8 +90,9 @@
         .list-pane {
             width: 280px;      
             min-width: 280px;  
-            background-color: #FCFDFD; /* Extremely subtle off-white for separation */
+            background-color: var(--bg); /* Pure white */
             border-right: 1px solid var(--border);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.02); /* Line with shadow */
             display: flex;
             flex-direction: column;
             z-index: 10;
@@ -120,7 +121,7 @@
             color: var(--primary);
         }
         .note-card.active { 
-            background-color: white;
+            background-color: var(--hover-bg);
             color: var(--primary);
             font-weight: 500;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -141,7 +142,7 @@
             width: 100%;
             padding: 15px;
             box-sizing: border-box;
-            background: #FCFDFD;
+            background: var(--bg);
             border-top: 1px solid var(--border);
             display: flex;
             gap: 10px;
@@ -170,16 +171,14 @@
             min-width: 0;
         }
 
-        /* View Mode */
+        /* View Mode (Full Width) */
         #viewMode {
             display: none;
             flex-direction: column;
             height: 100%;
             overflow-y: auto;
-            padding: 60px 80px;
-            max-width: 900px;
-            margin: 0 auto;
-            width: 100%;
+            padding: 50px 60px;
+            width: 100%; /* Spans entire available width */
             box-sizing: border-box;
         }
         .view-body {
@@ -188,7 +187,7 @@
             color: var(--text);
         }
 
-        /* Edit Mode */
+        /* Edit Mode (Full Width) */
         #editMode {
             display: none;
             flex-direction: column;
@@ -200,6 +199,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid var(--border);
         }
         .action-cluster {
             display: flex;
@@ -208,14 +208,12 @@
         }
         
         .editor-body { 
-            padding: 0 40px 40px 40px; 
+            padding: 0 50px 40px 50px; 
             flex-grow: 1; 
             display: flex; 
             flex-direction: column; 
             min-height: 0; 
-            max-width: 1000px;
-            margin: 0 auto;
-            width: 100%;
+            width: 100%; /* Spans entire available width */
             box-sizing: border-box;
         }
         
@@ -223,7 +221,7 @@
             font-size: 32px; 
             font-weight: 700; 
             border: none; 
-            padding: 10px 0 20px 0; 
+            padding: 30px 0 20px 0; 
             border-radius: 0; 
             background: transparent; 
             color: var(--primary); 
@@ -316,14 +314,13 @@
                     <span id="savedIndicator" style="color:var(--text-muted); font-size:13px;">✓ Saved</span>
                     <div class="action-cluster">
                         <button class="btn-outline" onclick="exportPDF()" title="Export Note to PDF">Export PDF</button>
-                        <button class="btn-outline" onclick="cancelEdit()">Done</button>
+                        <button class="btn-outline" onclick="cancelEdit()">Done Editing</button>
                         <button class="btn-danger" onclick="deleteNote()">Delete</button>
                     </div>
                 </div>
                 
                 <div class="editor-body">
                     <input type="hidden" id="noteId">
-                    <!-- Title Input -->
                     <input type="text" class="title-input" id="noteTitle" placeholder="Untitled Note" oninput="triggerAutoSave()">
                     
                     <!-- Custom Rich Text Editor -->
@@ -367,12 +364,16 @@
                             <button class="rte-btn" onclick="formatText('underline')" style="text-decoration: underline;">U</button>
                             <span style="border-left: 1px solid var(--border); margin: 0 4px; height: 16px;"></span>
                             
-                            <input type="color" class="rte-color" id="foreColorPicker" onchange="formatText('foreColor', this.value)" title="Text Color">
-                            <input type="color" class="rte-color" id="hiliteColorPicker" value="#ffff00" onchange="formatText('hiliteColor', this.value)" title="Highlight Color">
+                            <input type="color" class="rte-color" id="foreColorPicker" oninput="formatText('foreColor', this.value)" title="Text Color">
+                            <input type="color" class="rte-color" id="hiliteColorPicker" value="#ffff00" oninput="formatText('hiliteColor', this.value)" title="Highlight Color">
                             <span style="border-left: 1px solid var(--border); margin: 0 4px; height: 16px;"></span>
                             
                             <button class="rte-btn" onclick="insertLink()">Link</button>
                             <button class="rte-btn" onclick="insertTable()">Table</button>
+                            <!-- Delete Table Button -->
+                            <button class="rte-btn" onclick="deleteTable()" title="Delete currently selected table" style="color: var(--danger);">Del Table</button>
+                            <span style="border-left: 1px solid var(--border); margin: 0 4px; height: 16px;"></span>
+
                             <button class="rte-btn" onclick="formatText('insertUnorderedList')">• List</button>
                             <button class="rte-btn" onclick="formatText('insertOrderedList')">1. List</button>
                             <button class="rte-btn" onclick="formatText('formatBlock', 'BLOCKQUOTE')">Quote</button>
@@ -410,6 +411,7 @@
         let allNotes = [];
         let searchQuery = ''; 
         let activeNoteId = null;
+        let isInitialLoad = true;
 
         const navigationTreeEl = document.getElementById('navigationTree');
         const searchInput = document.getElementById('searchInput');
@@ -455,11 +457,17 @@
             navigationTreeEl.innerHTML = filteredNotes.map(note => {
                 const isActive = activeNoteId === note.id;
                 return `
-                    <div class="note-card ${isActive ? 'active' : ''}" onclick="window.enterEditMode('${note.id}')">
+                    <div class="note-card ${isActive ? 'active' : ''}" onclick="window.openNoteView('${note.id}')">
                         <div class="note-card-title">${note.title || 'Untitled Note'}</div>
                     </div>
                 `;
             }).join('');
+
+            // Auto-load first page on initial open
+            if (isInitialLoad && filteredNotes.length > 0) {
+                isInitialLoad = false;
+                window.openNoteView(filteredNotes[0].id);
+            }
         }
 
 
@@ -516,6 +524,28 @@
             window.enterEditMode(newDoc.id);
         };
 
+        // Reads the note (Browsing Mode)
+        window.openNoteView = (id) => {
+            activeNoteId = id;
+            emptyStateEl.style.display = 'none';
+            editModeEl.style.display = 'none';
+            viewModeEl.style.display = 'flex';
+            
+            const note = allNotes.find(n => n.id === id);
+            
+            // Header for viewing with Edit Button
+            const displayHtml = `
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 20px;">
+                    <h1 style="margin:0; color:var(--primary); font-size:36px; font-weight:700;">${note.title || 'Untitled Note'}</h1>
+                    <button class="btn-outline" onclick="window.enterEditMode('${id}')">✎ Edit</button>
+                </div>
+                ${note.content || ''}
+            `;
+            document.getElementById('viewContent').innerHTML = displayHtml;
+            renderNavigationTree();
+        };
+
+        // Enters full edit mode
         window.enterEditMode = (id) => {
             activeNoteId = id;
             viewModeEl.style.display = 'none';
@@ -533,23 +563,13 @@
 
         window.cancelEdit = () => {
             if (activeNoteId) {
-                // Switch to purely reading view
-                emptyStateEl.style.display = 'none';
-                editModeEl.style.display = 'none';
-                viewModeEl.style.display = 'flex';
-                
-                const note = allNotes.find(n => n.id === activeNoteId);
-                let displayHtml = `
-                    <h1 style="margin-top:0; color:var(--primary); font-size:32px;">${note.title || 'Untitled Note'}</h1>
-                    ${note.content || ''}
-                `;
-                document.getElementById('viewContent').innerHTML = displayHtml;
+                window.openNoteView(activeNoteId);
             } else {
                 activeNoteId = null;
                 editModeEl.style.display = 'none';
                 emptyStateEl.style.display = 'flex';
+                renderNavigationTree();
             }
-            renderNavigationTree();
         };
 
         window.deleteNote = async () => {
@@ -559,6 +579,8 @@
                 activeNoteId = null;
                 editModeEl.style.display = 'none';
                 emptyStateEl.style.display = 'flex';
+                // Trigger auto load if needed next time list renders
+                isInitialLoad = true; 
                 renderNavigationTree();
             }
         };
@@ -584,48 +606,78 @@
             });
         };
 
-        // --- RICH TEXT FORMATTING ---
+        // --- RICH TEXT FORMATTING & SELECTION MEMORY ---
+
+        // We must save the user's cursor selection before they click a dropdown or color picker,
+        // otherwise the browser forgets where to apply the style.
+        let savedSelectionRange = null;
+
+        const saveSelection = () => {
+            const sel = window.getSelection();
+            if (sel.getRangeAt && sel.rangeCount) {
+                // Only save if selection is inside the editor
+                if (editorContent.contains(sel.anchorNode)) {
+                    savedSelectionRange = sel.getRangeAt(0);
+                }
+            }
+        };
         
+        const restoreSelection = () => {
+            if (savedSelectionRange) {
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(savedSelectionRange);
+            }
+        };
+
+        // Constantly track selection while typing or clicking inside editor
+        editorContent.addEventListener('keyup', saveSelection);
+        editorContent.addEventListener('mouseup', saveSelection);
+        editorContent.addEventListener('mouseleave', saveSelection);
+
         window.formatText = (command, value = null) => {
+            restoreSelection(); // Bring cursor back
             document.execCommand(command, false, value);
             editorContent.focus();
             window.triggerAutoSave();
         };
         
         window.applyFontSize = (sizeInPixels) => {
-            const selection = window.getSelection();
-            if (!selection.rangeCount) return;
+            restoreSelection();
             
-            const span = document.createElement('span');
-            span.style.fontSize = sizeInPixels + 'px';
+            // Apply standard size 7 first as an anchor we can easily find
+            document.execCommand('fontSize', false, "7");
             
-            const range = selection.getRangeAt(0);
-            span.appendChild(range.extractContents());
-            range.insertNode(span);
-            
+            // Find that size 7 anchor and convert it to precise pixels
+            const fontElements = editorContent.getElementsByTagName("font");
+            for (let i = 0, len = fontElements.length; i < len; ++i) {
+                if (fontElements[i].size == "7") {
+                    fontElements[i].removeAttribute("size");
+                    fontElements[i].style.fontSize = sizeInPixels + "px";
+                }
+            }
             window.triggerAutoSave();
         };
 
-        // Fixed Line Height Application (Now fully supports lists)
+        // Fixed Line Height Application (Restricted to Editor area)
         window.applyLineHeight = (height) => {
+            restoreSelection();
             const selection = window.getSelection();
             if (!selection.rangeCount) return;
             
             let node = selection.focusNode;
             if (node.nodeType === 3) node = node.parentNode; // Handle text nodes
             
-            const editor = document.getElementById('noteContent');
-            let blockFound = false;
+            // Security constraint: Prevent applying spacing to menu or outside areas
+            if (!editorContent.contains(node)) return; 
             
-            // Allow applying line height to paragraphs, divs, lists, and list items
+            let blockFound = false;
             const blockTags = ['DIV', 'P', 'LI', 'UL', 'OL', 'BLOCKQUOTE', 'TD'];
             
-            while (node && node !== editor) {
+            while (node && node !== editorContent) {
                 if (blockTags.includes(node.tagName) || window.getComputedStyle(node).display === 'block') {
                     node.style.lineHeight = height;
                     blockFound = true;
-                    // If applied directly to an LI, we don't need to break out further. 
-                    // List CSS inheritance (line-height: inherit) resolves inner gaps natively.
                     break; 
                 }
                 node = node.parentNode;
@@ -635,7 +687,7 @@
                 document.execCommand('formatBlock', false, 'DIV');
                 let newNode = window.getSelection().focusNode;
                 if (newNode.nodeType === 3) newNode = newNode.parentNode;
-                while (newNode && newNode !== editor) {
+                while (newNode && newNode !== editorContent) {
                     if (newNode.tagName === 'DIV' || window.getComputedStyle(newNode).display === 'block') {
                         newNode.style.lineHeight = height;
                         break;
@@ -647,6 +699,7 @@
         };
 
         window.insertLink = () => {
+            restoreSelection();
             const url = prompt("Enter the URL:");
             if (url) {
                 document.execCommand('createLink', false, url);
@@ -655,6 +708,7 @@
         };
 
         window.insertTable = () => {
+            restoreSelection();
             const rows = prompt("Number of rows:", "3");
             const cols = prompt("Number of columns:", "3");
             if (!rows || !cols) return;
@@ -670,6 +724,26 @@
             tableHTML += '</tbody></table><br/>';
             document.execCommand('insertHTML', false, tableHTML);
             window.triggerAutoSave();
+        };
+
+        // Safely delete a table the cursor is currently inside
+        window.deleteTable = () => {
+            restoreSelection();
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+            
+            let node = selection.focusNode;
+            if (!editorContent.contains(node)) return;
+
+            while (node && node !== editorContent) {
+                if (node.nodeType === 1 && node.tagName === 'TABLE') {
+                    node.remove();
+                    window.triggerAutoSave();
+                    return;
+                }
+                node = node.parentNode;
+            }
+            alert('To delete a table, please place your cursor inside it first.');
         };
     </script>
 </body>
