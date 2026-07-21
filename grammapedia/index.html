@@ -101,6 +101,8 @@
         body[data-mode="edit"] .page-title { cursor: text; border: 1px dashed #ccc; background: #fdfdfd; }
         body[data-mode="edit"] .page-title:focus { background: #fff; border: 1px dashed var(--accent-blue); outline: none; }
 
+        #save-status { font-size: 12px; color: #888; font-weight: bold; margin-left: 10px; transition: color 0.2s; }
+
         button, select { 
             padding: 6px 12px; cursor: pointer; border: none; border-radius: 6px;
             background: var(--bg-color); font-size: 13px; box-shadow: var(--button-shadow);
@@ -120,6 +122,25 @@
         .toolbar button { font-family: serif; padding: 4px 8px; font-size: 14px; font-weight: bold; }
 
         .grid-container { font-size: 14px; padding: 20px 30px 60px 30px; overflow-x: auto; }
+        
+        /* Page Description Area */
+        .page-description {
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #444;
+            background: #fafbfc;
+            border-left: 4px solid var(--accent-blue);
+            border-radius: 4px;
+            min-height: 24px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        body[data-mode="edit"] .page-description { border: 1px dashed #ccc; border-left: 4px solid var(--accent-blue); background: #ffffff; }
+        body[data-mode="edit"] .page-description:focus { border-color: var(--accent-blue); }
+        .page-description[data-placeholder]:empty:before { content: attr(data-placeholder); color: #999; font-style: italic; }
+
         .study-table { border-spacing: 12px 6px; border-collapse: separate; width: max-content; transition: margin 0.3s; }
         
         .row-wrapper { transition: opacity 0.2s; }
@@ -184,6 +205,7 @@
                 <button id="new-cat-btn" class="hide" style="flex: 1; font-weight: bold; background: #f0f3f5;">+ Category</button>
                 <button id="new-page-btn" class="hide" style="flex: 1; font-weight: bold;">+ Page</button>
             </div>
+            <button id="mode-toggle-btn" class="mode-toggle practice hide" style="width: 100%;">Mode: Practice</button>
         </div>
     </aside>
 
@@ -193,17 +215,15 @@
                 <div class="brand-area">
                     <button id="toggle-sidebar-btn" title="Toggle Menu" style="font-size: 16px; padding: 4px 8px;">☰</button>
                     <h2 id="page-title-display" class="page-title" spellcheck="false">Connecting...</h2>
+                    <span id="save-status"></span>
                 </div>
                 
                 <div class="action-controls">
                     <button id="export-pdf-btn" title="Export as clean PDF Table" style="background: #e8f4f8;">🖨️ Export PDF</button>
-
                     <button id="sort-az-pages-btn" class="edit-control hide" title="Sort Pages A-Z">Sort Menu A-Z</button>
-                    
                     <button id="stats-btn" class="practice-control hide" title="View Study Statistics">📊 Stats</button>
-                    <button id="peek-answers-btn" class="practice-control hide">Show</button>
+                    <button id="peek-answers-btn" class="practice-control hide">Peek Answers</button>
                     <button id="clear-answers-btn" class="practice-control hide" style="background: var(--accent-red); color: white;">Clear Answers</button>
-                    <button id="mode-toggle-btn" class="mode-toggle practice hide">Mode: Practice</button>
                 </div>
             </div>
             
@@ -321,9 +341,54 @@
         let isCustomOrder = false; 
         let appMode = 'practice';
         let isPeeking = false; 
-        
-        let draggedMenuId = null;
-        let dragSrcInfo = null; // FIXED: Variable needed for drag & drop to work in strict module mode
+
+        // --- Smart Saving System ---
+        let saveTimeout = null;
+        let isSaving = false;
+
+        function setSaveStatus(status) {
+            const statusEl = document.getElementById('save-status');
+            if (!statusEl) return;
+            
+            if (status === 'saving') {
+                statusEl.innerText = "↻ Saving...";
+                statusEl.style.color = "var(--accent-blue)";
+                isSaving = true;
+            } else if (status === 'saved') {
+                statusEl.innerText = "✓ Saved";
+                statusEl.style.color = "var(--accent-green)";
+                isSaving = false;
+                setTimeout(() => { if(!isSaving) statusEl.innerText = ""; }, 2500); 
+            } else if (status === 'error') {
+                statusEl.innerText = "⚠️ Error Saving";
+                statusEl.style.color = "var(--accent-red)";
+                isSaving = false;
+            }
+        }
+
+        async function executeSave() {
+            try {
+                const docRef = doc(db, "spanish_study_app", "pages_data");
+                await setDoc(docRef, { categories: categories, isCustomOrder: isCustomOrder });
+                setSaveStatus('saved');
+            } catch (error) { 
+                console.error("Error saving data:", error); 
+                setSaveStatus('error');
+            }
+        }
+
+        function saveData() {
+            setSaveStatus('saving'); 
+            if (saveTimeout) clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => { executeSave(); }, 1500); 
+        }
+
+        window.addEventListener('beforeunload', function (e) {
+            if (isSaving) {
+                e.preventDefault();
+                e.returnValue = ''; 
+            }
+        });
 
         signInAnonymously(auth).then(() => {
             loadDataFromFirebase();
@@ -344,7 +409,7 @@
                     categories = [{
                         id: 'cat_default', title: 'My Pages', isOpen: true, pages: [
                             {
-                                id: Date.now(), title: "Hablar Template", columns: 2, answerColumnIndex: 1, alignment: "left", tableWidth: "max-content",
+                                id: Date.now(), title: "Hablar Template", description: "", columns: 2, answerColumnIndex: 1, alignment: "left", tableWidth: "max-content",
                                 columnStyles: [{ bold: false, italic: false, fontSize: '14px' }, { bold: false, italic: false, fontSize: '14px' }],
                                 rows: [
                                     { id: 1, type: "title", text: "Present", color: "#f89c12" },
@@ -364,13 +429,6 @@
             } catch (error) {
                 console.error("Firestore read error:", error);
             }
-        }
-
-        async function saveData() {
-            try {
-                const docRef = doc(db, "spanish_study_app", "pages_data");
-                await setDoc(docRef, { categories: categories, isCustomOrder: isCustomOrder });
-            } catch (error) { console.error("Error saving data:", error); }
         }
 
         function getActivePage() {
@@ -430,8 +488,13 @@
                 .title { background: #f89c12; color: white; font-weight: bold; text-align: center; font-size: 16px; }
                 .note { background: #fff3cd; font-style: italic; }
              </style></head><body>
-             <h2>${page.title}</h2>
-             <table>`;
+             <h2>${page.title}</h2>`;
+             
+             if (page.description) {
+                 html += `<div style="margin-bottom: 20px; font-size: 14px; color: #444; line-height: 1.5;">${page.description}</div>`;
+             }
+
+             html += `<table>`;
              
              page.rows.forEach(r => {
                  if (r.type === 'title') {
@@ -456,6 +519,8 @@
              printWindow.focus();
              setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
         });
+
+        let draggedMenuId = null;
 
         function renderMenu() {
             const menuList = document.getElementById('menu-list');
@@ -627,9 +692,22 @@
             document.getElementById('toolbar-table-width').value = activePage.tableWidth || "max-content";
             
             const container = document.getElementById('grid-container');
+            
+            // Build the Page Description Field
+            const pageDesc = activePage.description || "";
+            const isEditableDesc = appMode === 'edit' ? 'contenteditable="true"' : '';
+            const placeholderStr = appMode === 'edit' && !pageDesc ? 'data-placeholder="Add page description or instructions here..."' : '';
+            
+            let html = '';
+            
+            if (appMode === 'edit' || pageDesc.trim() !== "") {
+                html += `<div class="page-description" id="page-desc-input" ${isEditableDesc} ${placeholderStr}>${pageDesc}</div>`;
+            }
+
+            // Build the Table
             const tableWidth = activePage.tableWidth || 'max-content';
             const alignStyle = activePage.alignment === 'center' ? 'margin: 0 auto;' : 'margin: 0;';
-            let html = `<table class="study-table" style="${alignStyle} width: ${tableWidth};"><tbody>`;
+            html += `<table class="study-table" style="${alignStyle} width: ${tableWidth};"><tbody>`;
 
             if (!activePage.columnStyles) activePage.columnStyles = [];
 
@@ -709,7 +787,7 @@
 
         function resetPeekButton() {
             const btn = document.getElementById('peek-answers-btn');
-            btn.innerText = "Show"; // FIXED text
+            btn.innerText = "Peek Answers";
             btn.style.background = "var(--bg-color)";
             btn.style.color = "#333";
         }
@@ -738,7 +816,7 @@
 
         document.getElementById('peek-answers-btn').addEventListener('click', function() {
             isPeeking = !isPeeking;
-            this.innerText = isPeeking ? "Hide" : "Show"; // FIXED text
+            this.innerText = isPeeking ? "Stop Peeking" : "Peek Answers";
             this.style.background = isPeeking ? "var(--accent-blue)" : "var(--bg-color)";
             this.style.color = isPeeking ? "white" : "#333";
             renderGrid();
@@ -749,7 +827,7 @@
                 const activeData = getActivePage();
                 if(activeData) {
                     activeData.page.rows.forEach(r => { if (r.type === 'data') r.userAnswer = ""; });
-                    isPeeking = false; resetPeekButton(); saveData(); renderMenu(); // Renders menu to clear checkmark
+                    isPeeking = false; resetPeekButton(); saveData(); renderMenu(); 
                 }
             }
         });
@@ -818,15 +896,10 @@
                             this.classList.remove('incorrect'); this.classList.add('correct');
                             this.value = correctAnswer; 
                             if (row) { row.userAnswer = correctAnswer; saveData(); }
+                            renderMenu(); 
+                            if (index + 1 < inputs.length) inputs[index + 1].focus();
                         } else {
                             this.classList.add('incorrect'); this.classList.remove('correct');
-                        }
-                        
-                        // FIXED: Re-render menu to check for completion, THEN query DOM for new inputs
-                        renderMenu(); 
-                        const reQueriedInputs = document.querySelectorAll('.answer-input');
-                        if (index + 1 < reQueriedInputs.length) {
-                            reQueriedInputs[index + 1].focus();
                         }
                     }
                 });
@@ -840,7 +913,7 @@
                     if (row && row.userAnswer !== this.value.trim()) {
                         row.userAnswer = this.value.trim();
                         saveData();
-                        renderMenu(); // Trigger re-check of checkmark
+                        renderMenu(); 
                     }
                 });
             });
@@ -873,6 +946,19 @@
                     }
                 });
             });
+            
+            // Attach Page Description Listener
+            const descEl = document.getElementById('page-desc-input');
+            if (descEl && appMode === 'edit') {
+                descEl.addEventListener('blur', function() {
+                    let cleanedHTML = this.innerHTML.replace(/&nbsp;/gi, ' ').trim();
+                    const activeData = getActivePage();
+                    if (activeData && activeData.page.description !== cleanedHTML) {
+                        activeData.page.description = cleanedHTML;
+                        saveData();
+                    }
+                });
+            }
         }
 
         function attachDragAndDropRows() {
@@ -927,7 +1013,7 @@
             
             const newId = Date.now();
             targetCat.pages.push({
-                id: newId, title: "New Blank Page", columns: 2, answerColumnIndex: 1, alignment: "left", tableWidth: "max-content",
+                id: newId, title: "New Blank Page", description: "", columns: 2, answerColumnIndex: 1, alignment: "left", tableWidth: "max-content",
                 columnStyles: [{ bold: false, italic: false, fontSize: '14px' }, { bold: false, italic: false, fontSize: '14px' }],
                 rows: []
             });
@@ -1018,7 +1104,6 @@
             if (row && (row.type === 'title' || row.type === 'note')) { row.color = color; saveData(); renderGrid(); }
         };
 
-        // --- Column Swapping Logic ---
         window.swapCol = function(colIndex, dir) {
             const activePage = getActivePage().page;
             const targetIndex = colIndex + dir;
@@ -1047,6 +1132,7 @@
             renderGrid();
         };
 
+        // --- Modals ---
         const modal = document.getElementById('edit-modal');
         function renderModalColStyles(colCount) {
             const container = document.getElementById('modal-col-styles');
