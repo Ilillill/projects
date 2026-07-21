@@ -125,17 +125,9 @@
         
         /* Page Description Area */
         .page-description {
-            margin-bottom: 20px;
-            padding: 10px 15px;
-            font-size: 14px;
-            line-height: 1.5;
-            color: #444;
-            background: #fafbfc;
-            border-left: 4px solid var(--accent-blue);
-            border-radius: 4px;
-            min-height: 24px;
-            outline: none;
-            transition: all 0.2s;
+            margin-bottom: 20px; padding: 10px 15px; font-size: 14px; line-height: 1.5;
+            color: #444; background: #fafbfc; border-left: 4px solid var(--accent-blue);
+            border-radius: 4px; min-height: 24px; outline: none; transition: all 0.2s;
         }
         body[data-mode="edit"] .page-description { border: 1px dashed #ccc; border-left: 4px solid var(--accent-blue); background: #ffffff; }
         body[data-mode="edit"] .page-description:focus { border-color: var(--accent-blue); }
@@ -220,7 +212,9 @@
                 
                 <div class="action-controls">
                     <button id="export-pdf-btn" title="Export as clean PDF Table" style="background: #e8f4f8;">🖨️ Export PDF</button>
+
                     <button id="sort-az-pages-btn" class="edit-control hide" title="Sort Pages A-Z">Sort Menu A-Z</button>
+                    
                     <button id="stats-btn" class="practice-control hide" title="View Study Statistics">📊 Stats</button>
                     <button id="peek-answers-btn" class="practice-control hide">Peek Answers</button>
                     <button id="clear-answers-btn" class="practice-control hide" style="background: var(--accent-red); color: white;">Clear Answers</button>
@@ -522,7 +516,7 @@
 
         let draggedMenuId = null;
 
-        function renderMenu() {
+        function renderMenu(skipGridRender = false) {
             const menuList = document.getElementById('menu-list');
             menuList.innerHTML = '';
             
@@ -675,7 +669,10 @@
                 groupEl.appendChild(itemsContainer);
                 menuList.appendChild(groupEl);
             });
-            renderGrid();
+            
+            if (!skipGridRender) {
+                renderGrid();
+            }
         }
 
         // --- Grid Render ---
@@ -693,18 +690,15 @@
             
             const container = document.getElementById('grid-container');
             
-            // Build the Page Description Field
             const pageDesc = activePage.description || "";
             const isEditableDesc = appMode === 'edit' ? 'contenteditable="true"' : '';
             const placeholderStr = appMode === 'edit' && !pageDesc ? 'data-placeholder="Add page description or instructions here..."' : '';
             
             let html = '';
-            
             if (appMode === 'edit' || pageDesc.trim() !== "") {
                 html += `<div class="page-description" id="page-desc-input" ${isEditableDesc} ${placeholderStr}>${pageDesc}</div>`;
             }
 
-            // Build the Table
             const tableWidth = activePage.tableWidth || 'max-content';
             const alignStyle = activePage.alignment === 'center' ? 'margin: 0 auto;' : 'margin: 0;';
             html += `<table class="study-table" style="${alignStyle} width: ${tableWidth};"><tbody>`;
@@ -896,8 +890,9 @@
                             this.classList.remove('incorrect'); this.classList.add('correct');
                             this.value = correctAnswer; 
                             if (row) { row.userAnswer = correctAnswer; saveData(); }
-                            renderMenu(); 
+                            renderMenu(true); 
                             if (index + 1 < inputs.length) inputs[index + 1].focus();
+                            else this.blur();
                         } else {
                             this.classList.add('incorrect'); this.classList.remove('correct');
                         }
@@ -913,7 +908,7 @@
                     if (row && row.userAnswer !== this.value.trim()) {
                         row.userAnswer = this.value.trim();
                         saveData();
-                        renderMenu(); 
+                        renderMenu(true); 
                     }
                 });
             });
@@ -947,7 +942,6 @@
                 });
             });
             
-            // Attach Page Description Listener
             const descEl = document.getElementById('page-desc-input');
             if (descEl && appMode === 'edit') {
                 descEl.addEventListener('blur', function() {
