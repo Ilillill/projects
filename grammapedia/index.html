@@ -194,8 +194,9 @@
         
         <div class="sidebar-bottom-actions" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-light);">
             <div style="display: flex; gap: 8px;">
-                <button id="new-cat-btn" class="hide" style="flex: 1; font-weight: bold; background: #f0f3f5;">+ Category</button>
-                <button id="new-page-btn" class="hide" style="flex: 1; font-weight: bold;">+ Page</button>
+                <!-- .edit-control class properly assigned so these show up in Edit Mode -->
+                <button id="new-cat-btn" class="edit-control hide" style="flex: 1; font-weight: bold; background: #f0f3f5;">+ Category</button>
+                <button id="new-page-btn" class="edit-control hide" style="flex: 1; font-weight: bold;">+ Page</button>
             </div>
             <button id="mode-toggle-btn" class="mode-toggle practice hide" style="width: 100%;">Mode: Practice</button>
         </div>
@@ -516,6 +517,7 @@
 
         let draggedMenuId = null;
 
+        // Passed flag skipGridRender allows checkmarks to update without ruining Enter-key focus
         function renderMenu(skipGridRender = false) {
             const menuList = document.getElementById('menu-list');
             menuList.innerHTML = '';
@@ -526,7 +528,7 @@
                 
                 const headerEl = document.createElement('div');
                 headerEl.className = 'category-header';
-                if (appMode === 'edit') headerEl.draggable = true;
+                if (appMode === 'edit') headerEl.setAttribute('draggable', 'true');
                 
                 headerEl.innerHTML = `
                     <div class="cat-title-area" title="${cat.title}">
@@ -584,18 +586,20 @@
                     e.preventDefault(); e.stopPropagation();
                     headerEl.classList.remove('drag-over-top', 'drag-over-bg');
                     
-                    if (dragSrcInfo.type === 'cat' && dragSrcInfo.id !== cat.id) {
+                    if (dragSrcInfo && dragSrcInfo.type === 'cat' && dragSrcInfo.id !== cat.id) {
                         const fromIndex = categories.findIndex(c => c.id === dragSrcInfo.id);
                         const [movedCat] = categories.splice(fromIndex, 1);
                         categories.splice(catIndex, 0, movedCat);
+                        isCustomOrder = true; 
                         saveData(); renderMenu();
-                    } else if (dragSrcInfo.type === 'page') {
+                    } else if (dragSrcInfo && dragSrcInfo.type === 'page') {
                         const sourceCat = categories.find(c => c.id === dragSrcInfo.parentId);
                         if (sourceCat && sourceCat.id !== cat.id) {
                             const pageIndex = sourceCat.pages.findIndex(p => p.id === dragSrcInfo.id);
                             const [movedPage] = sourceCat.pages.splice(pageIndex, 1);
                             cat.pages.push(movedPage);
                             cat.isOpen = true; 
+                            isCustomOrder = true; 
                             saveData(); renderMenu();
                         }
                     }
@@ -611,7 +615,7 @@
                 cat.pages.forEach((page, pageIndex) => {
                     const pageEl = document.createElement('div');
                     pageEl.className = `menu-item ${page.id === activePageId ? 'active' : ''}`;
-                    if (appMode === 'edit') pageEl.draggable = true;
+                    if (appMode === 'edit') pageEl.setAttribute('draggable', 'true');
                     
                     let completedHTML = "";
                     let dataRows = page.rows.filter(r => r.type === 'data');
@@ -643,7 +647,7 @@
                     pageEl.addEventListener('dragover', (e) => {
                         if (appMode !== 'edit') return;
                         e.preventDefault(); e.stopPropagation();
-                        if (dragSrcInfo.type === 'page') pageEl.classList.add('drag-over-top');
+                        if (dragSrcInfo && dragSrcInfo.type === 'page') pageEl.classList.add('drag-over-top');
                     });
 
                     pageEl.addEventListener('dragleave', () => { pageEl.classList.remove('drag-over-top'); });
@@ -653,11 +657,12 @@
                         e.preventDefault(); e.stopPropagation();
                         pageEl.classList.remove('drag-over-top');
                         
-                        if (dragSrcInfo.type === 'page' && dragSrcInfo.id !== page.id) {
+                        if (dragSrcInfo && dragSrcInfo.type === 'page' && dragSrcInfo.id !== page.id) {
                             const sourceCat = categories.find(c => c.id === dragSrcInfo.parentId);
                             const sourceIndex = sourceCat.pages.findIndex(p => p.id === dragSrcInfo.id);
                             const [movedPage] = sourceCat.pages.splice(sourceIndex, 1);
                             cat.pages.splice(pageIndex, 0, movedPage);
+                            isCustomOrder = true; 
                             saveData(); renderMenu();
                         }
                     });
@@ -670,6 +675,7 @@
                 menuList.appendChild(groupEl);
             });
             
+            // Only rebuild the main table grid if the flag was not passed
             if (!skipGridRender) {
                 renderGrid();
             }
@@ -890,7 +896,10 @@
                             this.classList.remove('incorrect'); this.classList.add('correct');
                             this.value = correctAnswer; 
                             if (row) { row.userAnswer = correctAnswer; saveData(); }
+                            
+                            // True flag prevents the table grid from completely rebuilding and dropping focus!
                             renderMenu(true); 
+                            
                             if (index + 1 < inputs.length) inputs[index + 1].focus();
                             else this.blur();
                         } else {
