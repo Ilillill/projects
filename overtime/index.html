@@ -62,7 +62,7 @@
             flex-direction: column;
             gap: 2rem;
             width: 100%;
-            max-width: 1200px; /* Increased to comfortably fit 3 columns */
+            max-width: 1200px; 
         }
 
         .controls-grid {
@@ -94,11 +94,17 @@
         }
 
         /* Controls Panel */
+        .quick-adds-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
         .generator {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.5rem 0.8rem; /* Made much smaller */
+            padding: 0.5rem 0.8rem; 
             background: #fafafa;
             border: 2px dashed #e0e0e0;
             border-radius: 8px;
@@ -109,7 +115,7 @@
         .generator:active { cursor: grabbing; border-color: var(--accent); }
         
         .generator .icon-img {
-            width: 24px; /* Reduced icon size */
+            width: 24px; 
             height: 24px;
             border-radius: 4px;
         }
@@ -117,6 +123,29 @@
         .generator-text-title { font-weight: 600; font-size: 0.9rem; }
         .generator-text-value { color: var(--text-muted); font-size: 0.8rem; }
         
+        /* Tiny action buttons inside draggable items */
+        .generator-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            margin-left: 0.5rem;
+            border-left: 1px solid #eee;
+            padding-left: 0.5rem;
+        }
+        .generator-actions button {
+            background: none;
+            border: none;
+            box-shadow: none;
+            padding: 0.1rem;
+            font-size: 0.7rem;
+            line-height: 1;
+            color: var(--text-muted);
+        }
+        .generator-actions button:hover {
+            color: var(--text-main);
+            background: #ebebeb;
+        }
+
         .icon-img { 
             width: 48px; 
             height: 48px; 
@@ -140,13 +169,14 @@
         }
         .btn-primary { background: var(--text-main); color: white; border: none; padding: 0.8rem; }
         .btn-primary:hover { background: #000; }
+        .btn-secondary { background: var(--surface-color); padding: 0.4rem 0.8rem; font-size: 0.9rem; }
         .btn-danger { background: #ffebee; color: #c62828; border: none; padding: 0.4rem 0.8rem; font-size: 0.8rem; }
         .btn-danger:hover { background: #ffcdd2; box-shadow: none; }
 
         /* Banks */
         .banks-grid { 
             display: grid; 
-            grid-template-columns: repeat(3, 1fr); /* 3 columns layout */
+            grid-template-columns: repeat(3, 1fr);
             gap: 1.5rem; 
         }
         .bank {
@@ -198,7 +228,6 @@
 
     <header>
         <h1>Bonus Tracker</h1>
-        <button id="btn-open-settings">⚙️ Settings</button>
     </header>
 
     <div class="main-container">
@@ -214,13 +243,13 @@
             </div>
 
             <div class="panel">
-                <h3 style="margin-top:0; margin-bottom: 1rem;">Quick Add</h3>
-                <div class="generator draggable" draggable="true" id="drag-overtime">
-                    <img id="img-overtime" class="icon-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Overtime icon">
-                    <div>
-                        <div id="label-overtime-title" class="generator-text-title">Overtime</div>
-                        <div id="label-overtime-value" class="generator-text-value">£20</div>
-                    </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="margin:0;">Quick Add</h3>
+                    <button class="btn-secondary" id="btn-open-quickadd-new">+ Add Button</button>
+                </div>
+                <!-- Dynamic Container for Quick Adds -->
+                <div class="quick-adds-container" id="quick-adds-container">
+                    <!-- Buttons will render here -->
                 </div>
             </div>
 
@@ -233,7 +262,6 @@
                     </div>
                     <div class="row-group">
                         <input type="number" id="custom-amount" placeholder="Amount (£)" min="0">
-                        <!-- Select is now populated dynamically -->
                         <select id="custom-user"></select>
                     </div>
                     <input type="text" id="custom-img-url" placeholder="Icon image URL (optional)">
@@ -243,30 +271,30 @@
 
         </div>
 
-        <!-- Banks container is now populated dynamically -->
         <div class="banks-grid" id="banks-grid-container"></div>
     </div>
 
-    <!-- Settings Modal -->
-    <div class="modal-overlay" id="modal-settings">
+    <!-- Edit/Create Quick Add Modal -->
+    <div class="modal-overlay" id="modal-quickadd">
         <div class="modal">
-            <h3>App Settings</h3>
+            <h3 id="modal-quickadd-title">Add Quick Button</h3>
             <div class="form-group">
-                <label>Overtime Title</label>
-                <input type="text" id="set-overtime-title">
-                <label>Overtime Value (£)</label>
-                <input type="number" id="set-overtime-value">
-                <label>Overtime Image URL</label>
-                <input type="text" id="set-overtime-img" placeholder="https://...">
+                <input type="hidden" id="qa-edit-id">
+                <label>Title</label>
+                <input type="text" id="qa-title" placeholder="e.g. Oliver's Pocket Money">
+                <label>Amount (£)</label>
+                <input type="number" id="qa-amount" placeholder="5">
+                <label>Image URL</label>
+                <input type="text" id="qa-img" placeholder="https://...">
             </div>
             <div class="modal-actions">
-                <button id="btn-close-settings">Cancel</button>
-                <button class="btn-primary" id="btn-save-settings">Save</button>
+                <button id="btn-close-quickadd">Cancel</button>
+                <button class="btn-primary" id="btn-save-quickadd">Save</button>
             </div>
         </div>
     </div>
 
-    <!-- Edit Modal -->
+    <!-- Edit Bonus Modal -->
     <div class="modal-overlay" id="modal-edit">
         <div class="modal">
             <h3>Edit Bonus</h3>
@@ -304,24 +332,17 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // Global State variables
-        let appSettings = {
-            overtimeTitle: "Overtime",
-            overtimeValue: 20,
-            overtimeImg: ""
-        };
-        let itemsUnsubscribes = {}; // Tracks database listeners for each person's items
+        let itemsUnsubscribes = {}; 
+        const emptyImage = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
 
         // DOM Elements
-        const dragOvertime = document.getElementById('drag-overtime');
+        const quickAddsContainer = document.getElementById('quick-adds-container');
         const customTitle = document.getElementById('custom-title');
         const customAmount = document.getElementById('custom-amount');
         const customUser = document.getElementById('custom-user');
         const customImgUrl = document.getElementById('custom-img-url');
         const customImgPreview = document.getElementById('img-custom-preview');
-        const emptyImage = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
         
-        // Sign in Anonymously
         signInAnonymously(auth).then(() => {
             initApp();
         }).catch((error) => {
@@ -330,24 +351,18 @@
         });
 
         function initApp() {
-            // Listen for Settings
-            const settingsRef = ref(db, 'settings');
-            onValue(settingsRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    appSettings = { ...appSettings, ...data };
-                    updateSettingsUI();
-                }
+            // Listen for Quick Adds
+            onValue(ref(db, 'quickAdds'), (snapshot) => {
+                renderQuickAdds(snapshot.val());
             });
 
-            // Migration step to ensure old hardcoded users exist in the 'people' registry
+            // Ensure old hardcoded users exist in the 'people' registry
             get(ref(db, 'users')).then(snap => {
                 const existingUsers = snap.val() || {};
                 const names = Object.keys(existingUsers);
                 if (names.length > 0) {
                     names.forEach(n => set(ref(db, `people/${n}`), true));
                 } else {
-                    // Create default users if db is totally empty
                     set(ref(db, 'people/Christopher'), true);
                     set(ref(db, 'people/Renata'), true);
                 }
@@ -361,29 +376,115 @@
             });
         }
 
-        function updateSettingsUI() {
-            document.getElementById('label-overtime-title').innerText = appSettings.overtimeTitle;
-            document.getElementById('label-overtime-value').innerText = `£${appSettings.overtimeValue}`;
-            document.getElementById('img-overtime').src = appSettings.overtimeImg || emptyImage;
+        /* -----------------------
+           QUICK ADDS LOGIC
+        ------------------------ */
+        function renderQuickAdds(data) {
+            quickAddsContainer.innerHTML = '';
+            if (!data) return;
+
+            Object.entries(data).forEach(([id, item]) => {
+                const imgUrl = item.img || emptyImage;
+                
+                const btnHtml = `
+                    <div class="generator draggable" draggable="true" data-title="${item.title}" data-amount="${item.amount}" data-img="${item.img || ''}">
+                        <img class="icon-img" src="${imgUrl}" alt="icon">
+                        <div>
+                            <div class="generator-text-title">${item.title}</div>
+                            <div class="generator-text-value">£${item.amount}</div>
+                        </div>
+                        <div class="generator-actions">
+                            <button onclick="event.stopPropagation(); openEditQuickAdd('${id}', '${item.title}', ${item.amount}, '${item.img || ''}')">✏️</button>
+                            <button onclick="event.stopPropagation(); deleteQuickAdd('${id}')">✕</button>
+                        </div>
+                    </div>
+                `;
+                quickAddsContainer.insertAdjacentHTML('beforeend', btnHtml);
+            });
         }
 
+        // Handle Drag Start from dynamically generated buttons
+        quickAddsContainer.addEventListener('dragstart', (e) => {
+            const generator = e.target.closest('.generator');
+            if (generator) {
+                const payload = {
+                    title: generator.dataset.title,
+                    amount: generator.dataset.amount,
+                    img: generator.dataset.img
+                };
+                e.dataTransfer.setData('application/json', JSON.stringify(payload));
+                e.dataTransfer.effectAllowed = 'copy';
+            }
+        });
+
+        // Quick Add Modals & CRUD
+        const modalQuickAdd = document.getElementById('modal-quickadd');
+        
+        document.getElementById('btn-open-quickadd-new').addEventListener('click', () => {
+            document.getElementById('modal-quickadd-title').innerText = "Add Quick Button";
+            document.getElementById('qa-edit-id').value = "";
+            document.getElementById('qa-title').value = "";
+            document.getElementById('qa-amount').value = "";
+            document.getElementById('qa-img').value = "";
+            modalQuickAdd.classList.add('active');
+        });
+
+        document.getElementById('btn-close-quickadd').addEventListener('click', () => {
+            modalQuickAdd.classList.remove('active');
+        });
+
+        document.getElementById('btn-save-quickadd').addEventListener('click', () => {
+            const id = document.getElementById('qa-edit-id').value;
+            const title = document.getElementById('qa-title').value.trim();
+            const amount = parseFloat(document.getElementById('qa-amount').value);
+            const img = document.getElementById('qa-img').value.trim();
+
+            if (!title || isNaN(amount)) {
+                alert("Please enter a valid title and amount.");
+                return;
+            }
+
+            if (id) {
+                update(ref(db, `quickAdds/${id}`), { title, amount, img });
+            } else {
+                push(ref(db, 'quickAdds'), { title, amount, img });
+            }
+            modalQuickAdd.classList.remove('active');
+        });
+
+        window.openEditQuickAdd = (id, title, amount, img) => {
+            document.getElementById('modal-quickadd-title').innerText = "Edit Quick Button";
+            document.getElementById('qa-edit-id').value = id;
+            document.getElementById('qa-title').value = title;
+            document.getElementById('qa-amount').value = amount;
+            document.getElementById('qa-img').value = img;
+            modalQuickAdd.classList.add('active');
+        };
+
+        window.deleteQuickAdd = (id) => {
+            if (confirm("Delete this Quick Add template?")) {
+                remove(ref(db, `quickAdds/${id}`));
+            }
+        };
+
+
+        /* -----------------------
+           BANKS & DROP LOGIC
+        ------------------------ */
         function renderBanksGridAndSelect(peopleNames) {
             const banksGrid = document.getElementById('banks-grid-container');
             const userSelect = document.getElementById('custom-user');
             
-            // Preserve dropdown selection if possible
             const selectedUser = userSelect.value;
             userSelect.innerHTML = '';
             
             let html = '';
             peopleNames.forEach(name => {
-                // Populate Select Dropdown
                 const opt = document.createElement('option');
                 opt.value = name;
                 opt.innerText = name;
                 userSelect.appendChild(opt);
 
-                // Build HTML for each bank
                 html += `
                     <div class="bank dropzone" id="bank-${name}" data-user="${name}">
                         <div class="bank-header">
@@ -400,42 +501,17 @@
             banksGrid.innerHTML = html;
             if (peopleNames.includes(selectedUser)) userSelect.value = selectedUser;
 
-            // Re-attach dropzone event listeners to new DOM elements
             attachDropEvents();
 
-            // Clear old item database listeners
             Object.values(itemsUnsubscribes).forEach(unsub => unsub());
             itemsUnsubscribes = {};
 
-            // Attach new database listeners for each person
             peopleNames.forEach(name => {
                 const itemsRef = ref(db, `users/${name}/items`);
                 const unsub = onValue(itemsRef, (snapshot) => renderBankItems(name, snapshot.val()));
                 itemsUnsubscribes[name] = unsub;
             });
         }
-
-        // Add a new Person
-        document.getElementById('btn-add-person').addEventListener('click', () => {
-            const nameInput = document.getElementById('new-person-name');
-            const name = nameInput.value.trim();
-            if (name) {
-                set(ref(db, `people/${name}`), true);
-                nameInput.value = '';
-            }
-        });
-
-        // Live preview for custom image URL
-        customImgUrl.addEventListener('input', (e) => {
-            const url = e.target.value.trim();
-            customImgPreview.src = url || emptyImage;
-        });
-
-        // Drag and Drop Logic
-        dragOvertime.addEventListener('dragstart', (e) => {
-            e.dataTransfer.setData('text/plain', 'overtime');
-            e.dataTransfer.effectAllowed = 'copy';
-        });
 
         function attachDropEvents() {
             document.querySelectorAll('.dropzone').forEach(zone => {
@@ -447,16 +523,35 @@
                 zone.addEventListener('drop', (e) => {
                     e.preventDefault();
                     zone.classList.remove('drag-over');
-                    const type = e.dataTransfer.getData('text/plain');
-                    if (type === 'overtime') {
-                        const user = zone.dataset.user;
-                        addBonus(user, appSettings.overtimeTitle, appSettings.overtimeValue, appSettings.overtimeImg);
+                    
+                    const jsonData = e.dataTransfer.getData('application/json');
+                    if (jsonData) {
+                        try {
+                            const data = JSON.parse(jsonData);
+                            const user = zone.dataset.user;
+                            addBonus(user, data.title, data.amount, data.img);
+                        } catch(err) {
+                            console.error("Drop parsing error", err);
+                        }
                     }
                 });
             });
         }
 
-        // Add Custom Logic
+        document.getElementById('btn-add-person').addEventListener('click', () => {
+            const nameInput = document.getElementById('new-person-name');
+            const name = nameInput.value.trim();
+            if (name) {
+                set(ref(db, `people/${name}`), true);
+                nameInput.value = '';
+            }
+        });
+
+        customImgUrl.addEventListener('input', (e) => {
+            const url = e.target.value.trim();
+            customImgPreview.src = url || emptyImage;
+        });
+
         document.getElementById('btn-add-custom').addEventListener('click', () => {
             const title = customTitle.value.trim();
             const amount = parseFloat(customAmount.value);
@@ -474,7 +569,6 @@
             }
         });
 
-        // Database Functions
         function addBonus(user, title, amount, img) {
             const itemsRef = ref(db, `users/${user}/items`);
             push(itemsRef, { 
@@ -485,14 +579,10 @@
             });
         }
 
-        function deleteBonus(user, id) {
-            remove(ref(db, `users/${user}/items/${id}`));
-        }
-
         function renderBankItems(user, itemsObj) {
             const listEl = document.getElementById(`list-${user}`);
             const totalEl = document.getElementById(`total-${user}`);
-            if (!listEl || !totalEl) return; // safeguard if DOM is currently rebuilding
+            if (!listEl || !totalEl) return; 
             
             listEl.innerHTML = '';
             let total = 0;
@@ -522,9 +612,8 @@
             totalEl.innerText = `£${total}`;
         }
 
-        // Expose functions to window for inline onclick handlers
         window.deleteItem = (user, id) => {
-            if(confirm('Are you sure you want to delete this?')) deleteBonus(user, id);
+            if(confirm('Are you sure you want to delete this?')) remove(ref(db, `users/${user}/items/${id}`));
         };
         
         window.deletePerson = (name) => {
@@ -542,7 +631,6 @@
             document.getElementById('modal-edit').classList.add('active');
         };
 
-        // Modals Logic
         document.getElementById('btn-close-edit').addEventListener('click', () => document.getElementById('modal-edit').classList.remove('active'));
         document.getElementById('btn-save-edit').addEventListener('click', () => {
             const user = document.getElementById('edit-user').value;
@@ -552,26 +640,6 @@
             
             update(ref(db, `users/${user}/items/${id}`), { title, amount }).then(() => {
                 document.getElementById('modal-edit').classList.remove('active');
-            });
-        });
-
-        // Settings Logic
-        document.getElementById('btn-open-settings').addEventListener('click', () => {
-            document.getElementById('set-overtime-title').value = appSettings.overtimeTitle;
-            document.getElementById('set-overtime-value').value = appSettings.overtimeValue;
-            document.getElementById('set-overtime-img').value = appSettings.overtimeImg;
-            document.getElementById('modal-settings').classList.add('active');
-        });
-
-        document.getElementById('btn-close-settings').addEventListener('click', () => document.getElementById('modal-settings').classList.remove('active'));
-        document.getElementById('btn-save-settings').addEventListener('click', () => {
-            const newSettings = {
-                overtimeTitle: document.getElementById('set-overtime-title').value,
-                overtimeValue: parseFloat(document.getElementById('set-overtime-value').value),
-                overtimeImg: document.getElementById('set-overtime-img').value
-            };
-            set(ref(db, 'settings'), newSettings).then(() => {
-                document.getElementById('modal-settings').classList.remove('active');
             });
         });
     </script>
