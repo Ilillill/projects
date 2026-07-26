@@ -35,7 +35,7 @@
 
         header {
             width: 100%;
-            max-width: 900px;
+            max-width: 1200px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -62,13 +62,21 @@
             flex-direction: column;
             gap: 2rem;
             width: 100%;
-            max-width: 900px;
+            max-width: 1200px; /* Increased to comfortably fit 3 columns */
         }
 
         .controls-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1.5rem;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 1024px) {
+            .banks-grid { grid-template-columns: 1fr 1fr !important; }
         }
 
         @media (max-width: 768px) {
@@ -87,32 +95,40 @@
 
         /* Controls Panel */
         .generator {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 1rem;
-            padding: 1rem;
+            gap: 0.5rem;
+            padding: 0.5rem 0.8rem; /* Made much smaller */
             background: #fafafa;
             border: 2px dashed #e0e0e0;
-            border-radius: 12px;
+            border-radius: 8px;
             cursor: grab;
             transition: all 0.2s;
-            flex-grow: 1;
+            width: max-content;
         }
         .generator:active { cursor: grabbing; border-color: var(--accent); }
         
-        /* Icon backgrounds are now pure white */
+        .generator .icon-img {
+            width: 24px; /* Reduced icon size */
+            height: 24px;
+            border-radius: 4px;
+        }
+
+        .generator-text-title { font-weight: 600; font-size: 0.9rem; }
+        .generator-text-value { color: var(--text-muted); font-size: 0.8rem; }
+        
         .icon-img { 
             width: 48px; 
             height: 48px; 
             border-radius: 8px; 
             object-fit: cover; 
             background: #ffffff; 
-            border: 1px solid #f0f0f0; /* Soft border to define white icons against white background */
+            border: 1px solid #f0f0f0;
             flex-shrink: 0;
         }
         
         .form-group { display: flex; flex-direction: column; gap: 0.8rem; width: 100%; }
-        .row-group { display: flex; gap: 0.8rem; width: 100%; }
+        .row-group { display: flex; gap: 0.8rem; width: 100%; align-items: center; }
         
         input, select {
             padding: 0.8rem;
@@ -124,9 +140,15 @@
         }
         .btn-primary { background: var(--text-main); color: white; border: none; padding: 0.8rem; }
         .btn-primary:hover { background: #000; }
+        .btn-danger { background: #ffebee; color: #c62828; border: none; padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+        .btn-danger:hover { background: #ffcdd2; box-shadow: none; }
 
         /* Banks */
-        .banks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .banks-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); /* 3 columns layout */
+            gap: 1.5rem; 
+        }
         .bank {
             background: var(--surface-color);
             border-radius: var(--border-radius);
@@ -137,7 +159,7 @@
             transition: border 0.2s;
         }
         .bank.drag-over { border-color: var(--accent); background: #f4f9ff; }
-        .bank-header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #eee; padding-bottom: 1rem; margin-bottom: 1rem; }
+        .bank-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 1rem; margin-bottom: 1rem; }
         .bank-header h2 { margin: 0; font-size: 1.2rem; }
         .total { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
 
@@ -183,13 +205,21 @@
         
         <div class="controls-grid">
             
+            <div class="panel full-width" style="flex-direction: row; justify-content: space-between; align-items: center; padding: 1rem 1.5rem;">
+                <h3 style="margin:0;">Manage People</h3>
+                <div class="row-group" style="width: auto;">
+                    <input type="text" id="new-person-name" placeholder="Person's Name..." style="min-width: 200px;">
+                    <button class="btn-primary" id="btn-add-person" style="white-space: nowrap;">Add Person</button>
+                </div>
+            </div>
+
             <div class="panel">
                 <h3 style="margin-top:0; margin-bottom: 1rem;">Quick Add</h3>
                 <div class="generator draggable" draggable="true" id="drag-overtime">
                     <img id="img-overtime" class="icon-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Overtime icon">
                     <div>
-                        <div id="label-overtime-title" style="font-weight: 600;">Overtime</div>
-                        <div id="label-overtime-value" style="color: var(--text-muted);">£20</div>
+                        <div id="label-overtime-title" class="generator-text-title">Overtime</div>
+                        <div id="label-overtime-value" class="generator-text-value">£20</div>
                     </div>
                 </div>
             </div>
@@ -203,10 +233,8 @@
                     </div>
                     <div class="row-group">
                         <input type="number" id="custom-amount" placeholder="Amount (£)" min="0">
-                        <select id="custom-user">
-                            <option value="Christopher">Christopher</option>
-                            <option value="Renata">Renata</option>
-                        </select>
+                        <!-- Select is now populated dynamically -->
+                        <select id="custom-user"></select>
                     </div>
                     <input type="text" id="custom-img-url" placeholder="Icon image URL (optional)">
                     <button class="btn-primary" id="btn-add-custom">Add to Bank</button>
@@ -215,25 +243,11 @@
 
         </div>
 
-        <div class="banks-grid">
-            <div class="bank dropzone" id="bank-Christopher" data-user="Christopher">
-                <div class="bank-header">
-                    <h2>Christopher</h2>
-                    <span class="total" id="total-Christopher">£0</span>
-                </div>
-                <ul class="item-list" id="list-Christopher"></ul>
-            </div>
-
-            <div class="bank dropzone" id="bank-Renata" data-user="Renata">
-                <div class="bank-header">
-                    <h2>Renata</h2>
-                    <span class="total" id="total-Renata">£0</span>
-                </div>
-                <ul class="item-list" id="list-Renata"></ul>
-            </div>
-        </div>
+        <!-- Banks container is now populated dynamically -->
+        <div class="banks-grid" id="banks-grid-container"></div>
     </div>
 
+    <!-- Settings Modal -->
     <div class="modal-overlay" id="modal-settings">
         <div class="modal">
             <h3>App Settings</h3>
@@ -252,6 +266,7 @@
         </div>
     </div>
 
+    <!-- Edit Modal -->
     <div class="modal-overlay" id="modal-edit">
         <div class="modal">
             <h3>Edit Bonus</h3>
@@ -273,7 +288,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getDatabase, ref, onValue, push, set, remove, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+        import { getDatabase, ref, onValue, push, set, remove, update, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBxKv-xXahSO2TEtwVwXTfU1eJ1ZsaaMAc",
@@ -295,6 +310,7 @@
             overtimeValue: 20,
             overtimeImg: ""
         };
+        let itemsUnsubscribes = {}; // Tracks database listeners for each person's items
 
         // DOM Elements
         const dragOvertime = document.getElementById('drag-overtime');
@@ -324,9 +340,25 @@
                 }
             });
 
-            // Listen for Banks
-            onValue(ref(db, 'users/Christopher/items'), (snapshot) => renderBank('Christopher', snapshot.val()));
-            onValue(ref(db, 'users/Renata/items'), (snapshot) => renderBank('Renata', snapshot.val()));
+            // Migration step to ensure old hardcoded users exist in the 'people' registry
+            get(ref(db, 'users')).then(snap => {
+                const existingUsers = snap.val() || {};
+                const names = Object.keys(existingUsers);
+                if (names.length > 0) {
+                    names.forEach(n => set(ref(db, `people/${n}`), true));
+                } else {
+                    // Create default users if db is totally empty
+                    set(ref(db, 'people/Christopher'), true);
+                    set(ref(db, 'people/Renata'), true);
+                }
+            });
+
+            // Listen for People Registry
+            onValue(ref(db, 'people'), (snapshot) => {
+                const peopleObj = snapshot.val() || {};
+                const peopleNames = Object.keys(peopleObj);
+                renderBanksGridAndSelect(peopleNames);
+            });
         }
 
         function updateSettingsUI() {
@@ -334,6 +366,64 @@
             document.getElementById('label-overtime-value').innerText = `£${appSettings.overtimeValue}`;
             document.getElementById('img-overtime').src = appSettings.overtimeImg || emptyImage;
         }
+
+        function renderBanksGridAndSelect(peopleNames) {
+            const banksGrid = document.getElementById('banks-grid-container');
+            const userSelect = document.getElementById('custom-user');
+            
+            // Preserve dropdown selection if possible
+            const selectedUser = userSelect.value;
+            userSelect.innerHTML = '';
+            
+            let html = '';
+            peopleNames.forEach(name => {
+                // Populate Select Dropdown
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.innerText = name;
+                userSelect.appendChild(opt);
+
+                // Build HTML for each bank
+                html += `
+                    <div class="bank dropzone" id="bank-${name}" data-user="${name}">
+                        <div class="bank-header">
+                            <h2>${name}</h2>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span class="total" id="total-${name}">£0</span>
+                                <button class="btn-danger" onclick="deletePerson('${name}')">Delete</button>
+                            </div>
+                        </div>
+                        <ul class="item-list" id="list-${name}"></ul>
+                    </div>
+                `;
+            });
+            banksGrid.innerHTML = html;
+            if (peopleNames.includes(selectedUser)) userSelect.value = selectedUser;
+
+            // Re-attach dropzone event listeners to new DOM elements
+            attachDropEvents();
+
+            // Clear old item database listeners
+            Object.values(itemsUnsubscribes).forEach(unsub => unsub());
+            itemsUnsubscribes = {};
+
+            // Attach new database listeners for each person
+            peopleNames.forEach(name => {
+                const itemsRef = ref(db, `users/${name}/items`);
+                const unsub = onValue(itemsRef, (snapshot) => renderBankItems(name, snapshot.val()));
+                itemsUnsubscribes[name] = unsub;
+            });
+        }
+
+        // Add a new Person
+        document.getElementById('btn-add-person').addEventListener('click', () => {
+            const nameInput = document.getElementById('new-person-name');
+            const name = nameInput.value.trim();
+            if (name) {
+                set(ref(db, `people/${name}`), true);
+                nameInput.value = '';
+            }
+        });
 
         // Live preview for custom image URL
         customImgUrl.addEventListener('input', (e) => {
@@ -347,22 +437,24 @@
             e.dataTransfer.effectAllowed = 'copy';
         });
 
-        document.querySelectorAll('.dropzone').forEach(zone => {
-            zone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                zone.classList.add('drag-over');
+        function attachDropEvents() {
+            document.querySelectorAll('.dropzone').forEach(zone => {
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    zone.classList.add('drag-over');
+                });
+                zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('drag-over');
+                    const type = e.dataTransfer.getData('text/plain');
+                    if (type === 'overtime') {
+                        const user = zone.dataset.user;
+                        addBonus(user, appSettings.overtimeTitle, appSettings.overtimeValue, appSettings.overtimeImg);
+                    }
+                });
             });
-            zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-            zone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                zone.classList.remove('drag-over');
-                const type = e.dataTransfer.getData('text/plain');
-                if (type === 'overtime') {
-                    const user = zone.dataset.user;
-                    addBonus(user, appSettings.overtimeTitle, appSettings.overtimeValue, appSettings.overtimeImg);
-                }
-            });
-        });
+        }
 
         // Add Custom Logic
         document.getElementById('btn-add-custom').addEventListener('click', () => {
@@ -371,15 +463,14 @@
             const user = customUser.value;
             const img = customImgUrl.value.trim();
 
-            if (title && !isNaN(amount)) {
+            if (title && !isNaN(amount) && user) {
                 addBonus(user, title, amount, img);
-                // Clear fields
                 customTitle.value = ''; 
                 customAmount.value = '';
                 customImgUrl.value = '';
                 customImgPreview.src = emptyImage;
             } else {
-                alert("Please enter a valid title and amount.");
+                alert("Please ensure title, amount, and user are selected.");
             }
         });
 
@@ -398,14 +489,15 @@
             remove(ref(db, `users/${user}/items/${id}`));
         }
 
-        function renderBank(user, itemsObj) {
+        function renderBankItems(user, itemsObj) {
             const listEl = document.getElementById(`list-${user}`);
             const totalEl = document.getElementById(`total-${user}`);
-            listEl.innerHTML = '';
+            if (!listEl || !totalEl) return; // safeguard if DOM is currently rebuilding
             
+            listEl.innerHTML = '';
             let total = 0;
+            
             if (itemsObj) {
-                // Sort by timestamp if needed, but Firebase objects maintain insertion order relatively well
                 Object.entries(itemsObj).forEach(([id, data]) => {
                     total += data.amount;
                     const itemImg = data.img || emptyImage;
@@ -433,6 +525,13 @@
         // Expose functions to window for inline onclick handlers
         window.deleteItem = (user, id) => {
             if(confirm('Are you sure you want to delete this?')) deleteBonus(user, id);
+        };
+        
+        window.deletePerson = (name) => {
+            if(confirm(`Are you sure you want to completely remove ${name} and all their bonuses?`)) {
+                remove(ref(db, `people/${name}`));
+                remove(ref(db, `users/${name}`));
+            }
         };
         
         window.openEdit = (user, id, title, amount) => {
