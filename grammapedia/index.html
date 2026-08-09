@@ -633,8 +633,13 @@
                     pageEl.innerHTML = `<span style="overflow:hidden; text-overflow:ellipsis;" title="${page.title}">${page.title}</span>${completedHTML}`;
                     
                     pageEl.onclick = () => {
-                        activePageId = page.id;
-                        isPeeking = false; resetPeekButton(); renderMenu();
+                        if (activePageId !== page.id) {
+                            activePageId = page.id;
+                            isPeeking = false; 
+                            resetPeekButton(); 
+                            document.querySelector('main').scrollTop = 0; // Scrolls to top
+                            renderMenu();
+                        }
                     };
 
                     pageEl.addEventListener('dragstart', (e) => {
@@ -1036,6 +1041,7 @@
             });
             targetCat.isOpen = true;
             activePageId = newId;
+            document.querySelector('main').scrollTop = 0; // Scrolls to top
             saveData(); renderMenu();
         });
 
@@ -1076,6 +1082,7 @@
             const cat = categories.find(c => c.id === activeData.categoryId);
             cat.pages.push(newPage);
             activePageId = newPage.id;
+            document.querySelector('main').scrollTop = 0; // Scrolls to top
             saveData(); renderMenu();
         });
 
