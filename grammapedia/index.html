@@ -11,6 +11,7 @@
             --border-light: #eaedf0;
             --accent-green: #27ae60;
             --accent-red: #e74c3c;
+            --accent-dark-red: #c0392b;
             --accent-blue: #2980b9;
             --hover-bg: #f8f9fa;
             --title-bg-default: #f89c12;
@@ -194,7 +195,6 @@
         
         <div class="sidebar-bottom-actions" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-light);">
             <div style="display: flex; gap: 8px;">
-                <!-- .edit-control class properly assigned so these show up in Edit Mode -->
                 <button id="new-cat-btn" class="edit-control hide" style="flex: 1; font-weight: bold; background: #f0f3f5;">+ Category</button>
                 <button id="new-page-btn" class="edit-control hide" style="flex: 1; font-weight: bold;">+ Page</button>
             </div>
@@ -218,7 +218,8 @@
                     
                     <button id="stats-btn" class="practice-control hide" title="View Study Statistics">📊 Stats</button>
                     <button id="peek-answers-btn" class="practice-control hide">Peek Answers</button>
-                    <button id="clear-answers-btn" class="practice-control hide" style="background: var(--accent-red); color: white;">Clear Answers</button>
+                    <button id="clear-answers-btn" class="practice-control hide" style="background: var(--accent-red); color: white;" title="Clear practice answers for this page only">Clear Page</button>
+                    <button id="clear-global-btn" class="practice-control hide" style="background: var(--accent-dark-red); color: white;" title="Clear practice answers across ALL pages">Clear All Data</button>
                 </div>
             </div>
             
@@ -823,12 +824,25 @@
         });
 
         document.getElementById('clear-answers-btn').addEventListener('click', function() {
-            if (confirm("CLEAR ALL practice answers for this page?")) {
+            if (confirm("CLEAR ALL practice answers for THIS page only?")) {
                 const activeData = getActivePage();
                 if(activeData) {
                     activeData.page.rows.forEach(r => { if (r.type === 'data') r.userAnswer = ""; });
                     isPeeking = false; resetPeekButton(); saveData(); renderMenu(); 
                 }
+            }
+        });
+
+        document.getElementById('clear-global-btn').addEventListener('click', function() {
+            if (confirm("WARNING: CLEAR ALL practice answers across ALL pages and categories? This cannot be undone!")) {
+                categories.forEach(cat => {
+                    cat.pages.forEach(page => {
+                        page.rows.forEach(r => {
+                            if (r.type === 'data') r.userAnswer = "";
+                        });
+                    });
+                });
+                isPeeking = false; resetPeekButton(); saveData(); renderMenu(); 
             }
         });
 
