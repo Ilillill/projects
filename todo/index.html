@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Board</title>
+    <style>
+        :root {
+            /* Ultra-Modern Minimalist Theme */
+            --bg-color: #ffffff; 
+            --surface: #ffffff; 
+            --input-bg: #f2f2f7; 
+            --border: #e5e5ea;
+            --text: #1c1c1e;
+            --text-secondary: #8e8e93;
+            --accent: #ff9800; 
+            --hover-bg: #fcfcfc;
+            --drop-zone-bg: #ffffff; 
+            --task-bg: #ffffff;
+            --btn-blue: #007aff;
+            --delete-btn-color: #ff3b30;
+            
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
+            --shadow-modal: 0 10px 40px rgba(0,0,0,0.12);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 12px; 
+            display: flex;
+            flex-direction: column; 
+            height: 100vh;
+            box-sizing: border-box;
+            gap: 16px; 
+        }
+
+        /* --- Streamlined Top Toolbar --- */
+        #top-toolbar {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .toolbar-section {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .divider {
+            width: 1px;
+            height: 24px;
+            background: var(--border);
+            margin: 0 8px;
+        }
+
+        .text-input {
+            padding: 8px 14px; 
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background: var(--input-bg);
+            color: var(--text);
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .text-input:focus {
+            background: var(--surface);
+            border: 1px solid var(--accent);
+            box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+        }
+        
+        button.action-btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 8px 16px; 
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            white-space: nowrap;
+        }
+        
+        button.action-btn:hover { opacity: 0.85; }
+        button.action-btn:active { transform: scale(0.96); }
+        
+        .btn-export { background: var(--btn-blue) !important; }
+
+        /* --- Main Board & Categories --- */
+        #main-board {
+            flex: 1;
+            display: flex;
+            flex-direction: column; 
+            gap: 12px; 
+            overflow-y: auto;
+            padding-right: 4px; 
+        }
+
+        .category-box {
+            background: var(--surface);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: row; 
+            transition: all 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+        }
+
+        /* Pure Icon Sidebar */
+        .category-sidebar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px; /* Tight padding to reduce empty space */
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-top-left-radius: 12px;
+            border-bottom-left-radius: 12px;
+            background: #ffffff; /* Pure white background */
+            border-right: 1px solid var(--border);
+        }
+
+        .category-sidebar:hover { background: #f9f9f9; }
+
+        /* User Image Styling (75x75) */
+        .category-image {
+            width: 75px;
+            height: 75px;
+            object-fit: cover;
+            border-radius: 8px; 
+            box-shadow: var(--shadow-sm);
+            background: #ffffff; 
+            display: block; /* Removes inline spacing ghost gaps */
+        }
+
+        /* Generic emoji styling for Intake/Repeat */
+        .sidebar-emoji {
+            font-size: 40px; /* Scaled up to match the larger 75px footprint */
+            line-height: 1;
+            user-select: none;
+            padding: 8px;
+        }
+
+        .task-list {
+            flex: 1;
+            min-height: 40px; 
+            display: flex;
+            flex-direction: row; 
+            flex-wrap: wrap; 
+            align-content: flex-start; 
+            gap: 8px; 
+            padding: 8px; 
+            border-radius: 12px;
+        }
+
+        /* Minimal Task Cards */
+        .task-card {
+            background: var(--task-bg);
+            padding: 6px 12px; 
+            border-radius: 8px;
+            cursor: pointer; 
+            box-shadow: var(--shadow-sm);
+            user-select: none;
+            display: inline-flex; 
+            align-items: center;
+            width: fit-content; 
+            max-width: 100%; 
+            box-sizing: border-box;
+            border: 1px solid var(--border); 
+            transition: box-shadow 0.2s, transform 0.1s;
+        }
+
+        .task-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+
+        .task-card span {
+            word-break: break-word; 
+            font-size: 0.85rem; 
+            font-weight: 500;
+        }
+
+        .task-card:active { cursor: grabbing; opacity: 0.7; transform: scale(0.97); }
+
+        /* Permanent Category overrides */
+        #main-board .category-box:last-child .category-sidebar { 
+            background: #ffffff; /* Pure white */
+            border-right: 1px solid #ffe0b2; /* Keeping the orange hint border */
+        }
+        
+        /* --- Modal Styles --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(4px); 
+            -webkit-backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 1000;
+            opacity: 0; transition: opacity 0.2s;
+        }
+        
+        .modal-box {
+            background: var(--surface); padding: 24px; border-radius: 16px;
+            width: 320px; box-shadow: var(--shadow-modal);
+            border: 1px solid var(--border);
+            transform: scale(0.95); transition: transform 0.2s;
+        }
+        
+        .modal-overlay.active { opacity: 1; }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+
+        .modal-box h3 { margin-top: 0; margin-bottom: 16px; font-size: 1.1rem; color: var(--text); font-weight: 600;}
+        .modal-box input { width: 100%; box-sizing: border-box; margin-bottom: 12px; }
+        .modal-btn-group { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+        
+        .btn-cancel { 
+            background: var(--input-bg); color: var(--text); 
+            border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;
+        }
+        .btn-cancel:hover { background: #e5e5ea; }
+        .btn-delete { 
+            background: var(--delete-btn-color); color: #fff; 
+            border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="category-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Manage Category</h3>
+            <input type="text" id="modal-cat-name" class="text-input" placeholder="Category Name" autocomplete="off" required>
+            <input type="url" id="modal-cat-image" class="text-input" placeholder="Image URL (Required)" autocomplete="off" required>
+            <div class="modal-btn-group">
+                <button class="btn-cancel" onclick="closeCategoryModal()">Cancel</button>
+                <button class="btn-delete" id="modal-delete-btn">Delete</button>
+                <button class="action-btn" id="modal-save-btn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="task-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Manage Task</h3>
+            <input type="text" id="modal-task-text" class="text-input" autocomplete="off">
+            <div class="modal-btn-group">
+                <button class="btn-cancel" onclick="closeTaskModal()">Cancel</button>
+                <button class="btn-delete" id="modal-task-delete-btn">Delete</button>
+                <button class="action-btn" id="modal-task-save-btn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="top-toolbar">
+        <form id="add-task-form" class="toolbar-section">
+            <input type="text" id="new-task-input" class="text-input" placeholder="Drop a thought here..." autocomplete="off" required style="width: 250px;">
+            <button type="submit" class="action-btn">Add Task</button>
+        </form>
+
+        <div class="divider"></div>
+
+        <form id="add-category-form" class="toolbar-section">
+            <input type="text" id="new-category-name" class="text-input" placeholder="Category Name" autocomplete="off" required style="width: 130px;">
+            <input type="url" id="new-category-image" class="text-input" placeholder="Icon URL" autocomplete="off" required style="width: 130px;">
+            <button type="submit" class="action-btn">Add Category</button>
+        </form>
+
+        <div style="flex-grow: 1;"></div> 
+        
+        <button id="export-btn" class="action-btn btn-export">Export to TXT</button>
+    </div>
+
+    <div id="main-board">
+        <div class="category-box">
+            <div class="category-sidebar" style="cursor: default;" title="Intake Bench">
+                <span class="sidebar-emoji">📥</span>
+            </div>
+            <div class="task-list drop-zone" id="intake"></div>
+        </div>
+
+        <div class="category-box">
+            <div class="category-sidebar" style="cursor: default;" title="Repeatable Tasks">
+                <span class="sidebar-emoji">🔁</span>
+            </div>
+            <div class="task-list drop-zone" id="repeatable_tasks"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, onSnapshot, updateDoc, doc, deleteDoc, serverTimestamp, writeBatch, query, where } 
+        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const app = initializeApp({
+            apiKey: "AIzaSyBxKv-xXahSO2TEtwVwXTfU1eJ1ZsaaMAc",
+            authDomain: "tasks-de4d9.firebaseapp.com",
+            databaseURL: "https://tasks-de4d9-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "tasks-de4d9",
+            storageBucket: "tasks-de4d9.firebasestorage.app",
+            messagingSenderId: "908733856196",
+            appId: "1:908733856196:web:b8d268a692a0e079be4c91"
+        });
+        
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        const tasksRef = collection(db, "command_board_tasks");
+        const categoriesRef = collection(db, "command_board_categories"); 
+
+        let currentTasks = {};
+        let currentCategories = {};
+        let currentDragSourceCategory = ''; 
+        let currentEditingCatId = null; 
+        let currentEditingTaskId = null;
+
+        signInAnonymously(auth).then(() => {
+            onSnapshot(categoriesRef, (snapshot) => {
+                currentCategories = {};
+                snapshot.forEach(doc => { currentCategories[doc.id] = doc.data(); });
+                renderBoard();
+            }, (error) => console.error("Category Error: ", error));
+
+            onSnapshot(tasksRef, (snapshot) => {
+                currentTasks = {};
+                snapshot.forEach(doc => { currentTasks[doc.id] = doc.data(); });
+                renderBoard();
+            }, (error) => console.error("Task Error: ", error));
+        }).catch((error) => {
+            console.error("Auth Failed:", error);
+            alert("Database connection requires authentication. Please check console.");
+        });
+
+        function renderBoard() {
+            const mainBoard = document.getElementById('main-board');
+            const intakeZone = document.getElementById('intake');
+            const repeatZone = document.getElementById('repeatable_tasks');
+            
+            Array.from(mainBoard.children).forEach(child => {
+                if (child.querySelector('.drop-zone').id !== 'intake' && child.querySelector('.drop-zone').id !== 'repeatable_tasks') {
+                    mainBoard.removeChild(child);
+                }
+            });
+            
+            intakeZone.innerHTML = '';
+            repeatZone.innerHTML = '';
+
+            const sortedCategories = Object.entries(currentCategories).sort((a, b) => {
+                return (a[1].name || '').localeCompare(b[1].name || '');
+            });
+
+            const repeatBenchElement = mainBoard.lastElementChild;
+
+            sortedCategories.forEach(([catId, cat]) => {
+                const catBox = document.createElement('div');
+                catBox.className = 'category-box';
+                
+                const safeName = (cat.name || 'Unnamed').replace(/'/g, "\\'");
+                const safeImage = (cat.imageUrl || '').replace(/'/g, "\\'");
+                
+                const sidebarContent = cat.imageUrl && cat.imageUrl.trim() !== "" 
+                    ? `<img src="${cat.imageUrl}" alt="${cat.name}" class="category-image">` 
+                    : `<span class="sidebar-emoji">📁</span>`;
+
+                catBox.innerHTML = `
+                    <div class="category-sidebar" onclick="openCategoryModal('${catId}', '${safeName}', '${safeImage}')" title="Edit ${cat.name}">
+                        ${sidebarContent}
+                    </div>
+                    <div class="task-list drop-zone" id="${catId}"></div>
+                `;
+                mainBoard.insertBefore(catBox, repeatBenchElement);
+            });
+
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault(); 
+                    const glowColor = zone.id === 'repeatable_tasks' ? '#ffcc80' : '#bbdefb';
+                    zone.parentElement.style.boxShadow = `0 0 0 3px ${glowColor}, var(--shadow-sm)`;
+                });
+                zone.addEventListener('dragleave', () => {
+                    zone.parentElement.style.boxShadow = 'var(--shadow-sm)';
+                });
+                zone.addEventListener('drop', async (e) => {
+                    e.preventDefault();
+                    zone.parentElement.style.boxShadow = 'var(--shadow-sm)';
+                    
+                    const taskId = e.dataTransfer.getData('text/plain');
+                    const targetCategory = zone.id;
+                    const draggedTask = currentTasks[taskId];
+
+                    if (!draggedTask) return;
+
+                    if (currentDragSourceCategory === 'repeatable_tasks' && targetCategory !== 'repeatable_tasks') {
+                         try { 
+                            await addDoc(tasksRef, { text: draggedTask.text, category: targetCategory, createdAt: serverTimestamp() });
+                         } catch (error) { alert("FIREBASE ERROR: " + error.message); }
+                    } 
+                    else {
+                        if (draggedTask.category !== targetCategory) {
+                             try { await updateDoc(doc(db, "command_board_tasks", taskId), { category: targetCategory }); } 
+                             catch (error) { alert("FIREBASE ERROR: " + error.message); }
+                        }
+                    }
+                });
+            });
+
+            // NEW: Sort the tasks array alphabetically before building the UI
+            const sortedTasks = Object.entries(currentTasks).sort((a, b) => {
+                return (a[1].text || '').localeCompare(b[1].text || '');
+            });
+
+            sortedTasks.forEach(([taskId, task]) => {
+                const card = document.createElement('div');
+                card.className = 'task-card';
+                card.draggable = true;
+                card.id = taskId;
+                card.title = "Click to edit";
+                
+                if(task.category === 'repeatable_tasks') { card.style.borderLeftColor = '#ff9800'; }
+                else { card.style.borderLeftColor = 'var(--btn-blue)'; }
+                
+                card.innerHTML = `<span>${task.text}</span>`;
+                
+                card.addEventListener('click', () => { openTaskModal(taskId, task.text); });
+
+                card.addEventListener('dragstart', (e) => {
+                    currentDragSourceCategory = task.category; 
+                    e.dataTransfer.setData('text/plain', taskId);
+                    setTimeout(() => card.style.opacity = '0.4', 0);
+                });
+                card.addEventListener('dragend', () => card.style.opacity = '1');
+
+                let dropZone = document.getElementById(task.category);
+                if (!dropZone) dropZone = intakeZone;
+                
+                dropZone.appendChild(card);
+            });
+        }
+
+        document.getElementById('add-task-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('new-task-input');
+            if (input.value.trim() === '') return;
+            const taskText = input.value;
+            input.value = '';
+            input.focus();
+            try { await addDoc(tasksRef, { text: taskText, category: 'intake', createdAt: serverTimestamp() }); } 
+            catch (error) { alert("FIREBASE ERROR: " + error.message); }
+        });
+
+        document.getElementById('add-category-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('new-category-name');
+            const imageInput = document.getElementById('new-category-image');
+            if (nameInput.value.trim() === '' || imageInput.value.trim() === '') return;
+            
+            try {
+                await addDoc(categoriesRef, { 
+                    name: nameInput.value.trim(), 
+                    imageUrl: imageInput.value.trim(),
+                    createdAt: serverTimestamp() 
+                });
+                nameInput.value = '';
+                imageInput.value = '';
+            } catch (error) { alert("FIREBASE ERROR: " + error.message); }
+        });
+
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10); 
+        }
+
+        function hideModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('active');
+            setTimeout(() => modal.style.display = 'none', 200);
+        }
+
+        window.openCategoryModal = (catId, currentName, currentImage) => {
+            currentEditingCatId = catId;
+            document.getElementById('modal-cat-name').value = currentName;
+            document.getElementById('modal-cat-image').value = currentImage;
+            showModal('category-modal');
+            document.getElementById('modal-cat-name').focus();
+        };
+
+        window.closeCategoryModal = () => {
+            hideModal('category-modal');
+            currentEditingCatId = null;
+        };
+
+        document.getElementById('modal-save-btn').addEventListener('click', async () => {
+            if (!currentEditingCatId) return;
+            const newName = document.getElementById('modal-cat-name').value.trim();
+            const newImg = document.getElementById('modal-cat-image').value.trim();
+            if (newName !== "") {
+                try {
+                    await updateDoc(doc(db, "command_board_categories", currentEditingCatId), { 
+                        name: newName, 
+                        imageUrl: newImg 
+                    });
+                    closeCategoryModal();
+                } catch (error) { alert("FIREBASE ERROR: " + error.message); }
+            }
+        });
+
+        document.getElementById('modal-delete-btn').addEventListener('click', async () => {
+            if (!currentEditingCatId) return;
+            if (confirm("Delete this category? Tasks inside will return to the Intake bench.")) {
+                try {
+                    const q = query(tasksRef, where("category", "==", currentEditingCatId));
+                    const snapshot = await getDocs(q);
+                    const batch = writeBatch(db);
+                    snapshot.forEach((taskDoc) => { batch.update(taskDoc.ref, { category: 'intake' }); });
+                    await batch.commit();
+                    await deleteDoc(doc(db, "command_board_categories", currentEditingCatId));
+                    closeCategoryModal();
+                } catch (error) { alert("FIREBASE ERROR: " + error.message); }
+            }
+        });
+
+        window.openTaskModal = (taskId, text) => {
+            currentEditingTaskId = taskId;
+            document.getElementById('modal-task-text').value = text;
+            showModal('task-modal');
+            document.getElementById('modal-task-text').focus();
+        };
+
+        window.closeTaskModal = () => {
+            hideModal('task-modal');
+            currentEditingTaskId = null;
+        };
+
+        document.getElementById('modal-task-save-btn').addEventListener('click', async () => {
+            if (!currentEditingTaskId) return;
+            const newText = document.getElementById('modal-task-text').value.trim();
+            if (newText !== "") {
+                try {
+                    await updateDoc(doc(db, "command_board_tasks", currentEditingTaskId), { text: newText });
+                    closeTaskModal();
+                } catch (error) { alert("FIREBASE ERROR: " + error.message); }
+            }
+        });
+
+        document.getElementById('modal-task-delete-btn').addEventListener('click', async () => {
+            if (!currentEditingTaskId) return;
+            try {
+                await deleteDoc(doc(db, "command_board_tasks", currentEditingTaskId));
+                closeTaskModal();
+            } catch (error) { alert("FIREBASE ERROR: " + error.message); }
+        });
+
+        document.getElementById('export-btn').addEventListener('click', () => {
+            let exportData = "=== INTAKE BENCH ===\n";
+            const intakeTasks = Object.values(currentTasks).filter(t => t.category === 'intake' || (!currentCategories[t.category] && t.category !== 'repeatable_tasks'));
+            if (intakeTasks.length === 0) exportData += "(Empty)\n";
+            
+            // Sort exports alphabetically as well to match the UI
+            intakeTasks.sort((a,b) => (a.text || '').localeCompare(b.text || '')).forEach(t => exportData += `- ${t.text}\n`);
+            exportData += "\n";
+
+            const sortedCategories = Object.entries(currentCategories).sort((a, b) => { return (a[1].name || '').localeCompare(b[1].name || ''); });
+
+            sortedCategories.forEach(([catId, cat]) => {
+                exportData += `=== ${(cat.name || 'UNNAMED').toUpperCase()} ===\n`;
+                const catTasks = Object.values(currentTasks).filter(t => t.category === catId);
+                if (catTasks.length === 0) { exportData += "(Empty)\n"; } 
+                else { 
+                    catTasks.sort((a,b) => (a.text || '').localeCompare(b.text || '')).forEach(t => exportData += `- ${t.text}\n`); 
+                }
+                exportData += "\n";
+            });
+
+            exportData += "=== 📅 REPEATABLE TASKS BENCH ===\n";
+            const repeatableTasks = Object.values(currentTasks).filter(t => t.category === 'repeatable_tasks');
+            if (repeatableTasks.length === 0) exportData += "(Empty)\n";
+            repeatableTasks.sort((a,b) => (a.text || '').localeCompare(b.text || '')).forEach(t => exportData += `- ${t.text}\n`);
+            exportData += "\n";
+
+            const blob = new Blob([exportData], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            const dateStr = new Date().toISOString().split('T')[0];
+            a.download = `CommandBoard_Tasks_${dateStr}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>
