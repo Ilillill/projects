@@ -6,7 +6,6 @@
     <title>Tasks</title>
     <style>
         :root {
-            /* Ultra-Minimalist Professional Theme */
             --bg-color: #ffffff; 
             --surface: #ffffff; 
             --input-bg: #f5f5f7; 
@@ -81,7 +80,6 @@
             box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
         }
 
-        /* File Input Styling (Hidden input, styled label) */
         .file-label {
             display: inline-block;
             width: 140px;
@@ -342,7 +340,6 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        // Removed Storage SDK entirely. Relying purely on Firestore.
         import { getFirestore, collection, getDocs, addDoc, onSnapshot, updateDoc, setDoc, doc, deleteDoc, serverTimestamp, writeBatch, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
@@ -351,7 +348,7 @@
             authDomain: "tasks-de4d9.firebaseapp.com",
             databaseURL: "https://tasks-de4d9-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "tasks-de4d9",
-            storageBucket: "tasks-de4d9.firebasestorage.app", // Safely ignored now
+            storageBucket: "tasks-de4d9.firebasestorage.app", 
             messagingSenderId: "908733856196",
             appId: "1:908733856196:web:b8d268a692a0e079be4c91"
         });
@@ -410,12 +407,31 @@
             }
         });
 
-        // --- Helper: Convert File to Base64 String ---
+        // --- Helper: Convert & Resize File to 100x100 Base64 String ---
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        // Create an off-screen Canvas set to 100x100
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 100;
+                        canvas.height = 100;
+                        const ctx = canvas.getContext('2d');
+
+                        // Clear rect ensures transparent PNGs stay transparent
+                        ctx.clearRect(0, 0, 100, 100);
+                        ctx.drawImage(img, 0, 0, 100, 100);
+
+                        // Export as high-quality PNG Base64 string
+                        const resizedBase64 = canvas.toDataURL('image/png');
+                        resolve(resizedBase64);
+                    };
+                    img.onerror = error => reject(error);
+                };
                 reader.onerror = error => reject(error);
             });
         }
@@ -566,11 +582,9 @@
             btn.disabled = true;
 
             try {
-                // Convert file to Base64 String instantly
                 const file = fileInput.files[0];
                 const base64Image = await fileToBase64(file);
 
-                // Save directly to standard Firestore
                 await addDoc(categoriesRef, { 
                     name: nameInput.value.trim(), 
                     imageUrl: base64Image,
@@ -639,7 +653,6 @@
             btn.disabled = true;
 
             try {
-                // Generate new Base64 string if a new file was selected
                 if (fileInput.files.length > 0) {
                     finalImageUrl = await fileToBase64(fileInput.files[0]);
                 }
