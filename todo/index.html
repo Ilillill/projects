@@ -130,7 +130,7 @@
             flex: 1;
             display: flex;
             flex-direction: column; 
-            gap: 12px; 
+            gap: 8px; /* Slightly smaller gap between categories */
             overflow-y: auto;
             padding-right: 4px; 
         }
@@ -166,14 +166,14 @@
             padding: 4px; 
             flex-shrink: 0;
             cursor: pointer;
-            transition: background 0.2s;
             border-top-left-radius: 8px;
             border-bottom-left-radius: 8px;
             background: #ffffff; 
             border-right: 1px solid var(--border);
         }
 
-        .category-sidebar:hover { background: var(--input-bg); }
+        /* Enforced pure white hover state */
+        .category-sidebar:hover { background: #ffffff; }
 
         .category-image {
             width: 75px;
@@ -206,6 +206,12 @@
             border-radius: 8px;
         }
 
+        /* Extra small spacing specifically for completed tasks list */
+        .task-list.completed-list {
+            gap: 4px;
+            padding: 8px;
+        }
+
         .task-card {
             background: var(--task-bg);
             padding: 6px 12px; 
@@ -222,9 +228,23 @@
             transition: box-shadow 0.2s, transform 0.1s;
         }
 
+        /* Overrides for Completed Tasks */
+        .task-card.task-completed {
+            padding: 3px 8px;
+            font-style: italic;
+            border-left-color: var(--border) !important;
+            color: var(--text-secondary);
+            box-shadow: none; /* Flattens completed items */
+            background: #fafafa;
+        }
+
         .task-card:hover {
             box-shadow: var(--shadow-md);
             transform: translateY(-1px);
+        }
+
+        .task-card.task-completed:hover {
+            box-shadow: var(--shadow-sm);
         }
 
         .task-card span {
@@ -232,9 +252,24 @@
             font-size: 0.85rem; 
             font-weight: 400;
         }
+        
+        .task-card.task-completed span {
+            font-size: 0.75rem; 
+        }
+
+        .task-date {
+            font-size: 0.6rem;
+            color: #a0a0a5;
+            margin-left: 6px;
+            font-style: normal;
+        }
 
         .task-card:active { cursor: grabbing; opacity: 0.7; transform: scale(0.97); }
         
+        /* Permanent Category Specifics */
+        #main-board .category-box:nth-last-child(2) .category-sidebar { border-right: 1px solid #ffe0b2; } /* Repeatable */
+        #main-board .category-box:last-child .category-sidebar { border-right: 1px solid #e0e0e0; } /* Completed */
+
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.2);
@@ -297,6 +332,7 @@
         <div class="modal-box">
             <h3>Manage Task</h3>
             <input type="text" id="modal-task-text" class="text-input" autocomplete="off">
+            <input type="text" id="modal-task-date" class="text-input" autocomplete="off" placeholder="Completion Date (e.g., 2026-08-13)" style="display: none;">
             <div class="modal-btn-group">
                 <button class="btn-cancel" onclick="closeTaskModal()">Cancel</button>
                 <button class="btn-delete" id="modal-task-delete-btn">Delete</button>
@@ -335,6 +371,10 @@
         <div class="category-box" id="repeatable-container">
             <div class="category-sidebar" id="repeatable-sidebar" title="Edit Repeatable Tasks"></div>
             <div class="task-list drop-zone" id="repeatable_tasks"></div>
+        </div>
+        <div class="category-box" id="completed-container">
+            <div class="category-sidebar" id="completed-sidebar" title="Edit Completed Tasks"></div>
+            <div class="task-list drop-zone completed-list" id="completed_tasks"></div>
         </div>
     </div>
 
@@ -382,7 +422,6 @@
             alert("Database connection requires authentication.");
         });
 
-        // --- File Input UI Handlers ---
         const newCatFile = document.getElementById('new-category-file');
         const newCatLabel = document.getElementById('new-category-file-label');
         newCatFile.addEventListener('change', (e) => {
@@ -407,7 +446,6 @@
             }
         });
 
-        // --- Helper: Convert & Resize File to 100x100 Base64 String ---
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -416,19 +454,13 @@
                     const img = new Image();
                     img.src = event.target.result;
                     img.onload = () => {
-                        // Create an off-screen Canvas set to 100x100
                         const canvas = document.createElement('canvas');
                         canvas.width = 100;
                         canvas.height = 100;
                         const ctx = canvas.getContext('2d');
-
-                        // Clear rect ensures transparent PNGs stay transparent
                         ctx.clearRect(0, 0, 100, 100);
                         ctx.drawImage(img, 0, 0, 100, 100);
-
-                        // Export as high-quality PNG Base64 string
-                        const resizedBase64 = canvas.toDataURL('image/png');
-                        resolve(resizedBase64);
+                        resolve(canvas.toDataURL('image/png'));
                     };
                     img.onerror = error => reject(error);
                 };
@@ -441,15 +473,18 @@
             const intakeZone = document.getElementById('intake-container');
             const repeatZone = document.getElementById('repeatable_tasks');
             const repeatSidebar = document.getElementById('repeatable-sidebar');
+            const completedZone = document.getElementById('completed_tasks');
+            const completedSidebar = document.getElementById('completed-sidebar');
             
             Array.from(mainBoard.children).forEach(child => {
-                if (child.id !== 'intake-container' && child.id !== 'repeatable-container') {
+                if (child.id !== 'intake-container' && child.id !== 'repeatable-container' && child.id !== 'completed-container') {
                     mainBoard.removeChild(child);
                 }
             });
             
             intakeZone.innerHTML = '';
             repeatZone.innerHTML = '';
+            completedZone.innerHTML = '';
 
             const intakeTasks = Object.entries(currentTasks).filter(([id, t]) => t.category === 'intake');
             if (intakeTasks.length === 0) {
@@ -458,9 +493,9 @@
                 intakeZone.style.display = 'flex';
             }
 
+            // Setup Repeatable Tasks
             const repeatCat = currentCategories['repeatable_tasks'] || { name: 'Repeatable Tasks', imageUrl: '' };
             const safeRepeatImage = repeatCat.imageUrl || '';
-            
             if (safeRepeatImage) {
                 repeatSidebar.innerHTML = `<img src="${safeRepeatImage}" alt="Repeatable Tasks" class="category-image">`;
             } else {
@@ -468,8 +503,18 @@
             }
             repeatSidebar.onclick = () => openCategoryModal('repeatable_tasks', 'Repeatable Tasks', safeRepeatImage);
 
+            // Setup Completed Tasks
+            const compCat = currentCategories['completed_tasks'] || { name: 'Completed Tasks', imageUrl: '' };
+            const safeCompImage = compCat.imageUrl || '';
+            if (safeCompImage) {
+                completedSidebar.innerHTML = `<img src="${safeCompImage}" alt="Completed Tasks" class="category-image">`;
+            } else {
+                completedSidebar.innerHTML = `<div class="fallback-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>`;
+            }
+            completedSidebar.onclick = () => openCategoryModal('completed_tasks', 'Completed Tasks', safeCompImage);
+
             const sortedCategories = Object.entries(currentCategories)
-                .filter(([id]) => id !== 'repeatable_tasks')
+                .filter(([id]) => id !== 'repeatable_tasks' && id !== 'completed_tasks')
                 .sort((a, b) => (a[1].name || '').localeCompare(b[1].name || ''));
 
             const repeatBenchElement = document.getElementById('repeatable-container');
@@ -497,11 +542,12 @@
             document.querySelectorAll('.drop-zone').forEach(zone => {
                 zone.addEventListener('dragover', (e) => {
                     e.preventDefault(); 
-                    zone.parentElement.style.boxShadow = `0 0 0 2px var(--accent), var(--shadow-sm)`;
+                    const glowColor = zone.id === 'repeatable_tasks' ? '#ffcc80' : 
+                                      zone.id === 'completed_tasks' ? '#e0e0e0' : 'var(--accent)';
+                    zone.parentElement.style.boxShadow = `0 0 0 2px ${glowColor}, var(--shadow-sm)`;
                 });
                 zone.addEventListener('dragleave', () => {
                     zone.parentElement.style.boxShadow = 'none';
-                    zone.parentElement.style.border = '1px solid var(--border)';
                 });
                 zone.addEventListener('drop', async (e) => {
                     e.preventDefault();
@@ -515,12 +561,22 @@
 
                     if (currentDragSourceCategory === 'repeatable_tasks' && targetCategory !== 'repeatable_tasks') {
                          try { 
-                            await addDoc(tasksRef, { text: draggedTask.text, category: targetCategory, createdAt: serverTimestamp() });
+                            let newData = { text: draggedTask.text, category: targetCategory, createdAt: serverTimestamp() };
+                            if (targetCategory === 'completed_tasks' && !draggedTask.completedDate) {
+                                newData.completedDate = new Date().toISOString().split('T')[0];
+                            }
+                            await addDoc(tasksRef, newData);
                          } catch (error) { alert("FIREBASE ERROR: " + error.message); }
                     } 
                     else {
                         if (draggedTask.category !== targetCategory) {
-                             try { await updateDoc(doc(db, "command_board_tasks", taskId), { category: targetCategory }); } 
+                             try { 
+                                 let updates = { category: targetCategory };
+                                 if (targetCategory === 'completed_tasks' && !draggedTask.completedDate) {
+                                     updates.completedDate = new Date().toISOString().split('T')[0];
+                                 }
+                                 await updateDoc(doc(db, "command_board_tasks", taskId), updates); 
+                             } 
                              catch (error) { alert("FIREBASE ERROR: " + error.message); }
                         }
                     }
@@ -537,13 +593,18 @@
                 card.draggable = true;
                 card.id = taskId;
                 
-                if(task.category === 'intake') { card.style.borderLeft = '3px solid var(--text-secondary)'; }
-                else if(task.category === 'repeatable_tasks') { card.style.borderLeft = '3px solid #ff9800'; }
-                else { card.style.borderLeft = '3px solid var(--accent)'; }
+                if (task.category === 'completed_tasks') {
+                    card.classList.add('task-completed');
+                    const dateDisplay = task.completedDate ? `<span class="task-date">${task.completedDate}</span>` : '';
+                    card.innerHTML = `<span>${task.text}</span>${dateDisplay}`;
+                } else {
+                    if(task.category === 'intake') { card.style.borderLeft = '3px solid var(--text-secondary)'; }
+                    else if(task.category === 'repeatable_tasks') { card.style.borderLeft = '3px solid #ff9800'; }
+                    else { card.style.borderLeft = '3px solid var(--accent)'; }
+                    card.innerHTML = `<span>${task.text}</span>`;
+                }
                 
-                card.innerHTML = `<span>${task.text}</span>`;
-                
-                card.addEventListener('click', () => { openTaskModal(taskId, task.text); });
+                card.addEventListener('click', () => { openTaskModal(taskId, task.text, task.completedDate, task.category); });
 
                 card.addEventListener('dragstart', (e) => {
                     currentDragSourceCategory = task.category; 
@@ -626,7 +687,8 @@
             modalCatLabel.textContent = "Upload New Icon (Optional)";
             modalCatLabel.classList.remove('has-file');
             
-            if (catId === 'repeatable_tasks') {
+            // Protect hardcoded bases
+            if (catId === 'repeatable_tasks' || catId === 'completed_tasks') {
                 nameInput.disabled = true;
                 document.getElementById('modal-delete-btn').disabled = true;
             } else {
@@ -659,13 +721,15 @@
 
                 if (currentEditingCatId === 'repeatable_tasks') {
                     await setDoc(doc(db, "command_board_categories", "repeatable_tasks"), {
-                        name: "Repeatable Tasks", 
-                        imageUrl: finalImageUrl 
+                        name: "Repeatable Tasks", imageUrl: finalImageUrl 
+                    }, { merge: true });
+                } else if (currentEditingCatId === 'completed_tasks') {
+                    await setDoc(doc(db, "command_board_categories", "completed_tasks"), {
+                        name: "Completed Tasks", imageUrl: finalImageUrl 
                     }, { merge: true });
                 } else if (newName !== "") {
                     await updateDoc(doc(db, "command_board_categories", currentEditingCatId), { 
-                        name: newName, 
-                        imageUrl: finalImageUrl 
+                        name: newName, imageUrl: finalImageUrl 
                     });
                 }
                 closeCategoryModal();
@@ -678,7 +742,7 @@
         });
 
         document.getElementById('modal-delete-btn').addEventListener('click', async () => {
-            if (!currentEditingCatId || currentEditingCatId === 'repeatable_tasks') return;
+            if (!currentEditingCatId || currentEditingCatId === 'repeatable_tasks' || currentEditingCatId === 'completed_tasks') return;
             if (confirm("Delete this category? Tasks inside will return to the Intake bench.")) {
                 try {
                     const q = query(tasksRef, where("category", "==", currentEditingCatId));
@@ -692,9 +756,23 @@
             }
         });
 
-        window.openTaskModal = (taskId, text) => {
+        // Add "Enter to Save" logic for the Task Modal
+        const taskTextEnter = (e) => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('modal-task-save-btn').click(); }};
+        document.getElementById('modal-task-text').addEventListener('keydown', taskTextEnter);
+        document.getElementById('modal-task-date').addEventListener('keydown', taskTextEnter);
+
+        window.openTaskModal = (taskId, text, date, category) => {
             currentEditingTaskId = taskId;
             document.getElementById('modal-task-text').value = text;
+            
+            const dateInput = document.getElementById('modal-task-date');
+            if (category === 'completed_tasks') {
+                dateInput.style.display = 'block';
+                dateInput.value = date || '';
+            } else {
+                dateInput.style.display = 'none';
+            }
+
             showModal('task-modal');
             document.getElementById('modal-task-text').focus();
         };
@@ -707,9 +785,16 @@
         document.getElementById('modal-task-save-btn').addEventListener('click', async () => {
             if (!currentEditingTaskId) return;
             const newText = document.getElementById('modal-task-text').value.trim();
+            const dateInput = document.getElementById('modal-task-date');
+            
+            let updates = { text: newText };
+            if (dateInput.style.display === 'block') {
+                updates.completedDate = dateInput.value.trim();
+            }
+
             if (newText !== "") {
                 try {
-                    await updateDoc(doc(db, "command_board_tasks", currentEditingTaskId), { text: newText });
+                    await updateDoc(doc(db, "command_board_tasks", currentEditingTaskId), updates);
                     closeTaskModal();
                 } catch (error) { alert("FIREBASE ERROR: " + error.message); }
             }
@@ -723,6 +808,7 @@
             } catch (error) { alert("FIREBASE ERROR: " + error.message); }
         });
 
+        // --- Export Logic ---
         document.getElementById('export-btn').addEventListener('click', () => {
             let exportData = "=== INTAKE BENCH ===\n";
             const intakeTasks = Object.values(currentTasks).filter(t => t.category === 'intake');
@@ -731,7 +817,7 @@
             exportData += "\n";
 
             const sortedCategories = Object.entries(currentCategories)
-                .filter(([id]) => id !== 'repeatable_tasks')
+                .filter(([id]) => id !== 'repeatable_tasks' && id !== 'completed_tasks')
                 .sort((a, b) => (a[1].name || '').localeCompare(b[1].name || ''));
 
             sortedCategories.forEach(([catId, cat]) => {
@@ -748,6 +834,15 @@
             const repeatableTasks = Object.values(currentTasks).filter(t => t.category === 'repeatable_tasks');
             if (repeatableTasks.length === 0) exportData += "(Empty)\n";
             repeatableTasks.sort((a,b) => (a.text || '').localeCompare(b.text || '')).forEach(t => exportData += `- ${t.text}\n`);
+            exportData += "\n";
+
+            exportData += "=== ✔ COMPLETED TASKS ===\n";
+            const completedTasks = Object.values(currentTasks).filter(t => t.category === 'completed_tasks');
+            if (completedTasks.length === 0) exportData += "(Empty)\n";
+            completedTasks.sort((a,b) => (a.text || '').localeCompare(b.text || '')).forEach(t => {
+                const dateSuffix = t.completedDate ? ` [${t.completedDate}]` : '';
+                exportData += `- ${t.text}${dateSuffix}\n`;
+            });
             exportData += "\n";
 
             const blob = new Blob([exportData], { type: "text/plain" });
