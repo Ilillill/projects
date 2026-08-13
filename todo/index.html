@@ -13,7 +13,7 @@
             --border: #e5e5ea;
             --text: #1d1d1f;
             --text-secondary: #86868b;
-            --accent: #007aff; /* Switched to a professional system blue */
+            --accent: #007aff; 
             --hover-bg: #fbfbfd;
             --task-bg: #ffffff;
             --delete-btn-color: #ff3b30;
@@ -36,7 +36,6 @@
             gap: 16px; 
         }
 
-        /* --- Streamlined Top Toolbar --- */
         #top-toolbar {
             display: flex;
             gap: 16px;
@@ -46,7 +45,7 @@
         }
 
         #add-task-form {
-            flex: 1; /* Takes up remaining space gracefully */
+            flex: 1; 
             min-width: 200px;
         }
 
@@ -81,6 +80,20 @@
             border: 1px solid var(--accent);
             box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
         }
+
+        /* File Input Styling (Hidden input, styled label) */
+        .file-label {
+            display: inline-block;
+            width: 140px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: center;
+        }
+        .file-label:hover { background: #e8e8ed; }
+        .file-label.has-file { color: var(--accent); font-weight: 500; background: #e5f0ff; }
         
         button.action-btn {
             background: var(--accent);
@@ -97,7 +110,6 @@
         
         button.action-btn:hover { opacity: 0.85; }
         
-        /* Tiny Export Icon */
         .icon-btn {
             background: transparent;
             border: none;
@@ -116,7 +128,6 @@
             color: var(--text);
         }
 
-        /* --- Main Board & Categories --- */
         #main-board {
             flex: 1;
             display: flex;
@@ -126,9 +137,8 @@
             padding-right: 4px; 
         }
 
-        /* Ghost Intake Bench */
         #intake-container {
-            display: none; /* Hidden by default */
+            display: none; 
             flex-direction: row;
             flex-wrap: wrap;
             align-content: flex-start;
@@ -167,7 +177,6 @@
 
         .category-sidebar:hover { background: var(--input-bg); }
 
-        /* User Image Styling (75x75) */
         .category-image {
             width: 75px;
             height: 75px;
@@ -199,7 +208,6 @@
             border-radius: 8px;
         }
 
-        /* Minimal Task Cards */
         .task-card {
             background: var(--task-bg);
             padding: 6px 12px; 
@@ -229,7 +237,6 @@
 
         .task-card:active { cursor: grabbing; opacity: 0.7; transform: scale(0.97); }
         
-        /* --- Modal Styles --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.2);
@@ -273,7 +280,12 @@
         <div class="modal-box">
             <h3>Manage Category</h3>
             <input type="text" id="modal-cat-name" class="text-input" placeholder="Category Name" autocomplete="off" required>
-            <input type="url" id="modal-cat-image" class="text-input" placeholder="Image URL (Required)" autocomplete="off" required>
+            
+            <input type="file" id="modal-cat-file" accept="image/png, image/jpeg" style="display: none;">
+            <label for="modal-cat-file" id="modal-cat-file-label" class="text-input file-label" style="width: 100%;">Upload New Icon (Optional)</label>
+            
+            <input type="hidden" id="modal-cat-existing-image">
+
             <div class="modal-btn-group">
                 <button class="btn-cancel" onclick="closeCategoryModal()">Cancel</button>
                 <button class="btn-delete" id="modal-delete-btn">Delete</button>
@@ -295,10 +307,8 @@
         </div>
     </div>
 
-    <!-- Compact Toolbar -->
     <div id="top-toolbar">
         <form id="add-task-form">
-            <!-- No button, just pure input. Hitting Enter submits. -->
             <input type="text" id="new-task-input" class="text-input" placeholder="New" autocomplete="off" required>
         </form>
 
@@ -306,12 +316,14 @@
 
         <form id="add-category-form" class="toolbar-section">
             <input type="text" id="new-category-name" class="text-input" placeholder="Category Name" autocomplete="off" required style="width: 130px;">
-            <input type="url" id="new-category-image" class="text-input" placeholder="Icon URL" autocomplete="off" required style="width: 130px;">
-            <button type="submit" class="action-btn">Add Category</button>
+            
+            <input type="file" id="new-category-file" accept="image/png, image/jpeg" style="display: none;" required>
+            <label for="new-category-file" id="new-category-file-label" class="text-input file-label">Choose Icon...</label>
+            
+            <button type="submit" class="action-btn" id="add-category-btn">Add Category</button>
         </form>
         
         <button id="export-btn" class="icon-btn" title="Export to TXT">
-            <!-- Clean SVG Download Icon -->
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
@@ -321,24 +333,17 @@
     </div>
 
     <div id="main-board">
-        <!-- Ghost Intake Bench (No Drop Zone, Only grows when populated) -->
         <div id="intake-container"></div>
-
-        <!-- Dynamic categories inject here -->
-
-        <!-- Editable Repeatable Tasks Bench -->
         <div class="category-box" id="repeatable-container">
-            <div class="category-sidebar" id="repeatable-sidebar" title="Edit Repeatable Tasks">
-                <!-- Injected via JS -->
-            </div>
+            <div class="category-sidebar" id="repeatable-sidebar" title="Edit Repeatable Tasks"></div>
             <div class="task-list drop-zone" id="repeatable_tasks"></div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, onSnapshot, updateDoc, setDoc, doc, deleteDoc, serverTimestamp, writeBatch, query, where } 
-        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        // Removed Storage SDK entirely. Relying purely on Firestore.
+        import { getFirestore, collection, getDocs, addDoc, onSnapshot, updateDoc, setDoc, doc, deleteDoc, serverTimestamp, writeBatch, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const app = initializeApp({
@@ -346,7 +351,7 @@
             authDomain: "tasks-de4d9.firebaseapp.com",
             databaseURL: "https://tasks-de4d9-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "tasks-de4d9",
-            storageBucket: "tasks-de4d9.firebasestorage.app",
+            storageBucket: "tasks-de4d9.firebasestorage.app", // Safely ignored now
             messagingSenderId: "908733856196",
             appId: "1:908733856196:web:b8d268a692a0e079be4c91"
         });
@@ -380,13 +385,47 @@
             alert("Database connection requires authentication.");
         });
 
+        // --- File Input UI Handlers ---
+        const newCatFile = document.getElementById('new-category-file');
+        const newCatLabel = document.getElementById('new-category-file-label');
+        newCatFile.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                newCatLabel.textContent = e.target.files[0].name;
+                newCatLabel.classList.add('has-file');
+            } else {
+                newCatLabel.textContent = "Choose Icon...";
+                newCatLabel.classList.remove('has-file');
+            }
+        });
+
+        const modalCatFile = document.getElementById('modal-cat-file');
+        const modalCatLabel = document.getElementById('modal-cat-file-label');
+        modalCatFile.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                modalCatLabel.textContent = e.target.files[0].name;
+                modalCatLabel.classList.add('has-file');
+            } else {
+                modalCatLabel.textContent = "Upload New Icon (Optional)";
+                modalCatLabel.classList.remove('has-file');
+            }
+        });
+
+        // --- Helper: Convert File to Base64 String ---
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
         function renderBoard() {
             const mainBoard = document.getElementById('main-board');
             const intakeZone = document.getElementById('intake-container');
             const repeatZone = document.getElementById('repeatable_tasks');
             const repeatSidebar = document.getElementById('repeatable-sidebar');
             
-            // Clean up old dynamic categories
             Array.from(mainBoard.children).forEach(child => {
                 if (child.id !== 'intake-container' && child.id !== 'repeatable-container') {
                     mainBoard.removeChild(child);
@@ -396,7 +435,6 @@
             intakeZone.innerHTML = '';
             repeatZone.innerHTML = '';
 
-            // Handle Ghost Intake Visibility
             const intakeTasks = Object.entries(currentTasks).filter(([id, t]) => t.category === 'intake');
             if (intakeTasks.length === 0) {
                 intakeZone.style.display = 'none';
@@ -404,11 +442,9 @@
                 intakeZone.style.display = 'flex';
             }
 
-            // Extract Repeatable Category config and filter out from dynamic list
             const repeatCat = currentCategories['repeatable_tasks'] || { name: 'Repeatable Tasks', imageUrl: '' };
-            const safeRepeatImage = (repeatCat.imageUrl || '').replace(/'/g, "\\'");
+            const safeRepeatImage = repeatCat.imageUrl || '';
             
-            // Render Repeatable Sidebar Image or Fallback SVG
             if (safeRepeatImage) {
                 repeatSidebar.innerHTML = `<img src="${safeRepeatImage}" alt="Repeatable Tasks" class="category-image">`;
             } else {
@@ -427,10 +463,10 @@
                 catBox.className = 'category-box';
                 
                 const safeName = (cat.name || 'Unnamed').replace(/'/g, "\\'");
-                const safeImage = (cat.imageUrl || '').replace(/'/g, "\\'");
+                const safeImage = cat.imageUrl || '';
                 
-                const sidebarContent = cat.imageUrl && cat.imageUrl.trim() !== "" 
-                    ? `<img src="${cat.imageUrl}" alt="${cat.name}" class="category-image">` 
+                const sidebarContent = safeImage && safeImage.trim() !== "" 
+                    ? `<img src="${safeImage}" alt="${safeName}" class="category-image">` 
                     : `<div class="fallback-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg></div>`;
 
                 catBox.innerHTML = `
@@ -442,7 +478,6 @@
                 mainBoard.insertBefore(catBox, repeatBenchElement);
             });
 
-            // Drag and Drop (Explicitly excluding intake)
             document.querySelectorAll('.drop-zone').forEach(zone => {
                 zone.addEventListener('dragover', (e) => {
                     e.preventDefault(); 
@@ -476,7 +511,6 @@
                 });
             });
 
-            // Global Alphabetical Sort for tasks
             const sortedTasks = Object.entries(currentTasks).sort((a, b) => {
                 return (a[1].text || '').localeCompare(b[1].text || '');
             });
@@ -487,7 +521,6 @@
                 card.draggable = true;
                 card.id = taskId;
                 
-                // Subtle visual distinction
                 if(task.category === 'intake') { card.style.borderLeft = '3px solid var(--text-secondary)'; }
                 else if(task.category === 'repeatable_tasks') { card.style.borderLeft = '3px solid #ff9800'; }
                 else { card.style.borderLeft = '3px solid var(--accent)'; }
@@ -523,19 +556,37 @@
 
         document.getElementById('add-category-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const btn = document.getElementById('add-category-btn');
             const nameInput = document.getElementById('new-category-name');
-            const imageInput = document.getElementById('new-category-image');
-            if (nameInput.value.trim() === '' || imageInput.value.trim() === '') return;
+            const fileInput = document.getElementById('new-category-file');
             
+            if (nameInput.value.trim() === '' || fileInput.files.length === 0) return;
+            
+            btn.textContent = "Processing...";
+            btn.disabled = true;
+
             try {
+                // Convert file to Base64 String instantly
+                const file = fileInput.files[0];
+                const base64Image = await fileToBase64(file);
+
+                // Save directly to standard Firestore
                 await addDoc(categoriesRef, { 
                     name: nameInput.value.trim(), 
-                    imageUrl: imageInput.value.trim(),
+                    imageUrl: base64Image,
                     createdAt: serverTimestamp() 
                 });
+                
                 nameInput.value = '';
-                imageInput.value = '';
-            } catch (error) { alert("FIREBASE ERROR: " + error.message); }
+                fileInput.value = '';
+                newCatLabel.textContent = "Choose Icon...";
+                newCatLabel.classList.remove('has-file');
+            } catch (error) { 
+                alert("DATABASE ERROR: " + error.message); 
+            } finally {
+                btn.textContent = "Add Category";
+                btn.disabled = false;
+            }
         });
 
         function showModal(modalId) {
@@ -555,9 +606,12 @@
             const nameInput = document.getElementById('modal-cat-name');
             
             nameInput.value = currentName;
-            document.getElementById('modal-cat-image').value = currentImage;
+            document.getElementById('modal-cat-existing-image').value = currentImage;
             
-            // Protect the Repeatable Tasks systemic category from name changes and deletion
+            modalCatFile.value = '';
+            modalCatLabel.textContent = "Upload New Icon (Optional)";
+            modalCatLabel.classList.remove('has-file');
+            
             if (catId === 'repeatable_tasks') {
                 nameInput.disabled = true;
                 document.getElementById('modal-delete-btn').disabled = true;
@@ -567,7 +621,6 @@
             }
 
             showModal('category-modal');
-            document.getElementById('modal-cat-image').focus();
         };
 
         window.closeCategoryModal = () => {
@@ -577,24 +630,38 @@
 
         document.getElementById('modal-save-btn').addEventListener('click', async () => {
             if (!currentEditingCatId) return;
+            const btn = document.getElementById('modal-save-btn');
             const newName = document.getElementById('modal-cat-name').value.trim();
-            const newImg = document.getElementById('modal-cat-image').value.trim();
+            const fileInput = document.getElementById('modal-cat-file');
+            let finalImageUrl = document.getElementById('modal-cat-existing-image').value;
             
+            btn.textContent = "Saving...";
+            btn.disabled = true;
+
             try {
+                // Generate new Base64 string if a new file was selected
+                if (fileInput.files.length > 0) {
+                    finalImageUrl = await fileToBase64(fileInput.files[0]);
+                }
+
                 if (currentEditingCatId === 'repeatable_tasks') {
-                    // Use setDoc with merge to ensure the document gets created if it doesn't exist yet
                     await setDoc(doc(db, "command_board_categories", "repeatable_tasks"), {
                         name: "Repeatable Tasks", 
-                        imageUrl: newImg 
+                        imageUrl: finalImageUrl 
                     }, { merge: true });
                 } else if (newName !== "") {
                     await updateDoc(doc(db, "command_board_categories", currentEditingCatId), { 
                         name: newName, 
-                        imageUrl: newImg 
+                        imageUrl: finalImageUrl 
                     });
                 }
                 closeCategoryModal();
-            } catch (error) { alert("FIREBASE ERROR: " + error.message); }
+            } catch (error) { 
+                alert("FIREBASE ERROR: " + error.message); 
+            } finally {
+                btn.textContent = "Save";
+                btn.disabled = false;
+            }
         });
 
         document.getElementById('modal-delete-btn').addEventListener('click', async () => {
@@ -643,7 +710,6 @@
             } catch (error) { alert("FIREBASE ERROR: " + error.message); }
         });
 
-        // --- Export Logic ---
         document.getElementById('export-btn').addEventListener('click', () => {
             let exportData = "=== INTAKE BENCH ===\n";
             const intakeTasks = Object.values(currentTasks).filter(t => t.category === 'intake');
