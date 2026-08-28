@@ -148,10 +148,10 @@
             min-height: 40px;
             width: 100%;
             box-sizing: border-box;
+            flex-shrink: 0; /* Prevents container from collapsing and causing overlap */
         }
 
         #main-board {
-            /* Masonry Layout Setup */
             column-count: auto;
             column-width: 320px;
             column-gap: 16px;
@@ -162,40 +162,51 @@
             background: var(--surface);
             border-radius: 8px;
             display: flex;
-            flex-direction: row; 
+            flex-direction: column; 
             transition: box-shadow 0.2s ease;
             width: 100%;
             box-sizing: border-box;
             box-shadow: var(--shadow-sm);
             margin-bottom: 16px;
-            break-inside: avoid; /* Keeps items intact in masonry columns */
+            break-inside: avoid; 
         }
 
-        .category-sidebar {
+        .category-header {
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 4px; 
-            flex-shrink: 0;
+            gap: 8px;
+            padding: 10px; 
             cursor: pointer;
             border-top-left-radius: 8px;
-            border-bottom-left-radius: 8px;
-            background: #ffffff; 
-            border-right: 1px solid var(--input-bg);
+            border-top-right-radius: 8px;
+            background: #fbfbfd; 
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+        
+        .category-header:hover {
+            background: #f1f1f4;
         }
 
         .category-image {
-            width: 65px;
-            height: 65px;
+            width: 24px;
+            height: 24px;
             object-fit: cover;
-            border-radius: 6px; 
-            background: #ffffff; 
+            border-radius: 4px; 
+            background: transparent; 
             display: block; 
+        }
+        
+        .category-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text);
         }
 
         .fallback-icon {
-            width: 65px;
-            height: 65px;
+            width: 24px;
+            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -204,22 +215,22 @@
 
         .task-list {
             flex: 1;
-            min-height: 50px; 
+            min-height: 40px; 
             display: flex;
             flex-direction: row; 
             flex-wrap: wrap; 
             align-content: flex-start; 
-            gap: 6px; 
+            gap: 4px; 
             padding: 8px; 
             border-radius: 8px;
         }
 
         .task-card {
             background: var(--task-bg);
-            padding: 4px 10px; 
+            padding: 2px 6px; 
             border-radius: 6px;
             cursor: pointer; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
             user-select: none;
             display: inline-flex; 
             align-items: center;
@@ -230,9 +241,8 @@
             transition: box-shadow 0.2s, transform 0.1s;
         }
 
-        /* Completed item specifically in the modal list */
         .task-card.task-completed {
-            padding: 3px 8px;
+            padding: 2px 6px;
             font-style: italic;
             border-left: 2px solid var(--border) !important;
             color: var(--text-secondary);
@@ -250,14 +260,14 @@
 
         .task-card span {
             word-break: break-word; 
-            font-size: 0.75rem; /* Smaller text size */
+            font-size: 0.7rem; 
             font-weight: 400;
         }
 
         .task-date {
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             color: #a0a0a5;
-            margin-left: 6px;
+            margin-left: 4px;
             font-style: normal;
         }
 
@@ -280,7 +290,6 @@
             transform: scale(0.97); transition: transform 0.2s;
         }
 
-        /* Specific sizing for the new completed tasks list modal */
         #completed-modal .modal-box {
             width: 80%;
             max-width: 700px;
@@ -319,6 +328,7 @@
 </head>
 <body>
 
+    <!-- Category Modal -->
     <div id="category-modal" class="modal-overlay">
         <div class="modal-box">
             <h3>Manage Category</h3>
@@ -337,6 +347,7 @@
         </div>
     </div>
 
+    <!-- Task Modal -->
     <div id="task-modal" class="modal-overlay">
         <div class="modal-box">
             <h3>Manage Task</h3>
@@ -350,6 +361,7 @@
         </div>
     </div>
 
+    <!-- Completed Tasks Window Modal -->
     <div id="completed-modal" class="modal-overlay">
         <div class="modal-box">
             <h3>Completed Tasks</h3>
@@ -397,7 +409,7 @@
         
         <div id="main-board">
             <div class="category-box" id="repeatable-container">
-                <div class="category-sidebar" id="repeatable-sidebar" title="Edit Repeatable Tasks"></div>
+                <div class="category-header" id="repeatable-header" title="Edit Repeatable Tasks"></div>
                 <div class="task-list drop-zone" id="repeatable_tasks"></div>
             </div>
         </div>
@@ -497,10 +509,9 @@
             const mainBoard = document.getElementById('main-board');
             const intakeZone = document.getElementById('intake-container');
             const repeatZone = document.getElementById('repeatable_tasks');
-            const repeatSidebar = document.getElementById('repeatable-sidebar');
+            const repeatHeader = document.getElementById('repeatable-header');
             const completedListModal = document.getElementById('completed-modal-list');
             
-            // Clean dynamic elements from main board
             Array.from(mainBoard.children).forEach(child => {
                 if (child.id !== 'repeatable-container') {
                     mainBoard.removeChild(child);
@@ -509,7 +520,7 @@
             
             intakeZone.innerHTML = '';
             repeatZone.innerHTML = '';
-            completedListModal.innerHTML = ''; // reset completed container
+            completedListModal.innerHTML = ''; 
 
             const intakeTasks = Object.entries(currentTasks).filter(([id, t]) => t.category === 'intake');
             if (intakeTasks.length === 0) {
@@ -518,15 +529,16 @@
                 intakeZone.style.display = 'flex';
             }
 
-            // Setup Repeatable Tasks
             const repeatCat = currentCategories['repeatable_tasks'] || { name: 'Repeatable Tasks', imageUrl: '' };
             const safeRepeatImage = repeatCat.imageUrl || '';
+            const repeatName = repeatCat.name || 'Repeatable Tasks';
+            
             if (safeRepeatImage) {
-                repeatSidebar.innerHTML = `<img src="${safeRepeatImage}" alt="Repeatable Tasks" class="category-image">`;
+                repeatHeader.innerHTML = `<img src="${safeRepeatImage}" alt="Repeatable Tasks" class="category-image"><span class="category-title">${repeatName}</span>`;
             } else {
-                repeatSidebar.innerHTML = `<div class="fallback-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg></div>`;
+                repeatHeader.innerHTML = `<div class="fallback-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg></div><span class="category-title">${repeatName}</span>`;
             }
-            repeatSidebar.onclick = () => openCategoryModal('repeatable_tasks', 'Repeatable Tasks', safeRepeatImage);
+            repeatHeader.onclick = () => openCategoryModal('repeatable_tasks', repeatName, safeRepeatImage);
 
             const sortedCategories = Object.entries(currentCategories)
                 .filter(([id]) => id !== 'repeatable_tasks' && id !== 'completed_tasks')
@@ -539,20 +551,20 @@
                 const safeName = (cat.name || 'Unnamed').replace(/'/g, "\\'");
                 const safeImage = cat.imageUrl || '';
                 
-                const sidebarContent = safeImage && safeImage.trim() !== "" 
+                const headerContent = safeImage && safeImage.trim() !== "" 
                     ? `<img src="${safeImage}" alt="${safeName}" class="category-image">` 
-                    : `<div class="fallback-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg></div>`;
+                    : `<div class="fallback-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg></div>`;
 
                 catBox.innerHTML = `
-                    <div class="category-sidebar" onclick="openCategoryModal('${catId}', '${safeName}', '${safeImage}')" title="${cat.name}">
-                        ${sidebarContent}
+                    <div class="category-header" onclick="openCategoryModal('${catId}', '${safeName}', '${safeImage}')" title="${cat.name}">
+                        ${headerContent}
+                        <span class="category-title">${safeName}</span>
                     </div>
                     <div class="task-list drop-zone" id="${catId}"></div>
                 `;
                 mainBoard.appendChild(catBox);
             });
 
-            // Re-bind drop zones
             document.querySelectorAll('.drop-zone').forEach(zone => {
                 zone.addEventListener('dragover', (e) => {
                     e.preventDefault(); 
@@ -710,7 +722,6 @@
             setTimeout(() => modal.style.display = 'none', 200);
         }
 
-        // --- Completed Button Logic ---
         document.getElementById('completed_tasks').addEventListener('click', () => {
             showModal('completed-modal');
         });
