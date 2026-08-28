@@ -6,19 +6,19 @@
     <title>Tasks</title>
     <style>
         :root {
-            --bg-color: #ffffff; 
+            --bg-color: #fbfbfd; 
             --surface: #ffffff; 
             --input-bg: #f5f5f7; 
             --border: #e5e5ea;
             --text: #1d1d1f;
             --text-secondary: #86868b;
             --accent: #007aff; 
-            --hover-bg: #fbfbfd;
+            --hover-bg: #f5f5f7;
             --task-bg: #ffffff;
             --delete-btn-color: #ff3b30;
             
-            --shadow-sm: 0 1px 4px rgba(0,0,0,0.04);
-            --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
             --shadow-modal: 0 12px 40px rgba(0,0,0,0.12);
         }
 
@@ -102,7 +102,7 @@
             font-weight: 500;
             font-size: 0.85rem;
             cursor: pointer;
-            transition: opacity 0.2s;
+            transition: all 0.2s;
             white-space: nowrap;
         }
         
@@ -126,13 +126,13 @@
             color: var(--text);
         }
 
-        #main-board {
+        #board-wrapper {
             flex: 1;
             display: flex;
-            flex-direction: column; 
-            gap: 8px; /* Slightly smaller gap between categories */
+            flex-direction: column;
+            gap: 16px;
             overflow-y: auto;
-            padding-right: 4px; 
+            padding-right: 4px;
         }
 
         #intake-container {
@@ -143,9 +143,19 @@
             gap: 8px;
             padding: 12px;
             border-radius: 8px;
-            border: 1px dashed var(--border);
-            background: var(--hover-bg);
+            background: var(--surface);
+            box-shadow: var(--shadow-sm);
             min-height: 40px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #main-board {
+            /* Masonry Layout Setup */
+            column-count: auto;
+            column-width: 320px;
+            column-gap: 16px;
+            width: 100%;
         }
 
         .category-box {
@@ -156,7 +166,9 @@
             transition: box-shadow 0.2s ease;
             width: 100%;
             box-sizing: border-box;
-            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 16px;
+            break-inside: avoid; /* Keeps items intact in masonry columns */
         }
 
         .category-sidebar {
@@ -169,25 +181,21 @@
             border-top-left-radius: 8px;
             border-bottom-left-radius: 8px;
             background: #ffffff; 
-            border-right: 1px solid var(--border);
+            border-right: 1px solid var(--input-bg);
         }
 
-        /* Enforced pure white hover state */
-        .category-sidebar:hover { background: #ffffff; }
-
         .category-image {
-            width: 75px;
-            height: 75px;
+            width: 65px;
+            height: 65px;
             object-fit: cover;
             border-radius: 6px; 
-            box-shadow: var(--shadow-sm);
             background: #ffffff; 
             display: block; 
         }
 
         .fallback-icon {
-            width: 75px;
-            height: 75px;
+            width: 65px;
+            height: 65px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -196,45 +204,38 @@
 
         .task-list {
             flex: 1;
-            min-height: 60px; 
+            min-height: 50px; 
             display: flex;
             flex-direction: row; 
             flex-wrap: wrap; 
             align-content: flex-start; 
-            gap: 8px; 
-            padding: 10px; 
+            gap: 6px; 
+            padding: 8px; 
             border-radius: 8px;
-        }
-
-        /* Extra small spacing specifically for completed tasks list */
-        .task-list.completed-list {
-            gap: 4px;
-            padding: 8px;
         }
 
         .task-card {
             background: var(--task-bg);
-            padding: 6px 12px; 
+            padding: 4px 10px; 
             border-radius: 6px;
             cursor: pointer; 
-            box-shadow: var(--shadow-sm);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             user-select: none;
             display: inline-flex; 
             align-items: center;
             width: fit-content; 
             max-width: 100%; 
             box-sizing: border-box;
-            border: 1px solid var(--border); 
+            border: 1px solid transparent; 
             transition: box-shadow 0.2s, transform 0.1s;
         }
 
-        /* Overrides for Completed Tasks */
+        /* Completed item specifically in the modal list */
         .task-card.task-completed {
             padding: 3px 8px;
             font-style: italic;
-            border-left-color: var(--border) !important;
+            border-left: 2px solid var(--border) !important;
             color: var(--text-secondary);
-            box-shadow: none; /* Flattens completed items */
             background: #fafafa;
         }
 
@@ -249,12 +250,8 @@
 
         .task-card span {
             word-break: break-word; 
-            font-size: 0.85rem; 
+            font-size: 0.75rem; /* Smaller text size */
             font-weight: 400;
-        }
-        
-        .task-card.task-completed span {
-            font-size: 0.75rem; 
         }
 
         .task-date {
@@ -266,10 +263,6 @@
 
         .task-card:active { cursor: grabbing; opacity: 0.7; transform: scale(0.97); }
         
-        /* Permanent Category Specifics */
-        #main-board .category-box:nth-last-child(2) .category-sidebar { border-right: 1px solid #ffe0b2; } /* Repeatable */
-        #main-board .category-box:last-child .category-sidebar { border-right: 1px solid #e0e0e0; } /* Completed */
-
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.2);
@@ -286,13 +279,31 @@
             border: 1px solid var(--border);
             transform: scale(0.97); transition: transform 0.2s;
         }
+
+        /* Specific sizing for the new completed tasks list modal */
+        #completed-modal .modal-box {
+            width: 80%;
+            max-width: 700px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #completed-modal-list {
+            flex: 1;
+            overflow-y: auto;
+            background: var(--input-bg);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
         
         .modal-overlay.active { opacity: 1; }
         .modal-overlay.active .modal-box { transform: scale(1); }
 
         .modal-box h3 { margin-top: 0; margin-bottom: 16px; font-size: 1rem; color: var(--text); font-weight: 500;}
         .modal-box input { margin-bottom: 12px; }
-        .modal-btn-group { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+        .modal-btn-group { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
         
         .btn-cancel { 
             background: var(--input-bg); color: var(--text); 
@@ -308,7 +319,6 @@
 </head>
 <body>
 
-    <!-- Category Modal -->
     <div id="category-modal" class="modal-overlay">
         <div class="modal-box">
             <h3>Manage Category</h3>
@@ -327,7 +337,6 @@
         </div>
     </div>
 
-    <!-- Task Modal -->
     <div id="task-modal" class="modal-overlay">
         <div class="modal-box">
             <h3>Manage Task</h3>
@@ -337,6 +346,17 @@
                 <button class="btn-cancel" onclick="closeTaskModal()">Cancel</button>
                 <button class="btn-delete" id="modal-task-delete-btn">Delete</button>
                 <button class="action-btn" id="modal-task-save-btn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="completed-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Completed Tasks</h3>
+            <div id="completed-modal-list" class="task-list"></div>
+            <div class="modal-btn-group">
+                <button class="btn-cancel" onclick="closeCompletedModal()">Close</button>
+                <button class="btn-delete" id="clear-all-completed-btn">Clear All</button>
             </div>
         </div>
     </div>
@@ -356,6 +376,12 @@
             
             <button type="submit" class="action-btn" id="add-category-btn">Add Category</button>
         </form>
+
+        <div class="divider"></div>
+
+        <button id="completed_tasks" class="action-btn drop-zone" style="background: var(--surface); color: var(--text-secondary); border: 1px solid var(--border);">
+            ✓ Completed
+        </button>
         
         <button id="export-btn" class="icon-btn" title="Export to TXT">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -366,15 +392,14 @@
         </button>
     </div>
 
-    <div id="main-board">
-        <div id="intake-container"></div>
-        <div class="category-box" id="repeatable-container">
-            <div class="category-sidebar" id="repeatable-sidebar" title="Edit Repeatable Tasks"></div>
-            <div class="task-list drop-zone" id="repeatable_tasks"></div>
-        </div>
-        <div class="category-box" id="completed-container">
-            <div class="category-sidebar" id="completed-sidebar" title="Edit Completed Tasks"></div>
-            <div class="task-list drop-zone completed-list" id="completed_tasks"></div>
+    <div id="board-wrapper">
+        <div id="intake-container" class="drop-zone"></div>
+        
+        <div id="main-board">
+            <div class="category-box" id="repeatable-container">
+                <div class="category-sidebar" id="repeatable-sidebar" title="Edit Repeatable Tasks"></div>
+                <div class="task-list drop-zone" id="repeatable_tasks"></div>
+            </div>
         </div>
     </div>
 
@@ -473,18 +498,18 @@
             const intakeZone = document.getElementById('intake-container');
             const repeatZone = document.getElementById('repeatable_tasks');
             const repeatSidebar = document.getElementById('repeatable-sidebar');
-            const completedZone = document.getElementById('completed_tasks');
-            const completedSidebar = document.getElementById('completed-sidebar');
+            const completedListModal = document.getElementById('completed-modal-list');
             
+            // Clean dynamic elements from main board
             Array.from(mainBoard.children).forEach(child => {
-                if (child.id !== 'intake-container' && child.id !== 'repeatable-container' && child.id !== 'completed-container') {
+                if (child.id !== 'repeatable-container') {
                     mainBoard.removeChild(child);
                 }
             });
             
             intakeZone.innerHTML = '';
             repeatZone.innerHTML = '';
-            completedZone.innerHTML = '';
+            completedListModal.innerHTML = ''; // reset completed container
 
             const intakeTasks = Object.entries(currentTasks).filter(([id, t]) => t.category === 'intake');
             if (intakeTasks.length === 0) {
@@ -503,21 +528,9 @@
             }
             repeatSidebar.onclick = () => openCategoryModal('repeatable_tasks', 'Repeatable Tasks', safeRepeatImage);
 
-            // Setup Completed Tasks
-            const compCat = currentCategories['completed_tasks'] || { name: 'Completed Tasks', imageUrl: '' };
-            const safeCompImage = compCat.imageUrl || '';
-            if (safeCompImage) {
-                completedSidebar.innerHTML = `<img src="${safeCompImage}" alt="Completed Tasks" class="category-image">`;
-            } else {
-                completedSidebar.innerHTML = `<div class="fallback-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>`;
-            }
-            completedSidebar.onclick = () => openCategoryModal('completed_tasks', 'Completed Tasks', safeCompImage);
-
             const sortedCategories = Object.entries(currentCategories)
                 .filter(([id]) => id !== 'repeatable_tasks' && id !== 'completed_tasks')
                 .sort((a, b) => (a[1].name || '').localeCompare(b[1].name || ''));
-
-            const repeatBenchElement = document.getElementById('repeatable-container');
 
             sortedCategories.forEach(([catId, cat]) => {
                 const catBox = document.createElement('div');
@@ -536,25 +549,43 @@
                     </div>
                     <div class="task-list drop-zone" id="${catId}"></div>
                 `;
-                mainBoard.insertBefore(catBox, repeatBenchElement);
+                mainBoard.appendChild(catBox);
             });
 
+            // Re-bind drop zones
             document.querySelectorAll('.drop-zone').forEach(zone => {
                 zone.addEventListener('dragover', (e) => {
                     e.preventDefault(); 
                     const glowColor = zone.id === 'repeatable_tasks' ? '#ffcc80' : 
-                                      zone.id === 'completed_tasks' ? '#e0e0e0' : 'var(--accent)';
-                    zone.parentElement.style.boxShadow = `0 0 0 2px ${glowColor}, var(--shadow-sm)`;
+                                      zone.id === 'completed_tasks' ? '#4caf50' : 'var(--accent)';
+                    
+                    if(zone.tagName === 'BUTTON') {
+                        zone.style.boxShadow = `0 0 0 2px ${glowColor}, var(--shadow-sm)`;
+                    } else if (zone.id === 'intake-container') {
+                        zone.style.boxShadow = `0 0 0 2px ${glowColor}, var(--shadow-sm)`;
+                    } else {
+                        zone.parentElement.style.boxShadow = `0 0 0 2px ${glowColor}, var(--shadow-sm)`;
+                    }
                 });
+                
                 zone.addEventListener('dragleave', () => {
-                    zone.parentElement.style.boxShadow = 'none';
+                    if(zone.tagName === 'BUTTON' || zone.id === 'intake-container') {
+                        zone.style.boxShadow = 'var(--shadow-sm)';
+                    } else {
+                        zone.parentElement.style.boxShadow = 'var(--shadow-sm)';
+                    }
                 });
+                
                 zone.addEventListener('drop', async (e) => {
                     e.preventDefault();
-                    zone.parentElement.style.boxShadow = 'none';
+                    if(zone.tagName === 'BUTTON' || zone.id === 'intake-container') {
+                        zone.style.boxShadow = 'var(--shadow-sm)';
+                    } else {
+                        zone.parentElement.style.boxShadow = 'var(--shadow-sm)';
+                    }
                     
                     const taskId = e.dataTransfer.getData('text/plain');
-                    const targetCategory = zone.id;
+                    const targetCategory = zone.id === 'intake-container' ? 'intake' : zone.id;
                     const draggedTask = currentTasks[taskId];
 
                     if (!draggedTask) return;
@@ -613,10 +644,13 @@
                 });
                 card.addEventListener('dragend', () => card.style.opacity = '1');
 
-                let dropZone = document.getElementById(task.category);
-                if (!dropZone && task.category === 'intake') dropZone = intakeZone;
-                
-                if (dropZone) dropZone.appendChild(card);
+                if (task.category === 'completed_tasks') {
+                    completedListModal.appendChild(card);
+                } else {
+                    let dropZone = document.getElementById(task.category);
+                    if (!dropZone && task.category === 'intake') dropZone = intakeZone;
+                    if (dropZone) dropZone.appendChild(card);
+                }
             });
         }
 
@@ -676,6 +710,30 @@
             setTimeout(() => modal.style.display = 'none', 200);
         }
 
+        // --- Completed Button Logic ---
+        document.getElementById('completed_tasks').addEventListener('click', () => {
+            showModal('completed-modal');
+        });
+
+        window.closeCompletedModal = () => {
+            hideModal('completed-modal');
+        };
+
+        document.getElementById('clear-all-completed-btn').addEventListener('click', async () => {
+            if (confirm("Are you sure you want to permanently delete all completed tasks?")) {
+                try {
+                    const q = query(tasksRef, where("category", "==", "completed_tasks"));
+                    const snapshot = await getDocs(q);
+                    const batch = writeBatch(db);
+                    snapshot.forEach((taskDoc) => { batch.delete(taskDoc.ref); });
+                    await batch.commit();
+                    closeCompletedModal();
+                } catch (error) { 
+                    alert("FIREBASE ERROR: " + error.message); 
+                }
+            }
+        });
+
         window.openCategoryModal = (catId, currentName, currentImage) => {
             currentEditingCatId = catId;
             const nameInput = document.getElementById('modal-cat-name');
@@ -687,8 +745,7 @@
             modalCatLabel.textContent = "Upload New Icon (Optional)";
             modalCatLabel.classList.remove('has-file');
             
-            // Protect hardcoded bases
-            if (catId === 'repeatable_tasks' || catId === 'completed_tasks') {
+            if (catId === 'repeatable_tasks') {
                 nameInput.disabled = true;
                 document.getElementById('modal-delete-btn').disabled = true;
             } else {
@@ -723,10 +780,6 @@
                     await setDoc(doc(db, "command_board_categories", "repeatable_tasks"), {
                         name: "Repeatable Tasks", imageUrl: finalImageUrl 
                     }, { merge: true });
-                } else if (currentEditingCatId === 'completed_tasks') {
-                    await setDoc(doc(db, "command_board_categories", "completed_tasks"), {
-                        name: "Completed Tasks", imageUrl: finalImageUrl 
-                    }, { merge: true });
                 } else if (newName !== "") {
                     await updateDoc(doc(db, "command_board_categories", currentEditingCatId), { 
                         name: newName, imageUrl: finalImageUrl 
@@ -742,7 +795,7 @@
         });
 
         document.getElementById('modal-delete-btn').addEventListener('click', async () => {
-            if (!currentEditingCatId || currentEditingCatId === 'repeatable_tasks' || currentEditingCatId === 'completed_tasks') return;
+            if (!currentEditingCatId || currentEditingCatId === 'repeatable_tasks') return;
             if (confirm("Delete this category? Tasks inside will return to the Intake bench.")) {
                 try {
                     const q = query(tasksRef, where("category", "==", currentEditingCatId));
@@ -756,7 +809,6 @@
             }
         });
 
-        // Add "Enter to Save" logic for the Task Modal
         const taskTextEnter = (e) => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('modal-task-save-btn').click(); }};
         document.getElementById('modal-task-text').addEventListener('keydown', taskTextEnter);
         document.getElementById('modal-task-date').addEventListener('keydown', taskTextEnter);
@@ -808,7 +860,6 @@
             } catch (error) { alert("FIREBASE ERROR: " + error.message); }
         });
 
-        // --- Export Logic ---
         document.getElementById('export-btn').addEventListener('click', () => {
             let exportData = "=== INTAKE BENCH ===\n";
             const intakeTasks = Object.values(currentTasks).filter(t => t.category === 'intake');
