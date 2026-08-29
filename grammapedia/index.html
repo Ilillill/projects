@@ -169,12 +169,12 @@
 
         /* Modals & Stats */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); backdrop-filter: blur(2px); z-index: 300; justify-content: center; align-items: center; }
-        .modal { background: var(--bg-color); padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 340px; max-height: 90vh; overflow-y: auto; }
+        .modal { background: var(--bg-color); padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 380px; max-height: 90vh; overflow-y: auto; }
         .modal label { display: block; margin-bottom: 4px; font-size: 12px; color: #555; font-weight: bold; margin-top: 10px; }
         .modal input[type="text"], .modal input[type="number"], .modal select { width: 100%; padding: 6px; margin-bottom: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
         .modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
         
-        .col-style-container { border: 1px solid #ddd; border-radius: 4px; padding: 10px; margin-bottom: 5px; max-height: 200px; overflow-y: auto; background: #fafafa; }
+        .col-style-container { border: 1px solid #ddd; border-radius: 4px; padding: 10px; margin-bottom: 5px; max-height: 250px; overflow-y: auto; background: #fafafa; }
         .col-style-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; font-size: 12px; }
         .col-style-row select { padding: 2px; font-size: 12px; }
 
@@ -217,6 +217,10 @@
                     <button id="sort-az-pages-btn" class="edit-control hide" title="Sort Pages A-Z">Sort Menu A-Z</button>
                     
                     <button id="stats-btn" class="practice-control hide" title="View Study Statistics">📊 Stats</button>
+                    
+                    <!-- NEW SHUFFLE BUTTON -->
+                    <button id="shuffle-btn" class="practice-control hide" title="Shuffle row order for this session">🔀 Shuffle Order</button>
+                    
                     <button id="peek-answers-btn" class="practice-control hide">Peek Answers</button>
                     <button id="clear-answers-btn" class="practice-control hide" style="background: var(--accent-red); color: white;" title="Clear practice answers for this page only">Clear Page</button>
                     <button id="clear-global-btn" class="practice-control hide" style="background: var(--accent-dark-red); color: white;" title="Clear practice answers across ALL pages">Clear All Data</button>
@@ -406,7 +410,7 @@
                         id: 'cat_default', title: 'My Pages', isOpen: true, pages: [
                             {
                                 id: Date.now(), title: "Hablar Template", description: "", columns: 2, answerColumnIndex: 1, alignment: "left", tableWidth: "max-content",
-                                columnStyles: [{ bold: false, italic: false, fontSize: '14px' }, { bold: false, italic: false, fontSize: '14px' }],
+                                columnStyles: [{ bold: false, italic: false, fontSize: '14px', type: 'text' }, { bold: false, italic: false, fontSize: '14px', type: 'text' }],
                                 rows: [
                                     { id: 1, type: "title", text: "Present", color: "#f89c12" },
                                     { id: 2, type: "data", cells: [ "yo", "hablo" ], userAnswer: "" },
@@ -504,6 +508,12 @@
                          let colStyle = page.columnStyles[i] || {};
                          let styleStr = colStyle.bold ? "font-weight:bold;" : "";
                          styleStr += colStyle.italic ? "font-style:italic;" : "";
+                         
+                         // Clean up image URLs for print rendering
+                         if (colStyle.type === 'image' && cellVal.startsWith('http')) {
+                             cellVal = `<img src="${cellVal.trim()}" style="max-width: 150px; height: auto;">`;
+                         }
+                         
                          html += `<td style="${styleStr}">${cellVal}</td>`;
                      }
                      html += '</tr>';
@@ -518,7 +528,6 @@
 
         let draggedMenuId = null;
 
-        // Passed flag skipGridRender allows checkmarks to update without ruining Enter-key focus
         function renderMenu(skipGridRender = false) {
             const menuList = document.getElementById('menu-list');
             menuList.innerHTML = '';
@@ -637,7 +646,7 @@
                             activePageId = page.id;
                             isPeeking = false; 
                             resetPeekButton(); 
-                            document.querySelector('main').scrollTop = 0; // Scrolls to top
+                            document.querySelector('main').scrollTop = 0; 
                             renderMenu();
                         }
                     };
@@ -681,7 +690,6 @@
                 menuList.appendChild(groupEl);
             });
             
-            // Only rebuild the main table grid if the flag was not passed
             if (!skipGridRender) {
                 renderGrid();
             }
@@ -732,7 +740,7 @@
                 } else {
                     for (let colIndex = 0; colIndex < activePage.columns; colIndex++) {
                         const cellText = row.cells[colIndex] || "";
-                        const colStyle = activePage.columnStyles[colIndex] || { bold: false, italic: false, fontSize: '14px' };
+                        const colStyle = activePage.columnStyles[colIndex] || { bold: false, italic: false, fontSize: '14px', type: 'text' };
                         let styleStr = `font-size: ${colStyle.fontSize};`;
                         if (colStyle.bold) styleStr += ` font-weight: bold;`;
                         if (colStyle.italic) styleStr += ` font-style: italic;`;
@@ -756,7 +764,23 @@
                                        data-correct-answer="${cellText}" value="${displayValue}" autocomplete="off" ${isPeeking ? 'readonly' : ''}>
                             </td>`;
                         } else {
-                            html += `<td class="grid-cell" ${isEditable} data-row-id="${row.id}" data-col="${colIndex}" style="${styleStr}">${cellText}</td>`;
+                            // IMAGE COLUMN LOGIC
+                            if (colStyle.type === 'image') {
+                                const url = cellText.trim();
+                                if (appMode === 'practice') {
+                                    // Full size for practice mode
+                                    html += `<td class="grid-cell" style="text-align: center; ${styleStr}">
+                                                ${url.startsWith('http') ? `<img src="${url}" style="min-width: 400px; height: 400px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" alt="Image">` : ''}
+                                             </td>`;
+                                } else {
+                                    // Edit mode with small thumbnail and editable URL
+                                    html += `<td class="grid-cell" ${isEditable} data-row-id="${row.id}" data-col="${colIndex}" style="${styleStr}">
+                                                ${url.startsWith('http') ? `<img src="${url}" style="width: 30px; height: 30px; object-fit: cover; vertical-align: middle; margin-right: 6px; border-radius: 3px;" contenteditable="false" alt="preview">` : ''}${cellText}</td>`;
+                                }
+                            } else {
+                                // NORMAL TEXT COLUMN
+                                html += `<td class="grid-cell" ${isEditable} data-row-id="${row.id}" data-col="${colIndex}" style="${styleStr}">${cellText}</td>`;
+                            }
                         }
                     }
                 }
@@ -790,6 +814,33 @@
                 attachDragAndDropRows();
             }
         }
+
+        // --- Shuffle Logic (Session Only) ---
+        document.getElementById('shuffle-btn').addEventListener('click', function() {
+            const activeData = getActivePage();
+            if(!activeData) return;
+            
+            // 1. Extract only the actual data rows
+            let dataRows = activeData.page.rows.filter(r => r.type === 'data');
+            
+            // 2. Shuffle them using Fisher-Yates
+            for (let i = dataRows.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [dataRows[i], dataRows[j]] = [dataRows[j], dataRows[i]];
+            }
+            
+            // 3. Map back over original rows to put shuffled items in data slots (titles stay put)
+            let shuffleIndex = 0;
+            activeData.page.rows = activeData.page.rows.map(r => {
+                if (r.type === 'data') {
+                    return dataRows[shuffleIndex++];
+                }
+                return r; 
+            });
+            
+            // 4. Render without triggering a save, so it resets on page reload
+            renderGrid();
+        });
 
         function resetPeekButton() {
             const btn = document.getElementById('peek-answers-btn');
@@ -916,7 +967,6 @@
                             this.value = correctAnswer; 
                             if (row) { row.userAnswer = correctAnswer; saveData(); }
                             
-                            // True flag prevents the table grid from completely rebuilding and dropping focus!
                             renderMenu(true); 
                             
                             if (index + 1 < inputs.length) inputs[index + 1].focus();
@@ -956,16 +1006,26 @@
                     const row = activeData.page.rows.find(r => r.id === rowId);
                     
                     if (row) {
-                        let cleanedHTML = this.innerHTML.replace(/<br\s*\/?>/gi, '').trim();
-                        cleanedHTML = cleanedHTML.replace(/&nbsp;/gi, ' ').trim();
+                        let cleanedHTML = "";
+                        const colStyle = (colIndex !== null && activeData.page.columnStyles[colIndex]) ? activeData.page.columnStyles[colIndex] : null;
+
+                        // Image cells strip out HTML to just keep the URL text. Text cells allow basic bold/italic.
+                        if (colStyle && colStyle.type === 'image') {
+                            cleanedHTML = this.textContent.trim(); 
+                        } else {
+                            cleanedHTML = this.innerHTML.replace(/<br\s*\/?>/gi, '').trim().replace(/&nbsp;/gi, ' ');
+                        }
 
                         if (row.type === 'title' || row.type === 'note') { 
-                            row.text = cleanedHTML; this.innerHTML = cleanedHTML;
+                            row.text = cleanedHTML; 
                         } 
                         else if (row.type === 'data' && colIndex !== null) { 
-                            row.cells[parseInt(colIndex)] = cleanedHTML; this.innerHTML = cleanedHTML;
+                            row.cells[parseInt(colIndex)] = cleanedHTML; 
                         }
-                        saveData(); 
+                        saveData();
+                        
+                        // Re-render so image preview updates immediately
+                        if (colStyle && colStyle.type === 'image') renderGrid();
                     }
                 });
             });
@@ -1036,12 +1096,12 @@
             const newId = Date.now();
             targetCat.pages.push({
                 id: newId, title: "New Blank Page", description: "", columns: 2, answerColumnIndex: 1, alignment: "left", tableWidth: "max-content",
-                columnStyles: [{ bold: false, italic: false, fontSize: '14px' }, { bold: false, italic: false, fontSize: '14px' }],
+                columnStyles: [{ bold: false, italic: false, fontSize: '14px', type: 'text' }, { bold: false, italic: false, fontSize: '14px', type: 'text' }],
                 rows: []
             });
             targetCat.isOpen = true;
             activePageId = newId;
-            document.querySelector('main').scrollTop = 0; // Scrolls to top
+            document.querySelector('main').scrollTop = 0;
             saveData(); renderMenu();
         });
 
@@ -1082,7 +1142,7 @@
             const cat = categories.find(c => c.id === activeData.categoryId);
             cat.pages.push(newPage);
             activePageId = newPage.id;
-            document.querySelector('main').scrollTop = 0; // Scrolls to top
+            document.querySelector('main').scrollTop = 0;
             saveData(); renderMenu();
         });
 
@@ -1163,10 +1223,16 @@
             const activePage = getActivePage().page;
             container.innerHTML = '';
             for (let i = 0; i < colCount; i++) {
-                const style = (activePage.columnStyles && activePage.columnStyles[i]) || { bold: false, italic: false, fontSize: '14px' };
+                const style = (activePage.columnStyles && activePage.columnStyles[i]) || { bold: false, italic: false, fontSize: '14px', type: 'text' };
                 container.innerHTML += `
                     <div class="col-style-row">
                         <span style="font-weight: bold; width: 40px;">Col ${i + 1}:</span>
+                        
+                        <select id="mod-col-type-${i}" style="width: auto; margin-right: 5px;">
+                            <option value="text" ${style.type !== 'image' ? 'selected' : ''}>Text</option>
+                            <option value="image" ${style.type === 'image' ? 'selected' : ''}>Image URL</option>
+                        </select>
+                        
                         <label style="margin:0;"><input type="checkbox" id="mod-col-b-${i}" ${style.bold ? 'checked' : ''}> B</label>
                         <label style="margin:0;"><input type="checkbox" id="mod-col-i-${i}" ${style.italic ? 'checked' : ''}> I</label>
                         <select id="mod-col-s-${i}" style="width: auto;">
@@ -1219,6 +1285,7 @@
             activePage.columnStyles = [];
             for(let i = 0; i < newColumns; i++) {
                 activePage.columnStyles.push({
+                    type: document.getElementById(`mod-col-type-${i}`).value,
                     bold: document.getElementById(`mod-col-b-${i}`).checked,
                     italic: document.getElementById(`mod-col-i-${i}`).checked,
                     fontSize: document.getElementById(`mod-col-s-${i}`).value
