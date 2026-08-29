@@ -48,7 +48,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            flex-wrap: nowrap; /* Forces same line */
+            flex-wrap: nowrap;
             width: 100%;
         }
 
@@ -119,11 +119,13 @@
             text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; font-weight: 600;
         }
 
-        /* MASONRY LAYOUT UPDATES - Automatically grows horizontally */
+        /* DYNAMIC GRID LAYOUT - Forces horizontal stretching */
         .builder-container {
-            column-width: 260px;
-            column-gap: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
             width: 100%;
+            align-items: start; /* Prevents cards from stretching vertically */
         }
 
         .category-card {
@@ -132,9 +134,6 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.04);
             border: none;
             padding: 12px;
-            break-inside: avoid;
-            margin-bottom: 15px;
-            display: inline-block;
             width: 100%;
             box-sizing: border-box;
         }
@@ -297,7 +296,6 @@
         .active-tag .remove-btn { background: none; border: none; color: #bfdbfe; cursor: pointer; font-weight: bold; box-shadow: none; padding: 0;}
         .active-tag .remove-btn:hover { color: #fff; }
 
-        /* Hide Scrollbars for a cleaner look */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
@@ -375,7 +373,6 @@
         const db = getDatabase(app);
         const auth = getAuth(app); 
 
-        // State Variables
         let groupedData = {};
         let heroineData = {};
         let paleoData = {};
@@ -387,10 +384,6 @@
         const stagingArea = document.getElementById('staging-area');
         const searchInput = document.getElementById('search');
 
-        // ==========================================
-        // AUTOMATED CLIPBOARD COPIER
-        // ==========================================
-        // Observes staging area and auto-copies when elements change
         const autoCopyObserver = new MutationObserver(() => {
             const tags = stagingArea.querySelectorAll('.active-tag span');
             if (tags.length === 0) return;
@@ -404,9 +397,6 @@
         });
         autoCopyObserver.observe(stagingArea, { childList: true });
 
-        // ==========================================
-        // AUTO-POPULATION (HARDCODED DEFAULTS)
-        // ==========================================
         const defaultGroupedData = {
             "Core Settings & Styles": {
                 color: "#6366f1",
@@ -434,10 +424,6 @@
             actions: ["stalking prey through tall grass", "roaring fiercely"],
             environments: ["dense ancient redwood forest", "tropical prehistoric jungle"]
         };
-
-        // ==========================================
-        // AUTHENTICATION AND DATA LOADING
-        // ==========================================
         
         signInAnonymously(auth).then(() => {
             get(ref(db, 'promptBuilder/groupedData')).then((snapshot) => {
@@ -492,9 +478,6 @@
             mainContainer.innerHTML = `<h3 style="color: #ef4444;">Login Error: ${error.message}</h3>`;
         });
 
-        // ==========================================
-        // RENDER LOGIC
-        // ==========================================
         function renderBuilder(dataToRender) {
             mainContainer.innerHTML = '';
             for (const [groupName, groupData] of Object.entries(dataToRender)) {
@@ -610,10 +593,6 @@
                 mainContainer.appendChild(groupDiv);
             }
         }
-
-        // ==========================================
-        // UI & CRUD FUNCTIONS (ATTACHED TO WINDOW)
-        // ==========================================
         
         window.toggleEditMode = () => {
             editMode = !editMode;
@@ -734,9 +713,6 @@
             }
         };
 
-        // ==========================================
-        // PROMPT BUILDING ENGINE
-        // ==========================================
         window.handleEnter = (e) => { if (e.key === 'Enter') window.addCustomText(); };
 
         window.addCustomText = () => {
@@ -752,7 +728,7 @@
             const tag = document.createElement('div');
             tag.className = 'active-tag';
             tag.draggable = true;
-            tag.title = text; // Tooltip to see full text on hover
+            tag.title = text; 
             
             const textNode = document.createElement('span');
             textNode.textContent = text;
@@ -761,7 +737,7 @@
             const removeBtn = document.createElement('button');
             removeBtn.className = 'remove-btn';
             removeBtn.innerHTML = '&times;';
-            removeBtn.onclick = () => tag.remove(); // Removal naturally triggers MutationObserver to auto-copy
+            removeBtn.onclick = () => tag.remove(); 
             tag.appendChild(removeBtn);
 
             tag.addEventListener('dragstart', handleDragStart);
@@ -802,7 +778,6 @@
             }
         };
 
-        // --- Drag and Drop ---
         let dragSourceEl = null;
         function handleDragStart(e) {
             dragSourceEl = this;
@@ -834,7 +809,6 @@
             }, { distance: Number.POSITIVE_INFINITY }).element;
         }
 
-        // --- Search Logic ---
         searchInput.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             const groups = document.querySelectorAll('.macro-group');
@@ -859,7 +833,6 @@
             });
         });
 
-        // --- Generators ---
         const pick = (arr) => arr && arr.length > 0 ? arr[Math.floor(Math.random() * arr.length)] : "";
         
         window.generateAndCopyHeroine = () => {
