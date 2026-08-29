@@ -6,17 +6,17 @@
     <title>Ultimate AI Prompt Builder</title>
     <style>
         :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --group-bg: #18181b;
+            /* Minimalist Light Theme */
+            --bg-color: #f4f5f7;
+            --card-bg: #ffffff;
+            --group-bg: transparent;
             --accent-color: #3b82f6;
-            --accent-hover: #60a5fa;
-            --text-color: #e5e7eb;
-            --text-muted: #9ca3af;
-            --tag-bg: #2d2d30;
-            --tag-hover: #3f3f46;
-            --tag-active: #10b981;
-            --border-color: #333;
+            --accent-hover: #2563eb;
+            --text-color: #1f2937;
+            --text-muted: #6b7280;
+            --tag-bg: #f3f4f6;
+            --tag-hover: #e5e7eb;
+            --tag-active: #3b82f6;
             --danger-color: #ef4444;
             --warning-color: #f59e0b;
         }
@@ -27,116 +27,112 @@
             color: var(--text-color);
             margin: 0;
             padding: 15px;
-            padding-bottom: 250px; 
+            padding-bottom: 200px; 
             line-height: 1.4;
         }
 
+        /* Streamlined Top Bar */
         header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-            flex-wrap: wrap;
-            gap: 10px;
+            justify-content: space-between;
+            background: var(--card-bg);
+            padding: 8px 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
         }
-
-        h1 { margin: 0; color: #fff; font-size: 1.4rem; }
 
         .header-controls {
             display: flex;
             align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn-flow { background-color: #10b981; color: white; font-weight: bold; font-size: 1rem; padding: 8px 16px;}
-        .btn-flow:hover { background-color: #059669; }
-        .btn-heroine { background-color: #ec4899; color: white; }
-        .btn-heroine:hover { background-color: #f472b6; }
-        .btn-paleo { background-color: #f59e0b; color: white; }
-        .btn-paleo:hover { background-color: #fbbf24; }
-        .btn-edit-mode { background-color: var(--warning-color); color: #fff; }
-        .btn-cheatsheet { background-color: #6366f1; color: white; }
-
-        button {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 4px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-size: 0.8rem;
-        }
-
-        .search-bar {
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: nowrap; /* Forces same line */
             width: 100%;
-            max-width: 250px;
-            padding: 6px 10px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            background-color: var(--card-bg);
-            color: #fff;
-            font-size: 0.85rem;
         }
 
-        /* Views */
-        #builder-view, #cheatsheet-view { display: block; }
-        #cheatsheet-view { display: none; }
-
-        /* Cheatsheet Area */
-        .cheatsheet-container {
-            width: 100%;
-            height: 60vh;
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 15px;
-            box-sizing: border-box;
-            color: #fff;
-            font-family: monospace;
-            font-size: 1rem;
-            resize: vertical;
-        }
-
-        /* Macro-Group Styling */
-        .macro-group {
-            background-color: var(--group-bg);
-            border-radius: 8px;
-            border-left: 4px solid var(--border-color);
-            padding: 10px 15px;
-            margin-bottom: 20px;
-        }
-
-        .macro-title {
-            font-size: 1.1rem;
-            color: #fff;
-            margin-top: 0;
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .header-left-btns {
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        /* MASONRY LAYOUT UPDATES */
+        button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .btn-flow { background-color: #10b981; color: white; }
+        .btn-flow:hover { background-color: #059669; }
+        .btn-heroine { background-color: #ec4899; color: white; }
+        .btn-heroine:hover { background-color: #db2777; }
+        .btn-paleo { background-color: #f59e0b; color: white; }
+        .btn-paleo:hover { background-color: #d97706; }
+        .btn-edit-mode { background-color: var(--warning-color); color: white; }
+        .btn-cheatsheet { background-color: #6366f1; color: white; }
+
+        .search-bar {
+            width: 100%;
+            max-width: 250px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            background-color: #f9fafb;
+            color: var(--text-color);
+            font-size: 0.85rem;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+            outline: none;
+        }
+        .search-bar:focus { box-shadow: inset 0 1px 3px rgba(59, 130, 246, 0.3), 0 0 0 2px rgba(59, 130, 246, 0.2); }
+
+        /* Views */
+        #builder-view, #cheatsheet-view { display: block; }
+        #cheatsheet-view { display: none; }
+
+        .cheatsheet-container {
+            width: 100%; height: 60vh; background-color: var(--card-bg);
+            border: none; border-radius: 8px; padding: 15px; box-sizing: border-box;
+            color: var(--text-color); font-family: monospace; font-size: 0.95rem;
+            resize: vertical; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        /* Macro-Group Styling */
+        .macro-group {
+            border-left: 4px solid var(--accent-color);
+            padding: 5px 15px;
+            margin-bottom: 25px;
+        }
+
+        .macro-title {
+            font-size: 1rem; color: var(--text-color); margin-top: 0; margin-bottom: 12px;
+            text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; font-weight: 600;
+        }
+
+        /* MASONRY LAYOUT UPDATES - Automatically grows horizontally */
         .builder-container {
-            column-count: 4; /* Default to 4 columns on very wide screens */
+            column-width: 260px;
             column-gap: 15px;
             width: 100%;
         }
 
         .category-card {
             background-color: var(--card-bg);
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            padding: 10px;
-            position: relative;
-            
-            /* Masonry Fixes */
-            break-inside: avoid; /* Prevents card from splitting across columns */
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            border: none;
+            padding: 12px;
+            break-inside: avoid;
             margin-bottom: 15px;
             display: inline-block;
             width: 100%;
@@ -147,11 +143,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .category-title {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--text-muted);
             margin: 0;
             text-transform: uppercase;
@@ -161,36 +157,47 @@
         .copy-all-btn {
             background: none;
             border: none;
-            color: var(--accent-color);
-            font-size: 0.75rem;
+            color: var(--text-muted);
             cursor: pointer;
-            padding: 0;
+            padding: 4px;
+            box-shadow: none;
+            border-radius: 4px;
         }
-        .copy-all-btn:hover { text-decoration: underline; }
+        .copy-all-btn:hover { background-color: #f3f4f6; color: var(--accent-color); }
 
         .tag-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 5px;
+            gap: 6px;
         }
 
         .tag {
             background-color: var(--tag-bg);
             color: var(--text-color);
             padding: 4px 8px;
-            border-radius: 4px;
+            border-radius: 5px;
             font-size: 0.75rem;
             cursor: pointer;
             user-select: none;
             transition: all 0.15s ease;
-            border: 1px solid transparent;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 5px;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .tag:hover { background-color: var(--tag-hover); }
         .tag.hidden { display: none; }
+
+        /* Truncate long text into single line */
+        .tag-text {
+            display: inline-block;
+            max-width: 190px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
         /* Edit Mode Styles */
         .edit-controls { display: none; gap: 4px; }
@@ -198,44 +205,28 @@
         body.edit-mode .copy-all-btn { display: none; }
         
         .icon-btn {
-            background: none;
-            border: none;
-            padding: 0 4px;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 0.9rem;
+            background: none; border: none; padding: 0 4px; color: var(--text-muted);
+            cursor: pointer; font-size: 0.9rem; box-shadow: none;
         }
-        .icon-btn:hover { color: #fff; }
+        .icon-btn:hover { color: var(--text-color); }
         .icon-btn.edit:hover { color: #10b981; }
         .icon-btn.delete:hover { color: var(--danger-color); }
 
         .add-tag-btn {
-            background-color: transparent;
-            border: 1px dashed var(--border-color);
-            color: var(--text-muted);
-            width: 100%;
-            margin-top: 8px;
-            padding: 4px;
-            display: none;
+            background-color: transparent; border: 1px dashed #d1d5db; color: var(--text-muted);
+            width: 100%; margin-top: 8px; padding: 6px; display: none; box-shadow: none;
         }
         body.edit-mode .add-tag-btn { display: block; }
-        .add-tag-btn:hover { border-color: var(--text-color); color: #fff; }
+        .add-tag-btn:hover { border-color: var(--text-color); color: var(--text-color); }
 
         .add-cat-btn, .add-master-btn {
-            display: none;
-            margin-top: 10px;
-            background: transparent;
-            border: 1px dashed var(--border-color);
-            color: var(--text-muted);
+            display: none; margin-top: 10px; background: transparent;
+            border: 1px dashed #d1d5db; color: var(--text-muted); box-shadow: none;
         }
         body.edit-mode .add-cat-btn { display: inline-block; }
         
         body.edit-mode .add-master-btn { 
-            display: block; 
-            width: 100%; 
-            padding: 15px; 
-            font-size: 1.1rem; 
-            margin-top: 20px;
+            display: block; width: 100%; padding: 15px; font-size: 1rem; margin-top: 20px; 
         }
         .add-master-btn:hover { border-color: var(--accent-color); color: var(--accent-color); }
 
@@ -243,11 +234,11 @@
         .output-panel {
             position: fixed;
             bottom: 0; left: 0; right: 0;
-            background-color: #09090b;
-            border-top: 1px solid var(--border-color);
-            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 15px;
             z-index: 1000;
-            box-shadow: 0 -10px 20px rgba(0,0,0,0.6);
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.05);
         }
 
         .output-header {
@@ -256,8 +247,8 @@
             align-items: center;
             max-width: 1600px;
             margin: 0 auto 10px auto;
-            flex-wrap: wrap;
-            gap: 10px;
+            flex-wrap: nowrap;
+            gap: 15px;
         }
 
         .custom-input-group {
@@ -265,55 +256,70 @@
         }
 
         .custom-input-group input {
-            flex-grow: 1; background-color: var(--card-bg); border: 1px solid var(--border-color);
-            color: #fff; padding: 6px 10px; border-radius: 4px; font-size: 0.85rem;
+            flex-grow: 1; background-color: #f9fafb; border: none;
+            color: var(--text-color); padding: 6px 12px; border-radius: 6px; font-size: 0.85rem;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); outline: none;
         }
+        .custom-input-group input:focus { box-shadow: inset 0 1px 3px rgba(59, 130, 246, 0.3), 0 0 0 2px rgba(59, 130, 246, 0.2); }
 
-        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         .btn-add { background-color: #4b5563; color: white; }
         .btn-chaos { background-color: #ef4444; color: white; }
         .btn-random { background-color: #8b5cf6; color: white; }
         .btn-copy { background-color: var(--accent-color); color: white; }
-        .btn-clear { background-color: transparent; color: #9ca3af; border: 1px solid #4b5563; }
+        .btn-clear { background-color: transparent; color: var(--text-muted); box-shadow: none; padding: 6px; border-radius: 5px; border: 1px solid #e5e7eb;}
+        .btn-clear:hover { background-color: #fee2e2; color: #ef4444; border-color: #fca5a5;}
+        
+        .copy-indicator { display: none; color: #10b981; font-size: 0.8rem; font-weight: 600; margin-left: 5px; }
 
         .staging-area {
-            width: 100%; max-width: 1600px; min-height: 80px; max-height: 120px;
-            overflow-y: auto; margin: 0 auto; background-color: var(--card-bg);
-            border: 1px solid var(--border-color); border-radius: 6px; padding: 10px;
-            box-sizing: border-box; display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;
+            width: 100%; max-width: 1600px; min-height: 70px; max-height: 120px;
+            overflow-y: auto; margin: 0 auto; background-color: #f9fafb;
+            border-radius: 8px; padding: 10px; box-sizing: border-box; display: flex; 
+            flex-wrap: wrap; gap: 6px; align-content: flex-start; box-shadow: inset 0 1px 4px rgba(0,0,0,0.05);
         }
 
         .active-tag {
-            background-color: var(--accent-color); color: white; padding: 4px 8px;
-            border-radius: 4px; font-size: 0.8rem; display: flex; align-items: center;
-            gap: 6px; cursor: grab; user-select: none;
+            background-color: var(--tag-active); color: white; padding: 4px 8px;
+            border-radius: 5px; font-size: 0.8rem; display: flex; align-items: center;
+            gap: 6px; cursor: grab; user-select: none; max-width: 100%; box-sizing: border-box;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
-        .active-tag.dragging { opacity: 0.4; border: 1px dashed #fff; }
-        .active-tag .remove-btn { background: none; border: none; color: #d1d5db; cursor: pointer; font-weight: bold; }
+        .active-tag span {
+            display: inline-block;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .active-tag.dragging { opacity: 0.4; }
+        .active-tag .remove-btn { background: none; border: none; color: #bfdbfe; cursor: pointer; font-weight: bold; box-shadow: none; padding: 0;}
         .active-tag .remove-btn:hover { color: #fff; }
 
-        #hidden-clipboard { position: absolute; left: -9999px; }
+        /* Hide Scrollbars for a cleaner look */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
-        /* MASONRY RESPONSIVENESS */
-        @media (max-width: 1400px) {
-            .builder-container { column-count: 3; }
-        }
-        @media (max-width: 1000px) {
-            .builder-container { column-count: 2; }
-        }
-        @media (max-width: 650px) {
-            .builder-container { column-count: 1; }
-        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Ultimate AI Prompt Builder</h1>
         <div class="header-controls">
-            <button class="btn-flow" onclick="window.open('https://labs.google/fx/tools/flow', '_blank')">🚀 Open Google Flow</button>
-            <button class="btn-cheatsheet" onclick="window.toggleCheatsheet()">📝 Cheatsheets</button>
-            <button class="btn-edit-mode" id="edit-toggle-btn" onclick="window.toggleEditMode()">🛠 Edit Mode: OFF</button>
+            <div class="header-left-btns">
+                <button class="btn-flow" onclick="window.open('https://labs.google/fx/tools/flow', '_blank')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg> Google Flow
+                </button>
+                <button class="btn-cheatsheet" onclick="window.toggleCheatsheet()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Cheatsheets
+                </button>
+                <button class="btn-edit-mode" id="edit-toggle-btn" onclick="window.toggleEditMode()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg> Edit: OFF
+                </button>
+            </div>
             <input type="text" id="search" class="search-bar" placeholder="Search across all categories...">
         </div>
     </header>
@@ -337,16 +343,17 @@
                 <button class="btn-add" onclick="window.addCustomText()">Add</button>
             </div>
             <div class="btn-group">
+                <span class="copy-indicator" id="auto-copy-indicator">Copied!</span>
                 <button class="btn-heroine" id="btn-heroine-ui" onclick="window.generateAndCopyHeroine()">👸 Instant Heroine</button>
                 <button class="btn-paleo" id="btn-paleo-ui" onclick="window.generateAndCopyPaleo()">🦖 Instant Paleo</button>
                 <button class="btn-chaos" onclick="window.triggerChaos()" title="Randomly select conflicting items">🌪️ Chaos</button>
-                <button class="btn-random" onclick="window.randomizePrompt()">🎲 Randomize</button>
-                <button class="btn-clear" onclick="window.clearPrompt()">Clear All</button>
-                <button class="btn-copy" id="btn-copy-main" onclick="window.copyPrompt()">Copy Prompt</button>
+                <button class="btn-random" onclick="window.randomizePrompt()">🎲 Random</button>
+                <button class="btn-clear" onclick="window.clearPrompt()" title="Clear All">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
             </div>
         </div>
         <div class="staging-area" id="staging-area"></div>
-        <textarea id="hidden-clipboard"></textarea>
     </div>
 
     <script type="module">
@@ -374,11 +381,28 @@
         let paleoData = {};
         let editMode = false;
         let isCheatsheetView = false;
+        let autoCopyTimeout;
         
         const mainContainer = document.getElementById('main-container');
         const stagingArea = document.getElementById('staging-area');
         const searchInput = document.getElementById('search');
-        const hiddenClipboard = document.getElementById('hidden-clipboard');
+
+        // ==========================================
+        // AUTOMATED CLIPBOARD COPIER
+        // ==========================================
+        // Observes staging area and auto-copies when elements change
+        const autoCopyObserver = new MutationObserver(() => {
+            const tags = stagingArea.querySelectorAll('.active-tag span');
+            if (tags.length === 0) return;
+            const promptText = Array.from(tags).map(span => span.textContent).join(', ');
+            navigator.clipboard.writeText(promptText).then(() => {
+                const indicator = document.getElementById('auto-copy-indicator');
+                indicator.style.display = 'inline-block';
+                clearTimeout(autoCopyTimeout);
+                autoCopyTimeout = setTimeout(() => { indicator.style.display = 'none'; }, 1000);
+            }).catch(e => console.warn('Clipboard write ignored (document not focused)', e));
+        });
+        autoCopyObserver.observe(stagingArea, { childList: true });
 
         // ==========================================
         // AUTO-POPULATION (HARDCODED DEFAULTS)
@@ -416,9 +440,6 @@
         // ==========================================
         
         signInAnonymously(auth).then(() => {
-            console.log("Signed in anonymously!");
-
-            // Initialize Data if empty
             get(ref(db, 'promptBuilder/groupedData')).then((snapshot) => {
                 if (!snapshot.exists()) {
                     set(ref(db, 'promptBuilder/groupedData'), defaultGroupedData);
@@ -428,19 +449,15 @@
                 }
             }).catch((error) => console.error("Initialization Error:", error));
 
-            // Listen for real-time updates
             onValue(ref(db, 'promptBuilder/groupedData'), (snapshot) => {
                 groupedData = snapshot.val() || {};
                 
                 let needsUpdate = false;
-                
-                // Safety net check
                 if (!groupedData['Uncategorized - Rescued']) {
                     groupedData['Uncategorized - Rescued'] = { color: "#9ca3af", categories: { "Orphaned Tags": [] } };
                     needsUpdate = true;
                 }
 
-                // Automatic Migration: Insert "Custom Collections" before "Actions & Behaviors" if missing
                 if (!groupedData['Custom Collections'] && !groupedData['_patchedCustom']) {
                     const newData = {};
                     for (let key in groupedData) {
@@ -462,8 +479,7 @@
                     renderBuilder(renderData);
                 }
             }, (error) => {
-                console.error("Realtime Listener Error:", error);
-                mainContainer.innerHTML = `<h3 style="color: #ef4444;">Permission Error: ${error.message}</h3><p>Please check your Firebase Realtime Database Rules.</p>`;
+                mainContainer.innerHTML = `<h3 style="color: #ef4444;">Permission Error: ${error.message}</h3>`;
             });
 
             onValue(ref(db, 'promptBuilder/heroineData'), (snapshot) => { heroineData = snapshot.val() || defaultHeroineData; });
@@ -473,7 +489,6 @@
             });
             
         }).catch((error) => {
-            console.error("Anonymous login failed:", error);
             mainContainer.innerHTML = `<h3 style="color: #ef4444;">Login Error: ${error.message}</h3>`;
         });
 
@@ -487,13 +502,12 @@
                 
                 const groupDiv = document.createElement('div');
                 groupDiv.className = 'macro-group';
-                groupDiv.style.borderLeftColor = groupData.color || '#333';
+                groupDiv.style.borderLeftColor = groupData.color || '#3b82f6';
 
                 const groupTitle = document.createElement('h2');
                 groupTitle.className = 'macro-title';
-                groupTitle.innerHTML = `<span style="color:${groupData.color || '#333'}">■</span> ${groupName}`;
+                groupTitle.innerHTML = `<span style="color:${groupData.color || '#3b82f6'}">■</span> ${groupName}`;
                 
-                // Group Edit Controls
                 const groupEditSpan = document.createElement('span');
                 groupEditSpan.className = 'edit-controls';
                 groupEditSpan.innerHTML = `
@@ -506,7 +520,6 @@
                 const gridContainer = document.createElement('div');
                 gridContainer.className = 'builder-container';
 
-                // Render Categories
                 for (const [category, items] of Object.entries(groupData.categories)) {
                     const safeItems = items || [];
                     const card = document.createElement('div');
@@ -521,11 +534,13 @@
 
                     const copyBtn = document.createElement('button');
                     copyBtn.className = 'copy-all-btn';
-                    copyBtn.textContent = '[Copy All]';
+                    copyBtn.title = "Copy Category";
+                    copyBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
                     copyBtn.onclick = () => {
                         navigator.clipboard.writeText(safeItems.join(', ')).then(() => {
-                            copyBtn.textContent = '[Copied!]';
-                            setTimeout(() => copyBtn.textContent = '[Copy All]', 1500);
+                            const originalHTML = copyBtn.innerHTML;
+                            copyBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                            setTimeout(() => copyBtn.innerHTML = originalHTML, 1500);
                         });
                     };
 
@@ -544,11 +559,10 @@
                     const tagContainer = document.createElement('div');
                     tagContainer.className = 'tag-container';
 
-                    // Render Tags
                     safeItems.forEach((item, index) => {
                         const tag = document.createElement('span');
                         tag.className = 'tag';
-                        tag.innerHTML = `<span>${item}</span>`;
+                        tag.innerHTML = `<span class="tag-text" title="${item.replace(/"/g, '&quot;')}">${item}</span>`;
                         tag.dataset.text = item.toLowerCase();
                         
                         const tagEditSpan = document.createElement('span');
@@ -565,7 +579,7 @@
                             }
                             if(!editMode) {
                                 window.createActiveTag(item);
-                                tag.style.backgroundColor = groupData.color;
+                                tag.style.backgroundColor = groupData.color || "var(--accent-color)";
                                 tag.style.color = "white";
                                 setTimeout(() => {
                                     tag.style.backgroundColor = ""; tag.style.color = "";
@@ -605,7 +619,7 @@
             editMode = !editMode;
             document.body.classList.toggle('edit-mode', editMode);
             const btn = document.getElementById('edit-toggle-btn');
-            btn.textContent = editMode ? '🛠 Edit Mode: ON' : '🛠 Edit Mode: OFF';
+            btn.innerHTML = editMode ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg> Edit: ON` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg> Edit: OFF`;
             btn.style.backgroundColor = editMode ? '#ef4444' : 'var(--warning-color)';
         };
 
@@ -615,7 +629,7 @@
             document.getElementById('output-panel').style.display = isCheatsheetView ? 'none' : 'block';
             document.getElementById('cheatsheet-view').style.display = isCheatsheetView ? 'block' : 'none';
             const btn = document.querySelector('.btn-cheatsheet');
-            btn.textContent = isCheatsheetView ? '🔙 Back to Builder' : '📝 Cheatsheets';
+            btn.innerHTML = isCheatsheetView ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> Back to Builder` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Cheatsheets`;
         };
 
         window.saveCheatsheet = () => {
@@ -627,15 +641,12 @@
             });
         };
 
-        // --- Database Modifiers ---
-        
         window.addMasterGroup = () => {
             const name = prompt("Enter new Master Category name:");
             if(name && name.trim()) {
                 const safeName = name.trim();
                 if(!groupedData[safeName]) {
                     const randomColor = "#" + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
-                    // FIX: Added a placeholder phrase so Firebase doesn't delete the empty array
                     groupedData[safeName] = { color: randomColor, categories: { "New Category": ["Placeholder Phrase"] } };
                     set(ref(db, 'promptBuilder/groupedData'), groupedData);
                 }
@@ -691,7 +702,6 @@
             const name = prompt("Enter new category name:");
             if(name && name.trim()) {
                 if(!groupedData[group].categories) groupedData[group].categories = {};
-                // FIX: Added a placeholder phrase here as well
                 groupedData[group].categories[name.trim()] = ["Placeholder Phrase"];
                 set(ref(db, 'promptBuilder/groupedData'), groupedData);
             }
@@ -742,6 +752,7 @@
             const tag = document.createElement('div');
             tag.className = 'active-tag';
             tag.draggable = true;
+            tag.title = text; // Tooltip to see full text on hover
             
             const textNode = document.createElement('span');
             textNode.textContent = text;
@@ -750,7 +761,7 @@
             const removeBtn = document.createElement('button');
             removeBtn.className = 'remove-btn';
             removeBtn.innerHTML = '&times;';
-            removeBtn.onclick = () => tag.remove();
+            removeBtn.onclick = () => tag.remove(); // Removal naturally triggers MutationObserver to auto-copy
             tag.appendChild(removeBtn);
 
             tag.addEventListener('dragstart', handleDragStart);
@@ -789,25 +800,6 @@
             for(let i=0; i<numItems; i++) {
                 window.createActiveTag(all[Math.floor(Math.random() * all.length)]);
             }
-        };
-
-        window.copyPrompt = () => {
-            const tags = stagingArea.querySelectorAll('.active-tag span');
-            const promptText = Array.from(tags).map(span => span.textContent).join(', ');
-            
-            hiddenClipboard.value = promptText;
-            hiddenClipboard.select();
-            
-            navigator.clipboard.writeText(promptText).then(() => {
-                const btn = document.getElementById('btn-copy-main');
-                const orig = btn.textContent;
-                btn.textContent = "Copied!";
-                btn.style.backgroundColor = "#10b981";
-                setTimeout(() => {
-                    btn.textContent = orig;
-                    btn.style.backgroundColor = "";
-                }, 1500);
-            });
         };
 
         // --- Drag and Drop ---
@@ -861,7 +853,7 @@
                             tag.classList.add('hidden');
                         }
                     });
-                    card.style.display = cardHasMatch || term === "" ? 'block' : 'none';
+                    card.style.display = cardHasMatch || term === "" ? 'inline-block' : 'none';
                 });
                 group.style.display = groupHasMatch || term === "" ? 'block' : 'none';
             });
@@ -880,7 +872,7 @@
             navigator.clipboard.writeText(finalPrompt).then(() => {
                 const btn = document.getElementById('btn-heroine-ui');
                 const orig = btn.innerHTML;
-                btn.innerHTML = "✨ Copied to Clipboard!";
+                btn.innerHTML = "✨ Copied!";
                 btn.style.backgroundColor = "#10b981";
                 setTimeout(() => { btn.innerHTML = orig; btn.style.backgroundColor = ""; }, 1500);
             });
@@ -896,7 +888,7 @@
             navigator.clipboard.writeText(finalPrompt).then(() => {
                 const btn = document.getElementById('btn-paleo-ui');
                 const orig = btn.innerHTML;
-                btn.innerHTML = "✨ Copied to Clipboard!";
+                btn.innerHTML = "✨ Copied!";
                 btn.style.backgroundColor = "#10b981";
                 setTimeout(() => { btn.innerHTML = orig; btn.style.backgroundColor = ""; }, 1500);
             });
