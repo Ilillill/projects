@@ -218,7 +218,6 @@
                     
                     <button id="stats-btn" class="practice-control hide" title="View Study Statistics">📊 Stats</button>
                     
-                    <!-- NEW SHUFFLE BUTTON -->
                     <button id="shuffle-btn" class="practice-control hide" title="Shuffle row order for this session">🔀 Shuffle Order</button>
                     
                     <button id="peek-answers-btn" class="practice-control hide">Peek Answers</button>
@@ -341,6 +340,7 @@
         let isCustomOrder = false; 
         let appMode = 'practice';
         let isPeeking = false; 
+        let dragSrcInfo = null; // <- BUG FIX: Formally declared so ES Module doesn't throw a ReferenceError
 
         // --- Smart Saving System ---
         let saveTimeout = null;
@@ -509,7 +509,6 @@
                          let styleStr = colStyle.bold ? "font-weight:bold;" : "";
                          styleStr += colStyle.italic ? "font-style:italic;" : "";
                          
-                         // Clean up image URLs for print rendering
                          if (colStyle.type === 'image' && cellVal.startsWith('http')) {
                              cellVal = `<img src="${cellVal.trim()}" style="max-width: 150px; height: auto;">`;
                          }
@@ -525,8 +524,6 @@
              printWindow.focus();
              setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
         });
-
-        let draggedMenuId = null;
 
         function renderMenu(skipGridRender = false) {
             const menuList = document.getElementById('menu-list');
@@ -585,8 +582,8 @@
                 headerEl.addEventListener('dragover', (e) => {
                     if (appMode !== 'edit') return;
                     e.preventDefault();
-                    if (dragSrcInfo.type === 'cat') headerEl.classList.add('drag-over-top');
-                    else if (dragSrcInfo.type === 'page') headerEl.classList.add('drag-over-bg');
+                    if (dragSrcInfo && dragSrcInfo.type === 'cat') headerEl.classList.add('drag-over-top');
+                    else if (dragSrcInfo && dragSrcInfo.type === 'page') headerEl.classList.add('drag-over-bg');
                 });
 
                 headerEl.addEventListener('dragleave', () => { headerEl.classList.remove('drag-over-top', 'drag-over-bg'); });
@@ -764,21 +761,18 @@
                                        data-correct-answer="${cellText}" value="${displayValue}" autocomplete="off" ${isPeeking ? 'readonly' : ''}>
                             </td>`;
                         } else {
-                            // IMAGE COLUMN LOGIC
                             if (colStyle.type === 'image') {
                                 const url = cellText.trim();
                                 if (appMode === 'practice') {
-                                    // Full size for practice mode
+                                    // RESIZED: Reduced to 280x280 down from 400x400
                                     html += `<td class="grid-cell" style="text-align: center; ${styleStr}">
-                                                ${url.startsWith('http') ? `<img src="${url}" style="min-width: 400px; height: 400px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" alt="Image">` : ''}
+                                                ${url.startsWith('http') ? `<img src="${url}" style="min-width: 280px; height: 280px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" alt="Image">` : ''}
                                              </td>`;
                                 } else {
-                                    // Edit mode with small thumbnail and editable URL
                                     html += `<td class="grid-cell" ${isEditable} data-row-id="${row.id}" data-col="${colIndex}" style="${styleStr}">
                                                 ${url.startsWith('http') ? `<img src="${url}" style="width: 30px; height: 30px; object-fit: cover; vertical-align: middle; margin-right: 6px; border-radius: 3px;" contenteditable="false" alt="preview">` : ''}${cellText}</td>`;
                                 }
                             } else {
-                                // NORMAL TEXT COLUMN
                                 html += `<td class="grid-cell" ${isEditable} data-row-id="${row.id}" data-col="${colIndex}" style="${styleStr}">${cellText}</td>`;
                             }
                         }
@@ -820,16 +814,13 @@
             const activeData = getActivePage();
             if(!activeData) return;
             
-            // 1. Extract only the actual data rows
             let dataRows = activeData.page.rows.filter(r => r.type === 'data');
             
-            // 2. Shuffle them using Fisher-Yates
             for (let i = dataRows.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [dataRows[i], dataRows[j]] = [dataRows[j], dataRows[i]];
             }
             
-            // 3. Map back over original rows to put shuffled items in data slots (titles stay put)
             let shuffleIndex = 0;
             activeData.page.rows = activeData.page.rows.map(r => {
                 if (r.type === 'data') {
@@ -838,7 +829,6 @@
                 return r; 
             });
             
-            // 4. Render without triggering a save, so it resets on page reload
             renderGrid();
         });
 
@@ -1009,7 +999,6 @@
                         let cleanedHTML = "";
                         const colStyle = (colIndex !== null && activeData.page.columnStyles[colIndex]) ? activeData.page.columnStyles[colIndex] : null;
 
-                        // Image cells strip out HTML to just keep the URL text. Text cells allow basic bold/italic.
                         if (colStyle && colStyle.type === 'image') {
                             cleanedHTML = this.textContent.trim(); 
                         } else {
@@ -1024,7 +1013,6 @@
                         }
                         saveData();
                         
-                        // Re-render so image preview updates immediately
                         if (colStyle && colStyle.type === 'image') renderGrid();
                     }
                 });
