@@ -218,7 +218,8 @@
                     
                     <button id="stats-btn" class="practice-control hide" title="View Study Statistics">📊 Stats</button>
                     
-                    <button id="shuffle-btn" class="practice-control hide" title="Shuffle row order for this session">🔀 Shuffle Order</button>
+                    <!-- NEW SHUFFLE TOGGLE BUTTON -->
+                    <button id="shuffle-btn" class="practice-control hide" title="Toggle random row order">🔀 Shuffle Order</button>
                     
                     <button id="peek-answers-btn" class="practice-control hide">Peek Answers</button>
                     <button id="clear-answers-btn" class="practice-control hide" style="background: var(--accent-red); color: white;" title="Clear practice answers for this page only">Clear Page</button>
@@ -339,8 +340,12 @@
         let activePageId = null;
         let isCustomOrder = false; 
         let appMode = 'practice';
+        
+        // --- UI State Toggles ---
         let isPeeking = false; 
-        let dragSrcInfo = null; // <- BUG FIX: Formally declared so ES Module doesn't throw a ReferenceError
+        let isShuffled = false;
+        let currentShuffledRows = []; // Holds the temporary presentation order
+        let dragSrcInfo = null; 
 
         // --- Smart Saving System ---
         let saveTimeout = null;
@@ -641,8 +646,7 @@
                     pageEl.onclick = () => {
                         if (activePageId !== page.id) {
                             activePageId = page.id;
-                            isPeeking = false; 
-                            resetPeekButton(); 
+                            resetPracticeToggles(); 
                             document.querySelector('main').scrollTop = 0; 
                             renderMenu();
                         }
@@ -722,7 +726,10 @@
 
             if (!activePage.columnStyles) activePage.columnStyles = [];
 
-            activePage.rows.forEach(row => {
+            // IMPORTANT: Render the presentation array if shuffled, otherwise render standard saved rows
+            const rowsToRender = isShuffled ? currentShuffledRows : activePage.rows;
+
+            rowsToRender.forEach(row => {
                 const isEditable = appMode === 'edit' ? 'contenteditable="true"' : '';
                 html += `<tr class="row-wrapper" data-row-id="${row.id}" ${appMode === 'edit' ? 'draggable="true"' : ''}>`;
 
@@ -764,7 +771,6 @@
                             if (colStyle.type === 'image') {
                                 const url = cellText.trim();
                                 if (appMode === 'practice') {
-                                    // RESIZED: Reduced to 280x280 down from 400x400
                                     html += `<td class="grid-cell" style="text-align: center; ${styleStr}">
                                                 ${url.startsWith('http') ? `<img src="${url}" style="min-width: 280px; height: 280px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" alt="Image">` : ''}
                                              </td>`;
@@ -809,34 +815,72 @@
             }
         }
 
-        // --- Shuffle Logic (Session Only) ---
+        // --- Shuffle Logic (Toggle) ---
         document.getElementById('shuffle-btn').addEventListener('click', function() {
             const activeData = getActivePage();
             if(!activeData) return;
             
-            let dataRows = activeData.page.rows.filter(r => r.type === 'data');
-            
-            for (let i = dataRows.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [dataRows[i], dataRows[j]] = [dataRows[j], dataRows[i]];
+            if (isShuffled) {
+                // TOGGLE OFF: Return to normal order
+                isShuffled = false;
+                this.innerText = "🔀 Shuffle Order";
+                this.style.background = "var(--bg-color)";
+                this.style.color = "#333";
+            } else {
+                // TOGGLE ON: Create a visual-only shuffled array
+                isShuffled = true;
+                this.innerText = "▶ Restore Order";
+                this.style.background = "var(--accent-blue)";
+                this.style.color = "white";
+                
+                // Shallow copy rows so we don't mess up the underlying saved array
+                currentShuffledRows = [...activeData.page.rows];
+                let dataRows = currentShuffledRows.filter(r => r.type === 'data');
+                
+                // Shuffle just the data rows
+                for (let i = dataRows.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [dataRows[i], dataRows[j]] = [dataRows[j], dataRows[i]];
+                }
+                
+                // Put them back into the array alongside the titles and notes
+                let shuffleIndex = 0;
+                currentShuffledRows = currentShuffledRows.map(r => {
+                    if (r.type === 'data') {
+                        return dataRows[shuffleIndex++];
+                    }
+                    return r; 
+                });
             }
             
-            let shuffleIndex = 0;
-            activeData.page.rows = activeData.page.rows.map(r => {
-                if (r.type === 'data') {
-                    return dataRows[shuffleIndex++];
-                }
-                return r; 
-            });
-            
+            // Re-render the grid based on the new flag
             renderGrid();
         });
 
-        function resetPeekButton() {
+        // --- Reset Helpers ---
+        function resetPeekToggle() {
+            isPeeking = false;
             const btn = document.getElementById('peek-answers-btn');
-            btn.innerText = "Peek Answers";
-            btn.style.background = "var(--bg-color)";
-            btn.style.color = "#333";
+            if(btn) {
+                btn.innerText = "Peek Answers";
+                btn.style.background = "var(--bg-color)";
+                btn.style.color = "#333";
+            }
+        }
+
+        function resetShuffleToggle() {
+            isShuffled = false;
+            const btn = document.getElementById('shuffle-btn');
+            if (btn) {
+                btn.innerText = "🔀 Shuffle Order";
+                btn.style.background = "var(--bg-color)";
+                btn.style.color = "#333";
+            }
+        }
+
+        function resetPracticeToggles() {
+            resetPeekToggle();
+            resetShuffleToggle();
         }
 
         function updateModeUI() {
@@ -851,8 +895,7 @@
             const titleEl = document.getElementById('page-title-display');
             titleEl.setAttribute('contenteditable', appMode === 'edit' ? 'true' : 'false');
 
-            isPeeking = false;
-            resetPeekButton();
+            resetPracticeToggles();
             renderMenu(); 
         }
 
@@ -874,7 +917,9 @@
                 const activeData = getActivePage();
                 if(activeData) {
                     activeData.page.rows.forEach(r => { if (r.type === 'data') r.userAnswer = ""; });
-                    isPeeking = false; resetPeekButton(); saveData(); renderMenu(); 
+                    resetPeekToggle(); 
+                    saveData(); 
+                    renderMenu(); 
                 }
             }
         });
@@ -888,7 +933,9 @@
                         });
                     });
                 });
-                isPeeking = false; resetPeekButton(); saveData(); renderMenu(); 
+                resetPeekToggle();
+                saveData(); 
+                renderMenu(); 
             }
         });
 
